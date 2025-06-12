@@ -1,0 +1,35 @@
+// tsconfig.json (新規作成)
+
+{
+  "compilerOptions": {
+    "target": "ES2020", // 最近のモダンなJavaScriptバージョン
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // アプリケーションがブラウザと新しいJS機能を使うことを示す
+    "module": "ESNext",
+    "skipLibCheck": true, // ライブラリの型チェックをスキップして、コンパイル速度を上げる（開発時）
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true, // 各ファイルを独立したモジュールとしてコンパイル
+    "noEmit": true, // コンパイル後のJSファイルを生成しない（Viteが担当するため）
+    "jsx": "react-jsx", // JSXをReactが認識できるようにする
+
+    /* Linting */
+    "strict": true, // 厳格な型チェックを有効にする
+    "noUnusedLocals": true, // 未使用のローカル変数を警告
+    "noUnusedParameters": true, // 未使用の関数パラメータを警告
+    "noFallthroughCasesInSwitch": true, // switch文のフォールスルーを警告
+
+    // ★ Vitestのグローバル型定義を追加
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": [
+    "src", // srcフォルダ内のすべてのファイルを含める
+    "src/setupTests.ts", // setupTests.tsを含める
+    "src/**/*.test.ts", // srcディレクトリとそのサブディレクトリ内のすべての .test.ts ファイルを含める
+    "src/**/*.test.tsx" // srcディレクトリとそのサブディレクトリ内のすべての .test.tsx ファイルを含める
+  ]
+
+}
