@@ -1,0 +1,62 @@
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem {
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9; /* 背景色を追加 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.listItem:last-child {
+  margin-bottom: 0; /* 最後の要素の下マージンをなくす */
+}
+
+.itemContent {
+  flex-grow: 1; /* 内容が領域を占める */
+  text-align: left; /* テキストを左揃え */
+}
+
+.itemContent h3 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  color: #007bff;
+}
+
+.itemContent p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.itemActions {
+  display: flex;
+  gap: 5px; /* ボタン間のスペース */
+}
+
+/* ★追加: リストアイテム内のリンクのスタイル */
+.itemLink {
+  flex-grow: 1; /* 親のリストアイテムの幅全体を占める */
+  display: flex; /* 内部のコンテンツを flex に */
+  text-decoration: none; /* 下線をなくす */
+  color: inherit; /* 親の文字色を継承 */
+  padding-right: 10px; /* ボタンとの間にスペース */
+}
+
+.itemLink:hover {
+  text-decoration: underline; /* ホバーで下線 */
+  color: #007bff; /* ホバーで色変更 */
+}
+
+.itemContent {
+  /* flex-grow: 1; を itemLink に移動 */
+  /* flex-grow: 1; */
+  text-align: left;
+}
