@@ -1,24 +1,14 @@
 import React, { FC, useState, useEffect, FormEvent } from "react";
 import { Box, Button, Typography } from "@mui/material"; // MUIコンポーネントをインポート
 
-// 汎用フォーム部品をインポート
 import MuiTextFieldWrapper from "./FormFields/MuiTextFieldWrapper.tsx";
 import MuiCheckboxWrapper from "./FormFields/MuiCheckboxWrapper.tsx";
 import MuiDatePickerWrapper from "./FormFields/MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "./FormFields/MuiSelectFieldWrapper.tsx";
+import { FormField, CommonFormFieldComponent } from "../types/interfaces";
 
-// 共通の型定義をインポート
-import { FormField } from "../types/interfaces";
-import { getInitialFieldValue } from "../utils/formFieldInitializers.ts";
-
-// DynamicFormが受け取るPropsの型定義
 interface DynamicFormProps<T extends object> {
-  // ★修正: FormField の C 型引数を正しく指定できるようにする
-  // 今回は `DynamicForm` が全ての具体的なラッパーコンポーネントを知らないため、
-  // FormField<T, any> ではなく、より広い型を許容するようにするが、
-  // 最も良いのは DynamicForm の引数で componentProps を受け取って型を解決すること。
-  // 今回は簡易的に FormField<T, any> のまま、呼び出し側で厳密に。
-  fields: FormField<T, React.ComponentType<any> & { getInitialValue: () => any }>[]; // ★C 型引数を厳密に
+  fields: FormField<T, CommonFormFieldComponent<any>>[];
   initialData?: T | null;
   onSubmit: (data: T) => void;
   onCancel?: () => void;
@@ -46,8 +36,7 @@ function DynamicForm<T extends object>({
     }
     const initial: { [key: string]: any } = {};
     fields.forEach((field) => {
-      // ★修正: 初期値生成ロジックを getInitialFieldValue に置き換え
-      initial[field.name as string] = getInitialFieldValue(field.type);
+      initial[field.name as string] = field.component.getInitialValue();
     });
     return initial as T;
   });
@@ -60,8 +49,7 @@ function DynamicForm<T extends object>({
       // initialData が null/undefined の場合、フォームをリセット
       const initial: { [key: string]: any } = {};
       fields.forEach((field) => {
-        // ★修正: 初期値生成ロジックを getInitialFieldValue に置き換え
-        initial[field.name as string] = getInitialFieldValue(field.type);
+        initial[field.name as string] = field.component.getInitialValue();
       });
       setFormData(initial as T);
     }

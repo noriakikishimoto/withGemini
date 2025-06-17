@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { TextField } from "@mui/material";
+import { CommonFormFieldComponent } from "../../types/interfaces";
 
 // Propsの型定義
 interface MuiTextFieldWrapperProps {
@@ -15,7 +16,7 @@ interface MuiTextFieldWrapperProps {
   helperText?: string; // エラーメッセージ表示用
 }
 
-const MuiTextFieldWrapper: FC<MuiTextFieldWrapperProps> = ({
+const MuiTextFieldWrapper: CommonFormFieldComponent<MuiTextFieldWrapperProps> = ({
   label,
   name,
   value,
@@ -53,5 +54,7 @@ const MuiTextFieldWrapper: FC<MuiTextFieldWrapperProps> = ({
     />
   );
 };
+
+MuiTextFieldWrapper.getInitialValue = () => "";
 
 export default MuiTextFieldWrapper;

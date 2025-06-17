@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { FormControlLabel, Checkbox } from "@mui/material";
+import { CommonFormFieldComponent } from "../../types/interfaces";
 
 interface MuiCheckboxWrapperProps {
   label: string;
@@ -8,7 +9,12 @@ interface MuiCheckboxWrapperProps {
   onChange: (checked: boolean) => void;
 }
 
-const MuiCheckboxWrapper: FC<MuiCheckboxWrapperProps> = ({ label, name, checked, onChange }) => {
+const MuiCheckboxWrapper: CommonFormFieldComponent<MuiCheckboxWrapperProps> = ({
+  label,
+  name,
+  checked,
+  onChange,
+}) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.checked);
   };
@@ -21,5 +27,7 @@ const MuiCheckboxWrapper: FC<MuiCheckboxWrapperProps> = ({ label, name, checked,
     />
   );
 };
+
+MuiCheckboxWrapper.getInitialValue = () => false; // チェックボックスの初期値は false
 
 export default MuiCheckboxWrapper;

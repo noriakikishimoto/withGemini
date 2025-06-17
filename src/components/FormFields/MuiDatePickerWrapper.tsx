@@ -5,6 +5,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns"; // date-fns 用アダプター
 import { ja } from "date-fns/locale"; // 日本語ロケールをインポート
 import { TextField } from "@mui/material";
+import { CommonFormFieldComponent } from "../../types/interfaces";
 
 interface MuiDatePickerWrapperProps {
   label: string;
@@ -14,7 +15,7 @@ interface MuiDatePickerWrapperProps {
   required?: boolean;
 }
 
-const MuiDatePickerWrapper: FC<MuiDatePickerWrapperProps> = ({
+const MuiDatePickerWrapper: CommonFormFieldComponent<MuiDatePickerWrapperProps> = ({
   label,
   name,
   value,
@@ -61,4 +62,5 @@ const MuiDatePickerWrapper: FC<MuiDatePickerWrapperProps> = ({
   );
 };
 
+MuiDatePickerWrapper.getInitialValue = () => null; // 日付の初期値は null
 export default MuiDatePickerWrapper;

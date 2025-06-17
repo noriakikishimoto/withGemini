@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { CommonFormFieldComponent } from "../../types/interfaces";
 
 // 選択肢の型定義
 interface SelectOption {
@@ -16,7 +17,7 @@ interface MuiSelectFieldWrapperProps {
   required?: boolean;
 }
 
-const MuiSelectFieldWrapper: FC<MuiSelectFieldWrapperProps> = ({
+const MuiSelectFieldWrapper: CommonFormFieldComponent<MuiSelectFieldWrapperProps> = ({
   label,
   name,
   value,
@@ -50,4 +51,5 @@ const MuiSelectFieldWrapper: FC<MuiSelectFieldWrapperProps> = ({
   );
 };
 
+MuiSelectFieldWrapper.getInitialValue = () => "";
 export default MuiSelectFieldWrapper;

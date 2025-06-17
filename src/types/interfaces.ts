@@ -36,13 +36,18 @@ export interface FormFieldSelectOption {
   label: string;
 }
 
-// Tはフォームが扱うデータオブジェクトの型
-// CはフィールドをレンダリングするReactコンポーネントの型
-// Cは React.ComponentType<any> かつ、getInitialValue 静的メソッドを必須で持つことを保証
-export interface FormField<
-  T extends object,
-  C extends React.ComponentType<any> & { getInitialValue: () => any },
-> {
+// 全ての汎用フォームコンポーネントが従うべき共通の型エイリアス
+// P はそのコンポーネントが受け取るPropsの型
+export type CommonFormFieldComponent<P = {}> = React.ComponentType<P> & {
+  getInitialValue: () => any; // ここは具体的な初期値型を返す関数とする
+  // 例: getInitialValue: () => string; (MuiTextFieldWrapper向け)
+  //     getInitialValue: () => boolean; (MuiCheckboxWrapper向け)
+  // より厳密な型を求める場合は、getInitialValue の戻り値もジェネリクスにするか、
+  // 各コンポーネント側で export default のキャスト時に明示する。
+  // ここでは、共通インターフェースとしては any を許容し、個別の型は実装側で保証する
+};
+
+export interface FormField<T extends object, C extends CommonFormFieldComponent<any>> {
   name: keyof T;
   label: string;
   type: FormFieldType;

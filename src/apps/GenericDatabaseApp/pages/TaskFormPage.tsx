@@ -2,15 +2,13 @@
 
 import React, { FC, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Layout from "../../../components/Layout.tsx";
 import DynamicForm from "../../../components/DynamicForm.tsx";
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
 import MuiDatePickerWrapper from "../../../components/FormFields/MuiDatePickerWrapper.tsx";
 import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrapper.tsx";
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx";
-import DynamicList from "../../../components/DynamicList.tsx";
 
-import { FormField, TaskData } from "../../../types/interfaces.ts";
+import { FormField, TaskData, CommonFormFieldComponent } from "../../../types/interfaces.ts";
 import { taskRepository } from "../../../repositories/taskRepository.ts"; // タスクリポジトリをインポート
 
 import { Box, Typography, Button, Paper, CircularProgress } from "@mui/material"; // Paperはdivのようなもの、CircularProgressはローディング表示
@@ -25,16 +23,13 @@ const assigneeOptions = [
 
 // TaskData のフィールド定義
 // DynamicForm に渡すためのスキーマ
-export const taskFormFields: FormField<
-  TaskData,
-  React.ComponentType<any> & { getInitialValue: () => any }
->[] = [
+export const taskFormFields: FormField<TaskData, CommonFormFieldComponent<any>>[] = [
   {
     name: "title",
     label: "タスク名",
     type: "text",
     required: true,
-    component: MuiTextFieldWrapper as any,
+    component: MuiTextFieldWrapper,
   },
   {
     name: "description",
@@ -42,27 +37,27 @@ export const taskFormFields: FormField<
     type: "textarea",
     multiline: true,
     rows: 4,
-    component: MuiTextFieldWrapper as any,
+    component: MuiTextFieldWrapper,
   },
   {
     name: "dueDate",
     label: "期限",
     type: "date",
     required: true,
-    component: MuiDatePickerWrapper as any,
+    component: MuiDatePickerWrapper,
   },
   {
     name: "assignee",
     label: "担当者",
     type: "select",
     options: assigneeOptions,
-    component: MuiSelectFieldWrapper as any,
+    component: MuiSelectFieldWrapper,
   },
   {
     name: "completed",
     label: "完了済",
     type: "checkbox",
-    component: MuiCheckboxWrapper as any,
+    component: MuiCheckboxWrapper,
   },
 ];
 
