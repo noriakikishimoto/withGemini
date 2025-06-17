@@ -70,7 +70,7 @@ const ApplicationDetailPage: FC<ApplicationDetailPageProps> = ({ onEditProps }) 
       <Layout>
         <Box sx={{ padding: "20px", textAlign: "center", color: "red" }}>
           <Typography variant="body1">エラー: {error}</Typography>
-          <Button onClick={() => navigate("/list")} variant="contained">
+          <Button onClick={() => navigate("/applications/list")} variant="contained">
             リストに戻る
           </Button>
         </Box>
@@ -84,7 +84,7 @@ const ApplicationDetailPage: FC<ApplicationDetailPageProps> = ({ onEditProps }) 
       <Layout>
         <Box sx={{ padding: "20px", textAlign: "center", color: "red" }}>
           <Typography variant="body1">申請データが見つかりません。</Typography>
-          <Button onClick={() => navigate("/list")} variant="contained">
+          <Button onClick={() => navigate("/applications/list")} variant="contained">
             リストに戻る
           </Button>
         </Box>
@@ -134,7 +134,7 @@ const ApplicationDetailPage: FC<ApplicationDetailPageProps> = ({ onEditProps }) 
         >
           編集
         </Button>
-        <Button onClick={() => navigate("/list")} variant="outlined" color="secondary">
+        <Button onClick={() => navigate("/applications/list")} variant="outlined" color="secondary">
           リストに戻る
         </Button>
       </Box>

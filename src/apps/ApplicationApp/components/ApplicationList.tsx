@@ -1,13 +1,10 @@
 import React, { FC, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-// ★修正: MUIのコンポーネントをインポート
-import { Box, Typography, Button, Card, CardContent, CardActions, TextField } from "@mui/material"; // Card系コンポーネント
 
-import styles from "./ApplicationList.module.css";
+import { Box, Typography, Button, Card, CardContent, CardActions, TextField } from "@mui/material"; // Card系コンポーネント
 
 import { ApplicationData } from "../../../types/interfaces.ts";
 
-// ApplicationListが親から受け取るPropsの型を定義
 interface ApplicationListProps {
   applications: ApplicationData[]; // 表示する申請データの配列
   onDelete: (id: string) => void; // 削除ボタンが押されたときに親に伝える関数

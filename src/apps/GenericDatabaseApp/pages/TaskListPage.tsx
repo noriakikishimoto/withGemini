@@ -1,23 +1,12 @@
 import React, { FC, useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../../../components/Layout.tsx";
-import {
-  Box,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  CardActions,
-  TextField,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Typography, Button, TextField, CircularProgress } from "@mui/material";
 
 import { TaskData } from "../../../types/interfaces.ts";
 import { taskRepository } from "../../../repositories/taskRepository.ts"; // タスクリポジトリをインポート
 
-// ★追加: DynamicList コンポーネントをインポート
 import DynamicList from "../../../components/DynamicList.tsx";
-// ★追加: TaskData のフィールド定義をインポート
 import { taskFormFields } from "./TaskFormPage.tsx"; // TaskFormPage で定義したものを共有
 
 interface TaskListPageProps {}

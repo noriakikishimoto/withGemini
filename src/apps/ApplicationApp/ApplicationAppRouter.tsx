@@ -1,19 +1,12 @@
-// src/apps/ApplicationApp/ApplicationAppRouter.tsx
-
 import React, { FC, useState, useEffect } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 
-// 関連するコンポーネントとリポジトリを新しいパスからインポート
 import ApplicationForm from "./components/ApplicationForm.tsx";
 import ApplicationList from "./components/ApplicationList.tsx";
 import ApplicationDetailPage from "./components/ApplicationDetailPage.tsx"; // components/ApplicationDetailPage.tsx から移動
 
-import { applicationRepository } from "../../repositories/applicationRepository"; // リポジトリは共通パスから
 import { ApplicationData } from "../../types/interfaces"; // 型も共通パスから
 import { useApplications } from "../../hooks/useApplications"; // useApplications フックも共通パスから
-
-// ApplicationAppRouter は Layout で囲まれるため、Layout は不要
-// <Layout> は App.tsx が担当します
 
 const ApplicationAppRouter: FC = () => {
   // App.tsx から移動した申請管理に関する全てのステートとロジック
@@ -42,7 +35,7 @@ const ApplicationAppRouter: FC = () => {
         await addApplication(formData);
         alert("申請が保存されました！");
       }
-      navigate("list"); // ★修正: 相対パスに変更 /applications/list
+      navigate("/applications/list");
     } catch (err) {
       alert("エラーが発生しました: " + (err as Error).message);
     }
@@ -53,7 +46,7 @@ const ApplicationAppRouter: FC = () => {
       await deleteApplication(id);
       if (editingApplicationId === id) {
         setEditingApplicationId(null);
-        navigate("new"); // ★修正: 相対パスに変更 /applications/new
+        navigate("/applications/new");
       }
       alert("申請が削除されました。");
     } catch (err) {
@@ -63,12 +56,12 @@ const ApplicationAppRouter: FC = () => {
 
   const handleEditApplication = (id: string) => {
     setEditingApplicationId(id);
-    navigate("new"); // ★修正: 相対パスに変更 /applications/new
+    navigate("/applications/new");
   };
 
   const handleCancelEdit = () => {
     setEditingApplicationId(null);
-    navigate("list"); // ★修正: 相対パスに変更 /applications/list
+    navigate("/applications/list");
   };
 
   // ローディング中とエラー表示（Layout は App.tsx が提供）

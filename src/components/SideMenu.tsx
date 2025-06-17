@@ -1,94 +1,143 @@
-// src/components/SideMenu.tsx
-
-import React, { FC, useState, useEffect } from "react"; // ★useState を追加
+import React, { FC, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import styles from "./Layout.module.css";
+import {
+  List,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
+  Collapse,
+  Divider,
+  Toolbar,
+  IconButton,
+  Box,
+} from "@mui/material"; // MUIコンポーネント
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"; // 左矢印アイコン
+// アイコン
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import DescriptionIcon from "@mui/icons-material/Description";
+import TableViewIcon from "@mui/icons-material/TableView";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import LayersIcon from "@mui/icons-material/Layers";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
-interface SideMenuProps {}
+interface SideMenuProps {
+  onDrawerClose: () => void; // Drawerを閉じるためのコールバック
+}
 
-const SideMenu: FC<SideMenuProps> = () => {
+// メニュー項目の型定義 (Layout.tsxから移動)
+interface MenuItem {
+  text: string;
+  path?: string;
+  icon?: React.ReactElement;
+  children?: MenuItem[];
+}
+
+// メニュー項目を配列で定義 (Layout.tsxから移動)
+const menuItems: MenuItem[] = [
+  { text: "ホーム", path: "/", icon: <DashboardIcon /> },
+  {
+    text: "申請管理",
+    path: "/applications",
+    icon: <DescriptionIcon />,
+    children: [
+      { text: "申請リスト", path: "/applications/list" },
+      { text: "新規申請", path: "/applications/new" },
+    ],
+  },
+  {
+    text: "タスク管理",
+    path: "/generic-db/tasks",
+    icon: <TableViewIcon />,
+    children: [
+      { text: "タスクリスト", path: "/generic-db/tasks/list" },
+      { text: "新規タスク", path: "/generic-db/tasks/new" },
+    ],
+  },
+  {
+    text: "レポート",
+    path: "/reports",
+    icon: <BarChartIcon />,
+    children: [
+      { text: "売上", path: "/reports/sales" },
+      { text: "トラフィック", path: "/reports/traffic" },
+    ],
+  },
+  { text: "インテグレーション", path: "/integrations", icon: <LayersIcon /> },
+];
+
+const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
   const location = useLocation();
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
 
-  const [isApplicationMenuOpen, setIsApplicationMenuOpen] = useState(true); // デフォルトで開いておく
-  const [isTaskMenuOpen, setIsTaskMenuOpen] = useState(true); // デフォルトで開いておく
+  // サブメニューの開閉ハンドラ
+  const handleSubMenuClick = (itemPath: string) => {
+    setOpenSubMenus((prev) => ({ ...prev, [itemPath]: !prev[itemPath] }));
+  };
 
-  const isApplicationPath = location.pathname.startsWith("/applications/");
-  const isTaskPath = location.pathname.startsWith("/generic-db/tasks/");
-
+  // ドロワーを開いたとき、現在のパスに合わせてサブメニューを自動開閉
   useEffect(() => {
-    setIsApplicationMenuOpen(isApplicationPath);
-    setIsTaskMenuOpen(isTaskPath);
-  }, [location.pathname, isApplicationPath, isTaskPath]); // location.pathname が変わるたびに実行
-
-  // ★追加: クリックでメニュー開閉をトグルするハンドラ
-  // const toggleApplicationMenu = () => setIsApplicationMenuOpen((prev) => !prev);
-  // const toggleTaskMenu = () => setIsTaskMenuOpen((prev) => !prev);
+    menuItems.forEach((item) => {
+      if (item.path && location.pathname.startsWith(item.path)) {
+        setOpenSubMenus((prev) => ({ ...prev, [item.path || item.text]: true }));
+      }
+    });
+  }, [location.pathname]); // location.pathname が変わるたびに実行
 
   return (
-    <nav className="{styles.sideMenu}">
-      {/* 申請管理メニュー */}
-      {/* ★修正: isApplicationMenuOpen の条件の中に h3 と ul の両方を入れる */}
-      {isApplicationMenuOpen && (
-        <>
-          {/* Fragment を使って複数の要素をまとめる */}
-          <h3 className={styles.sideMenuTitle}>
-            {" "}
-            {/* onClick は削除 */}
-            申請管理
-            {/* 開閉を示すアイコンも不要 */}
-          </h3>
-          <ul className={styles.sideMenuList}>
-            <li className={styles.sideMenuItem}>
-              <Link
-                to="/applications/list"
-                className={`${styles.sideMenuLink} ${location.pathname === "/list" || location.pathname.startsWith("/applications/") ? styles.activeLink : ""}`}
+    <Box>
+      <Toolbar sx={{ justifyContent: "flex-end", minHeight: "64px" }}>
+        <IconButton onClick={onDrawerClose}>
+          <ChevronLeftIcon />
+        </IconButton>
+      </Toolbar>
+      <Divider />{" "}
+      <List>
+        {menuItems.map((item) => (
+          <React.Fragment key={item.text}>
+            {item.children ? (
+              <>
+                <ListItemButton
+                  onClick={() => handleSubMenuClick(item.path || item.text)}
+                  selected={location.pathname.startsWith(item.path || "")}
+                >
+                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                  <ListItemText primary={item.text} />
+                  {openSubMenus[item.path || item.text] ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={openSubMenus[item.path || item.text]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.children.map((child) => (
+                      <ListItemButton
+                        key={child.text}
+                        component={Link}
+                        to={child.path || ""}
+                        selected={location.pathname === child.path}
+                        sx={{ pl: 4 }}
+                        onClick={onDrawerClose} // サブメニュー項目クリックでドロワーを閉じる
+                      >
+                        {child.icon && <ListItemIcon>{child.icon}</ListItemIcon>}
+                        <ListItemText primary={child.text} />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </>
+            ) : (
+              <ListItemButton
+                component={Link}
+                to={item.path || ""}
+                selected={location.pathname === item.path}
+                onClick={onDrawerClose} // ルートメニュー項目クリックでドロワーを閉じる
               >
-                申請リスト
-              </Link>
-            </li>
-            <li className={styles.sideMenuItem}>
-              <Link
-                to="/applications/new"
-                className={`${styles.sideMenuLink} ${location.pathname === "/new" ? styles.activeLink : ""}`}
-              >
-                新規申請
-              </Link>
-            </li>
-          </ul>
-        </>
-      )}
-
-      {/* タスク管理メニュー */}
-      {/* ★修正: isTaskMenuOpen の条件の中に h3 と ul の両方を入れる */}
-      {isTaskMenuOpen && (
-        <>
-          {/* Fragment を使って複数の要素をまとめる */}
-          <h3 className={styles.sideMenuTitle} style={{ marginTop: "20px" }}>
-            {/* onClick は削除 */}
-            タスク管理
-            {/* 開閉を示すアイコンも不要 */}
-          </h3>
-          <ul className={styles.sideMenuList}>
-            <li className={styles.sideMenuItem}>
-              <Link
-                to="/generic-db/tasks/list"
-                className={`${styles.sideMenuLink} ${location.pathname === "/tasks/list" ? styles.activeLink : ""}`}
-              >
-                タスクリスト
-              </Link>
-            </li>
-            <li className={styles.sideMenuItem}>
-              <Link
-                to="/generic-db/tasks/new"
-                className={`${styles.sideMenuLink} ${location.pathname === "/tasks/new" ? styles.activeLink : ""}`}
-              >
-                新規タスク
-              </Link>
-            </li>
-          </ul>
-        </>
-      )}
-    </nav>
+                {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            )}
+          </React.Fragment>
+        ))}
+      </List>
+    </Box>
   );
 };
 

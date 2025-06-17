@@ -1,30 +1,40 @@
 import React, { FC } from "react";
 import { Link } from "react-router-dom";
-import styles from "./Layout.module.css"; // レイアウト共通のスタイルをインポート
-import "../App.css"; // グローバルなボタンクラスのためにApp.cssをインポート
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { Box, Typography, Button, IconButton, Toolbar } from "@mui/material"; // MUIコンポーネントをインポート
+import MenuIcon from "@mui/icons-material/Menu"; // メニューアイコン
 
-interface TopHeaderProps {}
+interface TopHeaderProps {
+  onMenuOpen: () => void; // Drawerを開くためのコールバック
+}
 
-const TopHeader: FC<TopHeaderProps> = () => {
+const TopHeader: FC<TopHeaderProps> = ({ onMenuOpen }) => {
   return (
-    <header className={styles.header}>
-      <h1 className={styles.headerTitle}>My Application (POC)</h1>
-      <nav className={styles.topNavigation}>
-        <Link to="/" className="btn btn-primary">
+    <Toolbar>
+      <IconButton
+        color="inherit"
+        aria-label="open drawer"
+        onClick={onMenuOpen} // ★Drawerを開くハンドラをPropsとして受け取る
+        edge="start"
+        // sx={{ mr: 2, ...(open && { display: 'none' }) }} // open状態はLayout側で管理するため削除
+      >
+        <MenuIcon />
+      </IconButton>
+      <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+        My Application (POC)
+      </Typography>
+      {/* グローバルメニュー (右寄せ) */}
+      <Box sx={{ display: { xs: "none", sm: "block" } }}>
+        <Button component={Link} to="/" sx={{ color: "white", mr: 1 }}>
           ホーム
-        </Link>{" "}
-        {/* / にリダイレクトを設定 */}
-        <Link to="/applications/list" className="btn btn-secondary" style={{ marginLeft: "10px" }}>
+        </Button>
+        <Button component={Link} to="/applications/list" sx={{ color: "white", mr: 1 }}>
           申請管理
-        </Link>{" "}
-        {/* ★追加: タスク管理メニュー */}
-        <Link to="/generic-db/tasks/list" className="btn btn-secondary" style={{ marginLeft: "10px" }}>
+        </Button>
+        <Button component={Link} to="/generic-db/tasks/list" sx={{ color: "white" }}>
           タスク管理
-        </Link>
-        {/* <Link to="/settings" className="btn btn-secondary" style={{ marginLeft: '10px' }}>設定</Link> */}
-      </nav>
-    </header>
+        </Button>
+      </Box>
+    </Toolbar>
   );
 };
 
