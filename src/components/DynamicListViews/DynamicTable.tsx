@@ -11,9 +11,11 @@ import {
   Paper,
   Button,
   Typography,
+  IconButton,
   Box,
 } from "@mui/material";
-
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 // 共通の型定義をインポート
 import { FormField, Identifiable } from "../../types/interfaces";
 
@@ -88,18 +90,17 @@ function DynamicTable<T extends Identifiable & object>({
                 </TableCell>
               ))}
               <TableCell align="right">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="warning"
-                  onClick={() => onEdit(item.id)}
-                  sx={{ mr: 1 }}
+                <IconButton aria-label="編集" color="warning" onClick={() => onEdit(item.id)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  aria-label="削除"
+                  color="error"
+                  onClick={() => onDelete(item.id)}
+                  sx={{ ml: 1 }}
                 >
-                  編集
-                </Button>
-                <Button size="small" variant="outlined" color="error" onClick={() => onDelete(item.id)}>
-                  削除
-                </Button>
+                  <DeleteIcon />
+                </IconButton>
               </TableCell>
             </TableRow>
           ))}

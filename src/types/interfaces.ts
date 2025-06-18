@@ -1,3 +1,5 @@
+import { Component } from "react";
+
 // ★追加: IDを持つエンティティの基本インターフェース
 export interface Identifiable {
   id: string;
@@ -5,12 +7,22 @@ export interface Identifiable {
 
 // ★追加: 汎用的なCRUD操作のインターフェース
 // <T extends Identifiable> は、Tが必ずidプロパティを持つことを保証する
+/*
 export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto> {
   getAll(): Promise<T[]>;
   getById(id: string): Promise<T | null>;
   create(data: CreateDto): Promise<T>;
   update(id: string, data: UpdateDto): Promise<T>;
   delete(id: string): Promise<void>;
+}
+  */
+export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto, AppIdType = void> {
+  // ★AppIdType を追加
+  getAll(appId?: AppIdType): Promise<T[]>; // ★appId をオプションで受け取るように
+  getById(id: string, appId?: AppIdType): Promise<T | null>; // ★appId をオプションで受け取るように
+  create(data: CreateDto, appId?: AppIdType): Promise<T>; // ★appId をオプションで受け取るように
+  update(id: string, data: UpdateDto, appId?: AppIdType): Promise<T>; // ★appId をオプションで受け取るように
+  delete(id: string, appId?: AppIdType): Promise<void>; // ★appId をオプションで受け取るように
 }
 
 // 既存の ApplicationData はそのまま使う
@@ -54,8 +66,9 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   required?: boolean;
   multiline?: boolean;
   rows?: number;
-  options?: FormFieldSelectOption[];
+  options?: FormFieldSelectOption[] | string;
   component: C;
+  initialValue?: any;
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {
@@ -66,4 +79,16 @@ export interface DynamicListProps<T extends Identifiable & object> {
   onDelete: (id: string) => void; // 削除ボタンが押されたときに呼ばれるコールバック
   itemBasePath: string; // 詳細ページへのリンクのベースパス (例: '/generic-db/tasks')
   listTitle: string; // リストのタイトル (例: '既存のタスク')
+}
+
+//　アプリケーションスキーマのデータモデル
+// これが「ユーザーが作成するアプリの定義」そのもの
+export interface AppSchema extends Identifiable {
+  name: string; // アプリケーションの名前（例: 顧客管理、商品管理）
+  description?: string; // アプリケーションの説明（オプション）
+  fields: Omit<FormField<any, any>, "component">[];
+}
+
+export interface GenericRecord extends Identifiable {
+  [key: string]: any; // フィールド名 (string) に対応する値 (any)
 }

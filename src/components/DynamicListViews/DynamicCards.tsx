@@ -1,7 +1,8 @@
 import React, { FC } from "react";
 import { Link } from "react-router-dom";
-import { Box, Typography, Button, Card, CardContent, CardActions } from "@mui/material";
-
+import { Box, Typography, Button, Card, CardContent, CardActions, IconButton } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 // 共通の型定義をインポート
 import { FormField, Identifiable } from "../../types/interfaces";
 
@@ -47,18 +48,21 @@ function DynamicCards<T extends Identifiable & object>({
             </Link>
           </CardContent>
           <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
-            <Button size="small" variant="outlined" color="warning" onClick={() => onEdit(item.id)}>
-              編集
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
+            <IconButton
+              aria-label="編集" // アクセシビリティのためにaria-labelを追加
+              color="warning" // warning カラー
+              onClick={() => onEdit(item.id)}
+            >
+              <EditIcon /> {/* 編集アイコン */}
+            </IconButton>
+            <IconButton
+              aria-label="削除" // アクセシビリティのためにaria-labelを追加
+              color="error" // error カラー
               onClick={() => onDelete(item.id)}
               sx={{ ml: 1 }}
             >
-              削除
-            </Button>
+              <DeleteIcon /> {/* 削除アイコン */}
+            </IconButton>
           </CardActions>
         </Card>
       ))}

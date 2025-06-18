@@ -20,6 +20,9 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/Layers";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import AppsIcon from "@mui/icons-material/Apps";
+
+import { AppSchema } from "../types/interfaces";
 
 interface SideMenuProps {
   onDrawerClose: () => void; // Drawerを閉じるためのコールバック
@@ -54,6 +57,16 @@ const menuItems: MenuItem[] = [
       { text: "新規タスク", path: "/generic-db/tasks/new" },
     ],
   },
+  // ★追加: アプリスキーマ管理のメニュー項目
+  {
+    text: "アプリ管理",
+    path: "/generic-db/app-schemas",
+    icon: <AppsIcon />,
+    children: [
+      { text: "アプリ一覧", path: "/generic-db/app-schemas/list" },
+      { text: "新規アプリ作成", path: "/generic-db/app-schemas/new" },
+    ],
+  },
   {
     text: "レポート",
     path: "/reports",
@@ -74,6 +87,8 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
   const handleSubMenuClick = (itemPath: string) => {
     setOpenSubMenus((prev) => ({ ...prev, [itemPath]: !prev[itemPath] }));
   };
+
+  const [userApps, setUserApps] = useState<AppSchema[]>([]);
 
   // ドロワーを開いたとき、現在のパスに合わせてサブメニューを自動開閉
   useEffect(() => {
@@ -136,6 +151,38 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
             )}
           </React.Fragment>
         ))}
+        {/* ★追加: ユーザーが作成したアプリを動的にメニューに追加 */}
+        {userApps.length > 0 && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <ListItemButton
+              onClick={() => handleSubMenuClick("/generic-db/data")} // 適当なキー
+              selected={location.pathname.startsWith("/generic-db/data")}
+            >
+              <ListItemIcon>
+                <AppsIcon />
+              </ListItemIcon>
+              <ListItemText primary="マイアプリ" />
+              {openSubMenus["/generic-db/data"] ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+            <Collapse in={openSubMenus["/generic-db/data"]} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {userApps.map((app) => (
+                  <ListItemButton
+                    key={app.id}
+                    component={Link}
+                    to={`/generic-db/data/${app.id}/list`} // 各アプリのデータ一覧へのリンク
+                    selected={location.pathname.startsWith(`/generic-db/data/${app.id}`)}
+                    sx={{ pl: 4 }}
+                    onClick={onDrawerClose}
+                  >
+                    <ListItemText primary={app.name} />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Collapse>
+          </>
+        )}
       </List>
     </Box>
   );

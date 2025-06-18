@@ -100,5 +100,5 @@ const apiRepository: BaseRepository<
 // 使用するリポジトリの選択
 // ここを変更するだけで、永続化層を切り替えられる！
 // ----------------------------------------------------
-export const applicationRepository: ApplicationRepository = localStorageRepository;
+export const applicationRepository = localStorageRepository;
 // export const applicationRepository: ApplicationRepository = apiRepository; // API連携時に切り替える

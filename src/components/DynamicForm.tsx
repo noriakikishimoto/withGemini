@@ -15,6 +15,8 @@ interface DynamicFormProps<T extends object> {
   submitButtonText?: string;
   cancelButtonText?: string;
   formTitle?: string;
+  // ★追加: フィールドの値が変更されたときに親に通知するコールバック
+  onFieldChange?: (fieldName: keyof T, value: any) => void;
 }
 
 // DynamicForm コンポーネントの定義
@@ -27,6 +29,7 @@ function DynamicForm<T extends object>({
   submitButtonText = "保存",
   cancelButtonText = "キャンセル",
   formTitle = "フォーム",
+  onFieldChange,
 }: DynamicFormProps<T>) {
   // フォームデータを管理するステート
   // initialDataがない場合は、フィールド定義から初期値を生成
@@ -53,7 +56,7 @@ function DynamicForm<T extends object>({
       });
       setFormData(initial as T);
     }
-  }, [initialData, fields]); // fields も依存配列に入れることで、フィールド定義が変わった場合も対応
+  }, [initialData]); // fields も依存配列に入れることで、フィールド定義が変わった場合も対応
 
   // 入力フィールドの値が変更されたときのハンドラ
   const handleChange = (name: keyof T, value: any) => {
@@ -61,6 +64,14 @@ function DynamicForm<T extends object>({
       ...prevData,
       [name]: value, // 動的なプロパティ名で値を更新
     }));
+    console.log("通過");
+    console.log(("name:" + name.toString + "value:" + value) as string);
+    // ★追加: onFieldChange コールバックがあれば呼び出す
+    if (onFieldChange) {
+      console.log("onchange");
+      console.log(("name:" + name.toString + "value:" + value) as string);
+      onFieldChange(name, value);
+    }
   };
 
   // フォーム送信時のハンドラ
@@ -83,9 +94,13 @@ function DynamicForm<T extends object>({
               <MuiTextFieldWrapper
                 label={field.label}
                 name={field.name as string}
-                value={(formData[field.name] as string | number).toString()} // TextFieldは文字列を受け取る
+                value={
+                  formData[field.name]
+                    ? (formData[field.name] as string | number).toString()
+                    : field.initialValue
+                }
                 onChange={(val) => handleChange(field.name, field.type === "number" ? Number(val) : val)}
-                multiline={field.multiline}
+                multiline={field.multiline || field.type === "textarea"}
                 rows={field.rows}
                 required={field.required}
                 type={field.type}
@@ -94,14 +109,16 @@ function DynamicForm<T extends object>({
               <MuiCheckboxWrapper
                 label={field.label}
                 name={field.name as string}
-                checked={formData[field.name] as boolean}
+                checked={formData[field.name] ? (formData[field.name] as boolean) : field.initialValue}
                 onChange={(val) => handleChange(field.name, val)}
               />
             ) : field.type === "date" ? (
               <MuiDatePickerWrapper
                 label={field.label}
                 name={field.name as string}
-                value={formData[field.name] as string | null}
+                value={
+                  formData[field.name] ? (formData[field.name] as string | null) : field.initialValue
+                }
                 onChange={(val) => handleChange(field.name, val)}
                 required={field.required}
               />
@@ -109,9 +126,15 @@ function DynamicForm<T extends object>({
               <MuiSelectFieldWrapper
                 label={field.label}
                 name={field.name as string}
-                value={formData[field.name] as string}
+                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
                 onChange={(val) => handleChange(field.name, val)}
-                options={field.options || []}
+                options={
+                  typeof field.options === "string" && field.options // 文字列の場合
+                    ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
+                    : Array.isArray(field.options)
+                      ? field.options
+                      : [] // 配列の場合、またはなければ空配列
+                }
                 required={field.required}
               />
             ) : null}
