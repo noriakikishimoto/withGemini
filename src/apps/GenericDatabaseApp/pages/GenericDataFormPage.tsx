@@ -181,6 +181,10 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         // component プロパティを付与
         component: getFieldComponentByType(field.type),
         initialValue: initialFieldValue, // 変換後のフィールド定義にも initialValue をセット
+
+        lookupAppId: field.lookupAppId, // 参照元アプリのID
+        lookupKeyField: field.lookupKeyField, // 参照元アプリのキーとなるフィールド名
+        lookupDisplayFields: field.lookupDisplayFields, // 参照元アプリから表示/コピーするフィールド名リスト
       };
     });
 

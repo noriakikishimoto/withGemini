@@ -35,6 +35,7 @@ import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrappe
 import MuiDatePickerWrapper from "../../../components/FormFields/MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx";
 import MuiRadioGroupWrapper from "../../../components/FormFields/MuiRadioGroupWrapper.tsx";
+import MuiLookupFieldWrapper from "../../../components/FormFields/MuiLookupFieldWrapper.tsx";
 
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 
@@ -89,6 +90,7 @@ const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldC
       { value: "select", label: "選択リスト" },
       { value: "radio", label: "ラジオボタン" },
       { value: "email", label: "メールアドレス" },
+      { value: "lookup", label: "ルックアップ" },
     ] as FormFieldSelectOption[],
     component: MuiSelectFieldWrapper,
   },
@@ -240,6 +242,16 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
         processedFieldData.options = [];
       }
     }
+    // ★追加: lookupAppId, lookupKeyField, lookupDisplayFields も保存
+    if (processedFieldData.type === "lookup") {
+      // lookupAppId と lookupKeyField は文字列なのでそのまま
+      // lookupDisplayFields は string[] なのでそのまま
+      // ただし、タイプが lookup 以外の場合には削除する
+    } else {
+      delete processedFieldData.lookupAppId;
+      delete processedFieldData.lookupKeyField;
+      delete processedFieldData.lookupDisplayFields;
+    }
     // その他のタイプの場合、options プロパティは存在しないか、適切に処理されるため、変更なし
     // ★追加: 保存しようとしている fieldToSave の中身を確認
     console.log("DEBUG: handleFieldModalSubmit - Prepared fieldToSave:", processedFieldData);
@@ -303,10 +315,36 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
           initialValue: false,
         });
         break;
+      case "lookup":
+        fields.push({
+          name: "lookupAppId",
+          label: "参照元アプリID",
+          type: "text", // 将来的にアプリ選択ドロップダウンに
+          component: MuiTextFieldWrapper,
+          required: true,
+          initialValue: "",
+        });
+        fields.push({
+          name: "lookupKeyField",
+          label: "キーフィールド名",
+          type: "text", // 将来的にフィールド選択ドロップダウンに
+          component: MuiTextFieldWrapper,
+          required: true,
+          initialValue: "",
+        });
+        fields.push({
+          name: "lookupDisplayFields",
+          label: "表示フィールド (カンマ区切り)",
+          type: "text", // 複数フィールドをカンマ区切りで入力
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        break;
       // 'number', 'date', 'checkbox' の場合は追加フィールドなし
       default:
         break;
     }
+
     return fields;
   }, [currentFieldTypeInModal]);
 

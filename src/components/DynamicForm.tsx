@@ -7,6 +7,7 @@ import MuiDatePickerWrapper from "./FormFields/MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "./FormFields/MuiSelectFieldWrapper.tsx";
 import { FormField, CommonFormFieldComponent } from "../types/interfaces";
 import MuiRadioGroupWrapper from "./FormFields/MuiRadioGroupWrapper.tsx";
+import MuiLookupFieldWrapper from "./FormFields/MuiLookupFieldWrapper.tsx";
 
 interface DynamicFormProps<T extends object> {
   fields: FormField<T, CommonFormFieldComponent<any>>[];
@@ -155,6 +156,17 @@ function DynamicForm<T extends object>({
                       : [] // 配列の場合、またはなければ空配列
                 }
                 required={field.required}
+              />
+            ) : field.type === "lookup" ? ( // ★追加: lookup タイプ
+              <MuiLookupFieldWrapper
+                label={field.label}
+                name={field.name as string}
+                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
+                onChange={(val, selectedRecord) => handleChange(field.name, val)} // selectedRecord は一旦無視
+                required={field.required}
+                lookupAppId={field.lookupAppId || ""} // ★ルックアップ設定を渡す
+                lookupKeyField={field.lookupKeyField || ""}
+                lookupDisplayFields={field.lookupDisplayFields || []}
               />
             ) : null}
           </Box>

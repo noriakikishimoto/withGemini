@@ -48,7 +48,8 @@ export type FormFieldType =
   | "checkbox"
   | "select"
   | "radio"
-  | "email";
+  | "email"
+  | "lookup";
 
 // ★追加: セレクトボックスの選択肢の型
 export interface FormFieldSelectOption {
@@ -77,6 +78,11 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   options?: FormFieldSelectOption[] | string;
   component: C;
   initialValue?: any;
+
+  // ★追加: ルックアップフィールドのメタデータ
+  lookupAppId?: string; // 参照元アプリのID
+  lookupKeyField?: string; // 参照元アプリのキーとなるフィールド名
+  lookupDisplayFields?: string[]; // 参照元アプリから表示/コピーするフィールド名
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {
