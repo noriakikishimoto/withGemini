@@ -82,7 +82,8 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   // ★追加: ルックアップフィールドのメタデータ
   lookupAppId?: string; // 参照元アプリのID
   lookupKeyField?: string; // 参照元アプリのキーとなるフィールド名
-  lookupDisplayFields?: string[]; // 参照元アプリから表示/コピーするフィールド名
+  //lookupDisplayFields?: string[]; // 参照元アプリから表示/コピーするフィールド名
+  lookupDisplayFields?: string;
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {

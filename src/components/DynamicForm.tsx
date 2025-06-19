@@ -1,13 +1,14 @@
-import React, { FC, useState, useEffect, FormEvent } from "react";
 import { Box, Button, Typography } from "@mui/material"; // MUIコンポーネントをインポート
+import { FormEvent, useEffect, useState } from "react";
 
-import MuiTextFieldWrapper from "./FormFields/MuiTextFieldWrapper.tsx";
+import { CommonFormFieldComponent, FormField } from "../types/interfaces";
 import MuiCheckboxWrapper from "./FormFields/MuiCheckboxWrapper.tsx";
 import MuiDatePickerWrapper from "./FormFields/MuiDatePickerWrapper.tsx";
-import MuiSelectFieldWrapper from "./FormFields/MuiSelectFieldWrapper.tsx";
-import { FormField, CommonFormFieldComponent } from "../types/interfaces";
-import MuiRadioGroupWrapper from "./FormFields/MuiRadioGroupWrapper.tsx";
 import MuiLookupFieldWrapper from "./FormFields/MuiLookupFieldWrapper.tsx";
+import MuiRadioGroupWrapper from "./FormFields/MuiRadioGroupWrapper.tsx";
+import MuiSelectFieldWrapper from "./FormFields/MuiSelectFieldWrapper.tsx";
+import MuiTextFieldWrapper from "./FormFields/MuiTextFieldWrapper.tsx";
+import FormFieldRenderer from "./FormFields/FormFieldRenderer.tsx";
 
 interface DynamicFormProps<T extends object> {
   fields: FormField<T, CommonFormFieldComponent<any>>[];
@@ -41,7 +42,10 @@ function DynamicForm<T extends object>({
     }
     const initial: { [key: string]: any } = {};
     fields.forEach((field) => {
-      initial[field.name as string] = field.component.getInitialValue();
+      //initial[field.name as string] = field.component.getInitialValue();
+      initial[field.name as string] = field.initialValue
+        ? field.initialValue
+        : field.component.getInitialValue();
     });
     return initial as T;
   });
@@ -88,88 +92,9 @@ function DynamicForm<T extends object>({
         {formTitle}
       </Typography>
       <form onSubmit={handleSubmit}>
+        {/* ★修正: fields.map の中身を FormFieldRenderer に置き換える */}
         {fields.map((field) => (
-          <Box key={field.name as string} sx={{ mb: 2 }}>
-            {" "}
-            {/* 各フィールドのコンテナ */}
-            {field.type === "text" ||
-            field.type === "textarea" ||
-            field.type === "number" ||
-            field.type === "email" ? (
-              <MuiTextFieldWrapper
-                label={field.label}
-                name={field.name as string}
-                value={
-                  formData[field.name]
-                    ? (formData[field.name] as string | number).toString()
-                    : field.initialValue
-                }
-                onChange={(val) => handleChange(field.name, field.type === "number" ? Number(val) : val)}
-                multiline={field.multiline || field.type === "textarea"}
-                rows={field.rows}
-                required={field.required}
-                type={field.type}
-              />
-            ) : field.type === "checkbox" ? (
-              <MuiCheckboxWrapper
-                label={field.label}
-                name={field.name as string}
-                checked={formData[field.name] ? (formData[field.name] as boolean) : field.initialValue}
-                onChange={(val) => handleChange(field.name, val)}
-              />
-            ) : field.type === "date" ? (
-              <MuiDatePickerWrapper
-                label={field.label}
-                name={field.name as string}
-                value={
-                  formData[field.name] ? (formData[field.name] as string | null) : field.initialValue
-                }
-                onChange={(val) => handleChange(field.name, val)}
-                required={field.required}
-              />
-            ) : field.type === "select" ? (
-              <MuiSelectFieldWrapper
-                label={field.label}
-                name={field.name as string}
-                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
-                onChange={(val) => handleChange(field.name, val)}
-                options={
-                  typeof field.options === "string" && field.options // 文字列の場合
-                    ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
-                    : Array.isArray(field.options)
-                      ? field.options
-                      : [] // 配列の場合、またはなければ空配列
-                }
-                required={field.required}
-              />
-            ) : field.type === "radio" ? ( // ★追加: radio タイプ
-              <MuiRadioGroupWrapper
-                label={field.label}
-                name={field.name as string}
-                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
-                onChange={(val) => handleChange(field.name, val)}
-                options={
-                  typeof field.options === "string" && field.options // 文字列の場合
-                    ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
-                    : Array.isArray(field.options)
-                      ? field.options
-                      : [] // 配列の場合、またはなければ空配列
-                }
-                required={field.required}
-              />
-            ) : field.type === "lookup" ? ( // ★追加: lookup タイプ
-              <MuiLookupFieldWrapper
-                label={field.label}
-                name={field.name as string}
-                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
-                onChange={(val, selectedRecord) => handleChange(field.name, val)} // selectedRecord は一旦無視
-                required={field.required}
-                lookupAppId={field.lookupAppId || ""} // ★ルックアップ設定を渡す
-                lookupKeyField={field.lookupKeyField || ""}
-                lookupDisplayFields={field.lookupDisplayFields || []}
-              />
-            ) : null}
-          </Box>
+          <FormFieldRenderer<T> field={field} formData={formData} handleChange={handleChange} />
         ))}
 
         <Box sx={{ mt: 3, mb: 2, textAlign: "center" }}>

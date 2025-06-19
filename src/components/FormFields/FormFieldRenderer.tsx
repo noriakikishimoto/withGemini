@@ -1,7 +1,6 @@
 import React, { FC } from "react";
-import { Box, Typography } from "@mui/material"; // レイアウト用のBoxコンポーネント
+import { Box, Typography } from "@mui/material";
 
-// 各汎用フォームパーツをインポート
 import MuiTextFieldWrapper from "./MuiTextFieldWrapper.tsx";
 import MuiCheckboxWrapper from "./MuiCheckboxWrapper.tsx";
 import MuiDatePickerWrapper from "./MuiDatePickerWrapper.tsx";
@@ -9,15 +8,13 @@ import MuiSelectFieldWrapper from "./MuiSelectFieldWrapper.tsx";
 
 // 共通の型定義をインポート
 import { FormField, CommonFormFieldComponent } from "../../types/interfaces";
+import MuiRadioGroupWrapper from "./MuiRadioGroupWrapper.tsx";
+import MuiLookupFieldWrapper from "./MuiLookupFieldWrapper.tsx";
 
-// FormFieldRenderer が受け取るPropsの型定義
 interface FormFieldRendererProps<T extends object> {
-  // field は単一の FormField オブジェクト
   field: FormField<T, CommonFormFieldComponent<any>>;
-  // formData は DynamicForm から渡されるフォームの全データ
   formData: Record<string, any>;
-  // handleChange は DynamicForm から渡される値変更ハンドラ
-  handleChange: (name: string, value: any) => void;
+  handleChange: (name: keyof T, value: any) => void;
 }
 
 // FormFieldRenderer コンポーネントの定義
@@ -53,15 +50,18 @@ function FormFieldRenderer<T extends object>({
     case "text":
     case "textarea":
     case "number":
+    case "email":
       return (
         <MuiTextFieldWrapper
           label={field.label}
           name={fieldNameAsString}
-          value={String(formData[fieldNameAsString] ?? "")} // nullish coalescing で安全なデフォルト
-          onChange={(val) =>
-            handleChange(fieldNameAsString, field.type === "number" ? Number(val) : val)
+          value={
+            formData[fieldNameAsString]
+              ? (formData[fieldNameAsString] as string | number).toString()
+              : field.initialValue
           }
-          multiline={field.multiline || field.type === "textarea"} // textarea タイプなら強制的に multiline
+          onChange={(val) => handleChange(field.name, field.type === "number" ? Number(val) : val)}
+          multiline={field.multiline || field.type === "textarea"}
           rows={field.rows}
           required={field.required}
           type={field.type}
@@ -72,9 +72,10 @@ function FormFieldRenderer<T extends object>({
         <MuiCheckboxWrapper
           label={field.label}
           name={fieldNameAsString}
-          checked={!!(formData[fieldNameAsString] ?? false)} // nullish coalescing で安全なデフォルト
-          onChange={(val) => handleChange(fieldNameAsString, val)}
-          required={field.required}
+          checked={
+            formData[fieldNameAsString] ? (formData[fieldNameAsString] as boolean) : field.initialValue
+          }
+          onChange={(val) => handleChange(field.name, val)}
         />
       );
     case "date":
@@ -82,8 +83,12 @@ function FormFieldRenderer<T extends object>({
         <MuiDatePickerWrapper
           label={field.label}
           name={fieldNameAsString}
-          value={(formData[fieldNameAsString] as string | null) ?? null} // nullish coalescing で安全なデフォルト
-          onChange={(val) => handleChange(fieldNameAsString, val)}
+          value={
+            formData[fieldNameAsString]
+              ? (formData[fieldNameAsString] as string | null)
+              : field.initialValue
+          }
+          onChange={(val) => handleChange(field.name, val)}
           required={field.required}
         />
       );
@@ -92,12 +97,55 @@ function FormFieldRenderer<T extends object>({
         <MuiSelectFieldWrapper
           label={field.label}
           name={fieldNameAsString}
-          value={String(formData[fieldNameAsString] ?? "")} // nullish coalescing で安全なデフォルト
-          onChange={(val) => handleChange(fieldNameAsString, val)}
-          options={parsedOptions} // パース済みの options を渡す
+          value={
+            formData[fieldNameAsString] ? (formData[fieldNameAsString] as string) : field.initialValue
+          }
+          onChange={(val) => handleChange(field.name, val)}
+          options={
+            typeof field.options === "string" && field.options // 文字列の場合
+              ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
+              : Array.isArray(field.options)
+                ? field.options
+                : [] // 配列の場合、またはなければ空配列
+          }
           required={field.required}
         />
       );
+    case "radio":
+      return (
+        <MuiRadioGroupWrapper
+          label={field.label}
+          name={fieldNameAsString}
+          value={
+            formData[fieldNameAsString] ? (formData[fieldNameAsString] as string) : field.initialValue
+          }
+          onChange={(val) => handleChange(field.name, val)}
+          options={
+            typeof field.options === "string" && field.options // 文字列の場合
+              ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
+              : Array.isArray(field.options)
+                ? field.options
+                : [] // 配列の場合、またはなければ空配列
+          }
+          required={field.required}
+        />
+      );
+    case "lookup":
+      return (
+        <MuiLookupFieldWrapper
+          label={field.label}
+          name={fieldNameAsString}
+          value={
+            formData[fieldNameAsString] ? (formData[fieldNameAsString] as string) : field.initialValue
+          }
+          onChange={(val, selectedRecord) => handleChange(field.name, val)} // selectedRecord は一旦無視
+          required={field.required}
+          lookupAppId={field.lookupAppId || ""} // ★ルックアップ設定を渡す
+          lookupKeyField={field.lookupKeyField || ""}
+          lookupDisplayFields={field.lookupDisplayFields || ""}
+        />
+      );
+
     default:
       // 未知のフィールドタイプの場合のフォールバック
       return (
