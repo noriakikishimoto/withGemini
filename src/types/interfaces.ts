@@ -40,7 +40,15 @@ export interface TaskData extends Identifiable {
   assignee: string; // 担当者（テキストまたは選択肢）
 }
 // ★追加: フォームフィールドのタイプを表すユニオン型
-export type FormFieldType = "text" | "textarea" | "number" | "date" | "checkbox" | "select";
+export type FormFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "date"
+  | "checkbox"
+  | "select"
+  | "radio"
+  | "email";
 
 // ★追加: セレクトボックスの選択肢の型
 export interface FormFieldSelectOption {

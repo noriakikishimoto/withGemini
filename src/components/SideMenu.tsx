@@ -38,7 +38,7 @@ interface MenuItem {
 
 // メニュー項目を配列で定義 (Layout.tsxから移動)
 const menuItems: MenuItem[] = [
-  { text: "ホーム", path: "/", icon: <DashboardIcon /> },
+  // { text: "ホーム", path: "/", icon: <DashboardIcon /> },
   {
     text: "申請管理",
     path: "/applications",
@@ -67,6 +67,7 @@ const menuItems: MenuItem[] = [
       { text: "新規アプリ作成", path: "/generic-db/app-schemas/new" },
     ],
   },
+  /*
   {
     text: "レポート",
     path: "/reports",
@@ -77,6 +78,7 @@ const menuItems: MenuItem[] = [
     ],
   },
   { text: "インテグレーション", path: "/integrations", icon: <LayersIcon /> },
+*/
 ];
 
 const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {

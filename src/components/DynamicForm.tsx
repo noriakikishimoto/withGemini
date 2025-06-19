@@ -6,6 +6,7 @@ import MuiCheckboxWrapper from "./FormFields/MuiCheckboxWrapper.tsx";
 import MuiDatePickerWrapper from "./FormFields/MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "./FormFields/MuiSelectFieldWrapper.tsx";
 import { FormField, CommonFormFieldComponent } from "../types/interfaces";
+import MuiRadioGroupWrapper from "./FormFields/MuiRadioGroupWrapper.tsx";
 
 interface DynamicFormProps<T extends object> {
   fields: FormField<T, CommonFormFieldComponent<any>>[];
@@ -90,7 +91,10 @@ function DynamicForm<T extends object>({
           <Box key={field.name as string} sx={{ mb: 2 }}>
             {" "}
             {/* 各フィールドのコンテナ */}
-            {field.type === "text" || field.type === "textarea" || field.type === "number" ? (
+            {field.type === "text" ||
+            field.type === "textarea" ||
+            field.type === "number" ||
+            field.type === "email" ? (
               <MuiTextFieldWrapper
                 label={field.label}
                 name={field.name as string}
@@ -124,6 +128,21 @@ function DynamicForm<T extends object>({
               />
             ) : field.type === "select" ? (
               <MuiSelectFieldWrapper
+                label={field.label}
+                name={field.name as string}
+                value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}
+                onChange={(val) => handleChange(field.name, val)}
+                options={
+                  typeof field.options === "string" && field.options // 文字列の場合
+                    ? field.options.split(",").map((s: string) => ({ value: s.trim(), label: s.trim() }))
+                    : Array.isArray(field.options)
+                      ? field.options
+                      : [] // 配列の場合、またはなければ空配列
+                }
+                required={field.required}
+              />
+            ) : field.type === "radio" ? ( // ★追加: radio タイプ
+              <MuiRadioGroupWrapper
                 label={field.label}
                 name={field.name as string}
                 value={formData[field.name] ? (formData[field.name] as string) : field.initialValue}

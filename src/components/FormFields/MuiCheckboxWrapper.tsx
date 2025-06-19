@@ -7,6 +7,7 @@ interface MuiCheckboxWrapperProps {
   name: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  required?: boolean;
 }
 
 const MuiCheckboxWrapper: CommonFormFieldComponent<MuiCheckboxWrapperProps> = ({
@@ -14,6 +15,7 @@ const MuiCheckboxWrapper: CommonFormFieldComponent<MuiCheckboxWrapperProps> = ({
   name,
   checked,
   onChange,
+  required = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.checked);
@@ -21,7 +23,9 @@ const MuiCheckboxWrapper: CommonFormFieldComponent<MuiCheckboxWrapperProps> = ({
 
   return (
     <FormControlLabel
-      control={<Checkbox id={name} name={name} checked={checked} onChange={handleChange} />}
+      control={
+        <Checkbox id={name} name={name} checked={checked} onChange={handleChange} required={required} />
+      }
       label={label}
       sx={{ mt: 1, mb: 1 }} // 上下マージン
     />

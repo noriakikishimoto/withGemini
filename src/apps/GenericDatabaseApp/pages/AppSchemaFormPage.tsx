@@ -34,6 +34,7 @@ import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrap
 import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrapper.tsx";
 import MuiDatePickerWrapper from "../../../components/FormFields/MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx";
+import MuiRadioGroupWrapper from "../../../components/FormFields/MuiRadioGroupWrapper.tsx";
 
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 
@@ -86,6 +87,8 @@ const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldC
       { value: "date", label: "日付" },
       { value: "checkbox", label: "チェックボックス" },
       { value: "select", label: "選択リスト" },
+      { value: "radio", label: "ラジオボタン" },
+      { value: "email", label: "メールアドレス" },
     ] as FormFieldSelectOption[],
     component: MuiSelectFieldWrapper,
   },
@@ -265,6 +268,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
     const fields: FormField<any, CommonFormFieldComponent<any>>[] = [...baseFieldDefinitionFields]; // ★修正
     switch (currentFieldTypeInModal) {
       case "select":
+      case "radio":
         fields.push({
           name: "options",
           label: "選択肢 (カンマ区切り)",

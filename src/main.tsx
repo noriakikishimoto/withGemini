@@ -9,7 +9,130 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
 // ★追加: カスタムテーマの定義 (デフォルトテーマでも可)
-const defaultTheme = createTheme();
+//const theme = createTheme();
+const theme = createTheme({
+  // パレットの色を微調整することも可能
+  // palette: {
+  //   primary: {
+  //     main: '#1976d2', // デフォルトの青色
+  //   },
+  //   secondary: {
+  //     main: '#dc004e', // デフォルトのピンク
+  //   },
+  // },
+
+  // ★重要: スペーシングの調整
+  // デフォルト 8px。これを小さくすると全体のマージン/パディングが小さくなる
+  spacing: 4, // デフォルト8pxを4px単位にする (4px, 8px, 12px, ...)
+  // もし Mui がデフォルトで 8px 単位で p={1} などと使っている場合、
+  // p={1} は 4px になり、全体的に詰まる。
+
+  // ★重要: タイポグラフィ（文字サイズ）の調整
+  typography: {
+    // 全体の基本フォントサイズを小さくする
+    fontSize: 10, // デフォルト16px。これを小さくすると全体的に文字が小さくなる
+    htmlFontSize: 12, // 1rem が 12px になるように (デフォルト16px)
+
+    // 各 variant の文字サイズを調整
+    h1: { fontSize: "2.5rem" }, // デフォルトより少し小さめ
+    h2: { fontSize: "2rem" },
+    h3: { fontSize: "1.75rem" },
+    h4: { fontSize: "1.5rem" },
+    h5: { fontSize: "1.25rem" }, // ListTitle (既存のタスク) など
+    h6: { fontSize: "1rem" }, // CardTitle (新しいタスク) など
+    subtitle1: { fontSize: "0.9rem" },
+    subtitle2: { fontSize: "0.8rem" },
+    body1: { fontSize: "0.85rem" }, // デフォルトの本文
+    body2: { fontSize: "0.75rem" }, // 小さいテキスト
+    button: { fontSize: "0.6rem" }, // ボタンの文字
+    caption: { fontSize: "0.65rem" },
+    overline: { fontSize: "0.6rem" },
+  },
+
+  // ★重要: コンポーネントのデフォルトスタイルを上書き
+  components: {
+    // ボタンのデフォルトサイズを小さくする
+    MuiButton: {
+      defaultProps: {
+        size: "small", // 全てのButtonのデフォルトサイズを 'small' に
+      },
+      styleOverrides: {
+        root: {
+          padding: "4px 8px", // デフォルトのpaddingをさらに小さく
+        },
+      },
+    },
+    // TextField のデフォルトサイズを小さくする
+    MuiTextField: {
+      defaultProps: {
+        size: "small", // 全てのTextFieldのデフォルトサイズを 'small' に
+      },
+      styleOverrides: {
+        root: {
+          marginTop: "8px", // マージンを小さく (normal は 16px)
+          marginBottom: "8px",
+        },
+        input: {
+          padding: "8.5px 14px", // input の内側のパディングを調整して高さを抑える
+        },
+      },
+    },
+    // テーブルのセルを詰める
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          padding: "4px 8px", // デフォルトのpaddingを小さく
+        },
+        sizeSmall: {
+          // size="small" の場合のpaddingも調整
+          padding: "2px 4px",
+        },
+      },
+    },
+    // ListItem を詰める (サイドメニューなど)
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          paddingTop: "4px",
+          paddingBottom: "4px",
+        },
+      },
+    },
+    // Card のパディングを詰める (DynamicCards)
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: "12px", // デフォルトの 16px から小さく
+          "&:last-child": {
+            // MUI CardContent の最後の要素の特殊なpaddingを調整
+            paddingBottom: "12px",
+          },
+        },
+      },
+    },
+    // DialogContent (モーダルのコンテンツ) のパディングを詰める
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: "16px 24px", // デフォルト24pxより少し小さく
+        },
+      },
+    },
+    // AppBar Toolbar の高さ調整 (Appbarの高さを抑える)
+    MuiToolbar: {
+      styleOverrides: {
+        dense: {
+          // dense variant の Toolbar の高さ
+          minHeight: 48,
+        },
+        regular: {
+          // regular variant の Toolbar の高さ (default)
+          minHeight: 56, // デフォルト 64px から少し小さく
+        },
+      },
+    },
+  },
+});
 
 // ★追加: react-router-dom から BrowserRouter をインポート
 import { BrowserRouter } from "react-router-dom";
@@ -19,7 +142,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     {/* ★追加: アプリケーション全体を BrowserRouter で囲む */}
     <BrowserRouter>
       {/* ★追加: ThemeProvider でアプリケーションを囲む */}
-      <ThemeProvider theme={defaultTheme}>
+      <ThemeProvider theme={theme}>
         {/* ★追加: CssBaseline でブラウザのデフォルトスタイルをリセット */}
         <CssBaseline />
         <App />

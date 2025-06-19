@@ -33,6 +33,11 @@ const MuiTextFieldWrapper: CommonFormFieldComponent<MuiTextFieldWrapperProps> = 
     onChange(e.target.value);
   };
 
+  const resolvedHelperText =
+    type === "email" && !error ? "正しいメールアドレス形式で入力してください。" : helperText;
+
+  const inputType = type === "number" ? "number" : type === "email" ? "email" : "text";
+
   return (
     <TextField
       fullWidth
@@ -45,9 +50,9 @@ const MuiTextFieldWrapper: CommonFormFieldComponent<MuiTextFieldWrapperProps> = 
       required={required}
       multiline={multiline}
       rows={rows}
-      type={type === "number" ? "number" : type} // type="number"の場合はMUI側で調整
+      type={inputType}
       error={error}
-      helperText={helperText}
+      helperText={resolvedHelperText}
       variant="outlined"
       // 数値入力の場合に、inputMode="numeric" や pattern="[0-9]*" を設定することも可能
       inputProps={type === "number" ? { inputMode: "numeric", pattern: "[0-9]*" } : {}}

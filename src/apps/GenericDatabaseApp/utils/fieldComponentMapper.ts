@@ -6,6 +6,7 @@ import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectField
 
 // 共通の型定義をインポート
 import { FormFieldType, CommonFormFieldComponent } from "../../../types/interfaces";
+import MuiRadioGroupWrapper from "../../../components/FormFields/MuiRadioGroupWrapper.tsx";
 
 /**
  * フィールドタイプに基づいて、対応する汎用フォームパーツコンポーネントを返すヘルパー関数。
@@ -17,6 +18,7 @@ export const getFieldComponentByType = (fieldType: FormFieldType): CommonFormFie
     case "text":
     case "number":
     case "textarea":
+    case "email":
       return MuiTextFieldWrapper;
     case "date":
       return MuiDatePickerWrapper;
@@ -24,6 +26,8 @@ export const getFieldComponentByType = (fieldType: FormFieldType): CommonFormFie
       return MuiCheckboxWrapper;
     case "select":
       return MuiSelectFieldWrapper;
+    case "radio":
+      return MuiRadioGroupWrapper;
     default:
       console.error(`Unknown field type: ${fieldType}. Falling back to MuiTextFieldWrapper.`);
       return MuiTextFieldWrapper;
