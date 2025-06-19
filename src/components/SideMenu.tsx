@@ -10,6 +10,9 @@ import {
   Toolbar,
   IconButton,
   Box,
+  CircularProgress,
+  Typography,
+  Button,
 } from "@mui/material"; // MUIコンポーネント
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"; // 左矢印アイコン
 // アイコン
@@ -23,6 +26,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import AppsIcon from "@mui/icons-material/Apps";
 
 import { AppSchema } from "../types/interfaces";
+import { appSchemaRepository } from "../repositories/appSchemaRepository";
 
 interface SideMenuProps {
   onDrawerClose: () => void; // Drawerを閉じるためのコールバック
@@ -91,6 +95,28 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
   };
 
   const [userApps, setUserApps] = useState<AppSchema[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // アプリスキーマデータをロードする関数
+  const fetchAppSchemas = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await appSchemaRepository.getAll();
+      setUserApps(data);
+    } catch (err) {
+      console.error("Error fetching app schemas:", err);
+      setError("アプリスキーマの読み込みに失敗しました。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // コンポーネントマウント時にアプリスキーマをロード
+  useEffect(() => {
+    fetchAppSchemas();
+  }, []);
 
   // ドロワーを開いたとき、現在のパスに合わせてサブメニューを自動開閉
   useEffect(() => {
@@ -100,6 +126,28 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
       }
     });
   }, [location.pathname]); // location.pathname が変わるたびに実行
+  // ローディング中とエラー表示
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+        <CircularProgress />
+        <Typography variant="body1" sx={{ ml: 2 }}>
+          アプリスキーマデータを読み込み中...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ padding: "20px", textAlign: "center", color: "red" }}>
+        <Typography variant="body1">エラー: {error}</Typography>
+        <Button onClick={fetchAppSchemas} variant="contained">
+          再試行
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box>
