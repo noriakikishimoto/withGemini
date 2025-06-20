@@ -29,18 +29,14 @@ import {
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx"; // フィールド定義フォームで使うため
 import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrapper.tsx"; // フィールド定義フォームで使うため
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx"; // フィールド定義フォームで使うため
-// AppSchemaFormPage から移動されるフィールド定義
-const baseFieldDefinitionFields: FormField<
-  Omit<FormField<any, any>, "component">,
-  CommonFormFieldComponent<any>
->[] = [
+
+const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldComponent<any>>[] = [
   {
     name: "name",
     label: "フィールド名 (内部)",
     type: "text",
     required: true,
     component: MuiTextFieldWrapper,
-    initialValue: "",
   },
   {
     name: "label",
@@ -48,7 +44,6 @@ const baseFieldDefinitionFields: FormField<
     type: "text",
     required: true,
     component: MuiTextFieldWrapper,
-    initialValue: "",
   },
   {
     name: "type",
@@ -62,169 +57,125 @@ const baseFieldDefinitionFields: FormField<
       { value: "date", label: "日付" },
       { value: "checkbox", label: "チェックボックス" },
       { value: "select", label: "選択リスト" },
+      { value: "radio", label: "ラジオボタン" },
+      { value: "email", label: "メールアドレス" },
+      { value: "lookup", label: "ルックアップ" },
     ] as FormFieldSelectOption[],
     component: MuiSelectFieldWrapper,
-    initialValue: "text",
   },
   {
     name: "required",
     label: "必須",
     type: "checkbox",
     component: MuiCheckboxWrapper,
-    initialValue: false,
   },
+  // multiline, rows, options は動的に表示を切り替える必要があるが、一旦シンプルに
 ];
 
 interface AppSchemaFieldsEditorProps {
   fields: Omit<FormField<any, any>, "component">[]; // 親から渡される現在のフィールド定義の配列
   onFieldsChange: (newFields: Omit<FormField<any, any>, "component">[]) => void; // 親にフィールド定義の変更を通知するコールバック
-
-  // ★追加: モーダル内のフォームのデータが変更されたときに親に通知するコールバック
-  //onFieldModalFormChange: (data: Omit<FormField<any, any>, "component">) => void;
-  // ★追加: 編集中のフィールドの初期データ (親から渡される)
-  //editingFieldInitialData: Omit<FormField<any, any>, "component"> | null;
 }
 
-const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
-  fields,
-  onFieldsChange,
-  // onFieldModalFormChange,
-  // editingFieldInitialData, // ★Propsとして受け取る
-}) => {
+const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onFieldsChange }) => {
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
   const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(null);
   const [currentFieldTypeInModal, setCurrentFieldTypeInModal] = useState<FormFieldType>("text");
 
-  const editingFieldInitialData: Omit<FormField<any, any>, "component"> | null = useMemo(() => {
-    if (editingFieldIndex !== null && fields[editingFieldIndex]) {
+  const editingFieldInitialData: Omit<FormField<any, any>, "component"> | null = React.useMemo(() => {
+    if (editingFieldIndex !== null && fields && fields[editingFieldIndex]) {
       const fieldDef = fields[editingFieldIndex];
-
-      let parsedOptions: FormFieldSelectOption[] | undefined;
-      if (typeof fieldDef.options === "string") {
-        try {
-          parsedOptions = (fieldDef.options as string)
-            .split(",")
-            .map((s: string) => ({ value: s.trim(), label: s.trim() }));
-        } catch (e) {
-          console.error("Error parsing options string for initial data:", e);
-          parsedOptions = undefined;
-        }
-      } else if (Array.isArray(fieldDef.options)) {
-        parsedOptions = fieldDef.options as FormFieldSelectOption[];
-      } else {
-        parsedOptions = undefined;
-      }
-
-      const parsedRows = fieldDef.rows !== undefined ? fieldDef.rows : undefined;
-      const parsedMultiline = fieldDef.multiline !== undefined ? fieldDef.multiline : undefined;
 
       return {
         ...fieldDef,
-        options: parsedOptions,
-        rows: parsedRows,
-        multiline: parsedMultiline,
-      } as Omit<FormField<any, any>, "component">;
+      } as Omit<FormField<any, any>, "component">; // 型キャスト
     }
     return null;
-  }, [editingFieldIndex, fields]); // fields も依存配列に入れる
+  }, [editingFieldIndex, fields]);
 
-  // useEffect で currentFieldTypeInModal をセットするロジックは必要 (handleEditField から)
-
-  useEffect(() => {
-    if (editingFieldIndex !== null && editingFieldInitialData) {
-      setCurrentFieldTypeInModal(editingFieldInitialData.type);
-    } else {
-      setCurrentFieldTypeInModal("text"); // 新規の場合はデフォルト
-    }
-  }, [editingFieldIndex, editingFieldInitialData]); // editingFieldInitialData が変わったらタイプを更新
-
-  // フィールド編集モーダル関連ハンドラ
   const handleAddField = () => {
     setEditingFieldIndex(null); // 新規追加モード
     setIsFieldModalOpen(true);
-    // 新規追加時の initialData は DynamicForm が fields 定義から生成するので、ここで渡す必要はない
-    // setCurrentFieldTypeInModal('text'); // handleFieldModalOpen で設定
+    setCurrentFieldTypeInModal("text");
   };
-
   const handleEditField = (index: number) => {
     setEditingFieldIndex(index); // 編集モード
     setIsFieldModalOpen(true);
-    // currentFieldTypeInModal は useEffect で initialData から設定される
-    // if (fields[index]) { setCurrentFieldTypeInModal(fields[index].type); }
+    if (fields && fields[index]) {
+      // 編集対象のフィールドタイプをモーダルにセット
+      setCurrentFieldTypeInModal(fields[index].type);
+    }
   };
 
   const handleDeleteField = (index: number) => {
     if (window.confirm("このフィールド定義を本当に削除しますか？")) {
       const updatedFields = fields.filter((_, i) => i !== index);
-      onFieldsChange(updatedFields); // 親にフィールド定義の変更を通知
+      onFieldsChange(updatedFields); // 親に通知
       alert("フィールドが削除されました。");
     }
   };
 
-  // フィールドモーダル内の DynamicForm の onSubmit ハンドラ
   const handleFieldModalSubmit = (fieldData: Omit<FormField<any, any>, "component">) => {
-    let updatedFields = [...fields]; // 親から渡された fields のコピーを作成
+    let updatedFields: Omit<FormField<any, any>, "component">[] = [...fields];
 
-    const fieldDataToSave = { ...fieldData }; // fieldData のコピー
+    const processedFieldData = { ...fieldData }; // fieldData のコピーを作成
 
-    if (fieldDataToSave.type === "select") {
-      if (Array.isArray(fieldDataToSave.options)) {
-        fieldDataToSave.options = (fieldDataToSave.options as FormFieldSelectOption[])
-          .map((opt) => opt.value)
-          .join(",");
+    if (processedFieldData.type === "select") {
+      // options が文字列として存在する場合、FormFieldSelectOption[] に変換
+      if (typeof processedFieldData.options === "string") {
+        const optionsString = processedFieldData.options;
+        processedFieldData.options = optionsString
+          .split(",")
+          .map((s) => ({ value: s.trim(), label: s.trim() }));
       } else {
-        fieldDataToSave.options = "";
+        // もし options が文字列でなければ、空の配列にするなど適切な処理
+        processedFieldData.options = [];
       }
+    }
+    // ★追加: lookupAppId, lookupKeyField, lookupDisplayFields も保存
+    if (processedFieldData.type === "lookup") {
+      // lookupAppId と lookupKeyField は文字列なのでそのまま
+      // lookupDisplayFields は string[] なのでそのまま
+      // ただし、タイプが lookup 以外の場合には削除する
     } else {
-      delete fieldDataToSave.options;
+      delete processedFieldData.lookupAppId;
+      delete processedFieldData.lookupKeyField;
+      delete processedFieldData.lookupDisplayFields;
     }
-    if (fieldDataToSave.type !== "text" && fieldDataToSave.type !== "textarea") {
-      delete fieldDataToSave.multiline;
-    }
-    if (fieldDataToSave.type !== "textarea") {
-      delete fieldDataToSave.rows;
-    }
+
+    // rows や multiline も保存されるが、DynamicForm からは適切な型で渡されるはずなのでそのまま
 
     if (editingFieldIndex !== null) {
-      updatedFields[editingFieldIndex] = fieldDataToSave;
+      // 編集の場合
+      updatedFields[editingFieldIndex] = fieldData;
     } else {
-      updatedFields.push(fieldDataToSave);
+      // 新規追加の場合
+      updatedFields.push(fieldData);
     }
-    onFieldsChange(updatedFields); // 親にフィールド定義の変更を通知
-    setIsFieldModalOpen(false);
-    setEditingFieldIndex(null);
+    onFieldsChange(updatedFields); // ステートを更新
+    setIsFieldModalOpen(false); // モーダルを閉じる
+    setEditingFieldIndex(null); // 編集状態をリセット
   };
-
   const handleFieldModalClose = () => {
     setIsFieldModalOpen(false);
     setEditingFieldIndex(null);
   };
 
-  // フィールドタイプに応じて DynamicForm に渡すフィールド定義を動的に生成
   const dynamicFieldDefinitionFields = useMemo(() => {
-    const fields: FormField<Omit<FormField<any, any>, "component">, CommonFormFieldComponent<any>>[] = [
-      ...baseFieldDefinitionFields,
-    ];
-
-    if (currentFieldTypeInModal === "select") {
-      fields.push({
-        name: "options",
-        label: "選択肢 (カンマ区切り)",
-        type: "text",
-        component: MuiTextFieldWrapper,
-        initialValue: "",
-      });
-    }
-
-    if (currentFieldTypeInModal === "textarea" || currentFieldTypeInModal === "text") {
-      fields.push({
-        name: "multiline",
-        label: "複数行",
-        type: "checkbox",
-        component: MuiCheckboxWrapper,
-        initialValue: false,
-      });
-      if (currentFieldTypeInModal === "textarea") {
+    // fields の型をよりシンプルに、最終的に FormField<any, CommonFormFieldComponent<any>>[] になるようにする
+    const fields: FormField<any, CommonFormFieldComponent<any>>[] = [...baseFieldDefinitionFields]; // ★修正
+    switch (currentFieldTypeInModal) {
+      case "select":
+      case "radio":
+        fields.push({
+          name: "options",
+          label: "選択肢 (カンマ区切り)",
+          type: "text",
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        break;
+      case "textarea":
         fields.push({
           name: "rows",
           label: "行数",
@@ -232,75 +183,118 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
           component: MuiTextFieldWrapper,
           initialValue: 4,
         });
-      }
+        fields.push({
+          // textarea の場合、multiline は常に true と見なされることが多いが、定義は残す
+          name: "multiline",
+          label: "複数行",
+          type: "checkbox",
+          component: MuiCheckboxWrapper,
+          initialValue: true, // textarea のデフォルトは true
+        });
+        break;
+      case "text": // テキストタイプの場合、multiline オプションのみ
+        fields.push({
+          name: "multiline",
+          label: "複数行",
+          type: "checkbox",
+          component: MuiCheckboxWrapper,
+          initialValue: false,
+        });
+        break;
+      case "lookup":
+        fields.push({
+          name: "lookupAppId",
+          label: "参照元アプリID",
+          type: "text", // 将来的にアプリ選択ドロップダウンに
+          component: MuiTextFieldWrapper,
+          required: true,
+          initialValue: "",
+        });
+        fields.push({
+          name: "lookupKeyField",
+          label: "キーフィールド名",
+          type: "text", // 将来的にフィールド選択ドロップダウンに
+          component: MuiTextFieldWrapper,
+          required: true,
+          initialValue: "",
+        });
+        fields.push({
+          name: "lookupDisplayFields",
+          label: "表示フィールド (カンマ区切り)",
+          type: "text", // 複数フィールドをカンマ区切りで入力
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        break;
+      // 'number', 'date', 'checkbox' の場合は追加フィールドなし
+      default:
+        break;
     }
 
     return fields;
   }, [currentFieldTypeInModal]);
 
   return (
-    <Paper sx={{ mt: 4, p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          フィールド定義 ({fields.length || 0} 件)
-        </Typography>
-        <Button variant="contained" onClick={handleAddField}>
-          フィールドを追加
-        </Button>
-      </Box>
+    <>
+      <Paper sx={{ mt: 4, p: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            フィールド定義 ({fields.length || 0} 件)
+          </Typography>
+          <Button variant="contained" onClick={handleAddField}>
+            フィールドを追加
+          </Button>
+        </Box>
 
-      {fields.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          このアプリにはまだフィールドが定義されていません。
-        </Typography>
-      ) : (
-        <List>
-          {fields.map((fieldDef, index) => (
-            <React.Fragment key={fieldDef.name as string}>
-              <ListItemButton>
-                <ListItemText
-                  primary={`${fieldDef.label} (${fieldDef.name as string})`}
-                  secondary={`タイプ: ${fieldDef.type}${fieldDef.required ? " (必須)" : ""}`}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton edge="end" aria-label="edit" onClick={() => handleEditField(index)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteField(index)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItemButton>
-              <Divider />
-            </React.Fragment>
-          ))}
-        </List>
-      )}
+        {fields.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            このアプリにはまだフィールドが定義されていません。
+          </Typography>
+        ) : (
+          <List>
+            {fields.map((fieldDef, index) => (
+              <React.Fragment key={fieldDef.name as string}>
+                {" "}
+                {/* key は name を使う */}
+                <ListItemButton>
+                  <ListItemText
+                    primary={`${fieldDef.label} (${fieldDef.name as string})`}
+                    secondary={`タイプ: ${fieldDef.type}${fieldDef.required ? " (必須)" : ""}`}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton edge="end" aria-label="edit" onClick={() => handleEditField(index)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteField(index)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItemButton>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+      </Paper>
 
-      {/* フィールド追加/編集用のモーダル */}
+      {/* ★追加: フィールド追加/編集用のモーダル */}
       <Dialog open={isFieldModalOpen} onClose={handleFieldModalClose} fullWidth maxWidth="sm">
         <DialogTitle>
           {editingFieldIndex !== null ? "フィールドを編集" : "新しいフィールドを追加"}
         </DialogTitle>
         <DialogContent>
-          <DynamicForm<Omit<FormField<any, any>, "component">>
-            fields={dynamicFieldDefinitionFields}
-            initialData={editingFieldInitialData} // initialData は親から渡される
+          <DynamicForm<Omit<FormField<any, any>, "component">> // フィールド定義自体を DynamicForm で編集
+            fields={dynamicFieldDefinitionFields} // ★修正: 動的に生成されたフィールド定義を渡す
+            initialData={editingFieldInitialData}
             onSubmit={handleFieldModalSubmit}
-            onCancel={handleFieldModalClose}
+            onCancel={handleFieldModalClose} // モーダル内のキャンセルボタン
             submitButtonText={editingFieldIndex !== null ? "保存" : "追加"}
-            // ★修正: DynamicForm のフィールド変更を AppSchemaFieldsEditor の initialData にも反映
-            // onFieldChange コールバックは親から渡された onFieldModalFormChange を呼び出す
+            // ★追加: DynamicForm のフィールド変更を AppSchemaFormPage に通知する
             onFieldChange={(fieldName, value) => {
               if (fieldName === "type") {
-                setCurrentFieldTypeInModal(value as FormFieldType);
+                // 変更されたフィールドが 'type' の場合
+                setCurrentFieldTypeInModal(value as FormFieldType); // currentFieldTypeInModal を更新
               }
-              // この onFieldChange イベントを親に伝える
-              //  onFieldModalFormChange({
-              // 仮のオブジェクトを渡している
-              //    ...(editingFieldInitialData || {}), // null 対策
-              //    [fieldName]: value,
-              //  } as Omit<FormField<any, any>, "component">);
             }}
           />
         </DialogContent>
@@ -310,7 +304,7 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </>
   );
 };
 
