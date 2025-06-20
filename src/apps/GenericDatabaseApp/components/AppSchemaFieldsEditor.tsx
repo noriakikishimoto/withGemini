@@ -17,7 +17,12 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
+} from "@mui/icons-material";
 
 import DynamicForm from "../../../components/DynamicForm.tsx"; // 汎用フォーム
 import {
@@ -75,9 +80,14 @@ const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldC
 interface AppSchemaFieldsEditorProps {
   fields: Omit<FormField<any, any>, "component">[]; // 親から渡される現在のフィールド定義の配列
   onFieldsChange: (newFields: Omit<FormField<any, any>, "component">[]) => void; // 親にフィールド定義の変更を通知するコールバック
+  onIndexChange: (index: number, direction: "up" | "down") => void;
 }
 
-const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onFieldsChange }) => {
+const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
+  fields,
+  onFieldsChange,
+  onIndexChange,
+}) => {
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
   const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(null);
   const [currentFieldTypeInModal, setCurrentFieldTypeInModal] = useState<FormFieldType>("text");
@@ -153,6 +163,33 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
     }
 
     // rows や multiline も保存されるが、DynamicForm からは適切な型で渡されるはずなのでそのまま
+
+    if (
+      processedFieldData.type !== "text" &&
+      processedFieldData.type !== "textarea" &&
+      processedFieldData.type !== "number" &&
+      processedFieldData.type !== "email" &&
+      processedFieldData.type !== "lookup"
+    ) {
+      delete processedFieldData.multiline;
+    }
+    if (processedFieldData.type !== "textarea") {
+      delete processedFieldData.rows;
+    }
+    // ★追加: group, xs, sm, md のクリーンアップ
+    const hasLayoutProps =
+      processedFieldData.group !== undefined ||
+      processedFieldData.xs !== undefined ||
+      processedFieldData.sm !== undefined ||
+      processedFieldData.md !== undefined;
+
+    if (!hasLayoutProps) {
+      // もし layoutProps が設定されていなければ削除
+      delete processedFieldData.group;
+      delete processedFieldData.xs;
+      delete processedFieldData.sm;
+      delete processedFieldData.md;
+    }
 
     if (editingFieldIndex !== null) {
       // 編集の場合
@@ -247,6 +284,36 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
       default:
         break;
     }
+    // ★追加: group, xs, sm, md の入力フィールドを常に表示
+    // どのタイプでもレイアウト設定は可能
+    fields.push({
+      name: "group",
+      label: "グループ名",
+      type: "text",
+      component: MuiTextFieldWrapper,
+      initialValue: "",
+    });
+    fields.push({
+      name: "xs",
+      label: "幅 (xs)",
+      type: "number",
+      component: MuiTextFieldWrapper,
+      initialValue: 12,
+    });
+    fields.push({
+      name: "sm",
+      label: "幅 (sm)",
+      type: "number",
+      component: MuiTextFieldWrapper,
+      initialValue: 12,
+    });
+    fields.push({
+      name: "md",
+      label: "幅 (md)",
+      type: "number",
+      component: MuiTextFieldWrapper,
+      initialValue: 6,
+    }); // デフォルトを6に
 
     return fields;
   }, [currentFieldTypeInModal]);
@@ -275,8 +342,8 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
                 {/* key は name を使う */}
                 <ListItemButton>
                   <ListItemText
-                    primary={`${fieldDef.label} (${fieldDef.name as string})`}
-                    secondary={`タイプ: ${fieldDef.type}${fieldDef.required ? " (必須)" : ""}`}
+                    primary={`${fieldDef.label} (${fieldDef.name as string}) `}
+                    secondary={`タイプ: ${fieldDef.type}${fieldDef.required ? " (必須)" : ""}／グループ：${fieldDef.group ? (fieldDef.group as string) : "設定なし"}`}
                   />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" aria-label="edit" onClick={() => handleEditField(index)}>
@@ -284,6 +351,22 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
                     </IconButton>
                     <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteField(index)}>
                       <DeleteIcon />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="move up"
+                      onClick={() => onIndexChange(index, "up")}
+                      disabled={index === 0}
+                    >
+                      <ArrowUpwardIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="move down"
+                      onClick={() => onIndexChange(index, "down")}
+                      disabled={index === fields.length - 1}
+                    >
+                      <ArrowDownwardIcon fontSize="small" />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItemButton>

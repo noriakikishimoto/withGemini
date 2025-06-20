@@ -1,5 +1,5 @@
-import { Box, Button, Typography } from "@mui/material"; // MUIコンポーネントをインポート
-import { FormEvent, useEffect, useState } from "react";
+import { Box, Button, Grid, Paper, Typography } from "@mui/material"; // MUIコンポーネントをインポート
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { CommonFormFieldComponent, FormField } from "../types/interfaces";
 import FormFieldRenderer from "./FormFields/FormFieldRenderer.tsx";
@@ -75,15 +75,64 @@ function DynamicForm<T extends object>({
     onSubmit(formData); // 親にフォームデータを渡す
   };
 
+  // ★追加: フィールドをグループごとに分類するロジック
+  const groupedFields = useMemo(() => {
+    const groups: Record<string, FormField<T, CommonFormFieldComponent<any>>[]> = {};
+    const defaultGroup = "基本情報"; // グループが指定されていないフィールドのデフォルトグループ
+
+    fields.forEach((field) => {
+      const groupName = field.group || defaultGroup; // group プロパティがあればそれを使用、なければデフォルト
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push(field);
+    });
+
+    // グループ名をソートして順序を安定させる
+    const sortedGroupNames = Object.keys(groups).sort((a, b) => {
+      // '基本情報' グループを常に先頭にする
+      if (a === defaultGroup) return -1;
+      if (b === defaultGroup) return 1;
+      return a.localeCompare(b); // それ以外はアルファベット順
+    });
+
+    return sortedGroupNames.map((groupName) => ({
+      name: groupName,
+      fields: groups[groupName],
+    }));
+  }, [fields]); // fields プロップが変更されたら再計算
+
   return (
     <Box sx={{ flex: 1, paddingRight: "20px", borderRight: "1px solid #eee" }}>
       <Typography variant="h5" component="h2" gutterBottom align="center">
         {formTitle}
       </Typography>
       <form onSubmit={handleSubmit}>
-        {/* ★修正: fields.map の中身を FormFieldRenderer に置き換える */}
-        {fields.map((field) => (
-          <FormFieldRenderer<T> field={field} formData={formData} handleChange={handleChange} />
+        {/* ★修正: グループごとにフォームフィールドをレンダリング */}
+        {groupedFields.map((group) => (
+          <Paper key={group.name} sx={{ mt: 2, p: 2 }}>
+            {" "}
+            {/* 各グループをPaperで囲む */}
+            <Typography variant="h6" component="h3" gutterBottom>
+              {group.name}
+            </Typography>
+            <Grid container spacing={2}>
+              {" "}
+              {/* グループ内のフィールドをGridでレイアウト */}
+              {group.fields.map((field) => (
+                <Grid
+                  key={field.name as string}
+                  size={{
+                    xs: field.xs || 12,
+                    sm: field.sm || field.xs || 12,
+                    md: field.md || field.sm || field.xs || 12,
+                  }}
+                >
+                  <FormFieldRenderer<T> field={field} formData={formData} handleChange={handleChange} />
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
         ))}
 
         <Box sx={{ mt: 3, mb: 2, textAlign: "center" }}>

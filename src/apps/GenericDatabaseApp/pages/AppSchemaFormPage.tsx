@@ -16,6 +16,9 @@ const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
     type: "text",
     required: true,
     component: MuiTextFieldWrapper,
+    xs: 12, // ★追加: 全幅を占める
+    sm: 6, // ★追加: 小画面以上で半分
+    md: 4, // ★追加: 中画面以上で1/3
   },
   {
     name: "description",
@@ -24,6 +27,7 @@ const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
     multiline: true,
     rows: 3,
     component: MuiTextFieldWrapper,
+    xs: 12, // ★追加: 全幅を占める
   },
 ];
 
@@ -100,6 +104,24 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
     navigate("/generic-db/app-schemas/list"); // キャンセル時はリストページに遷移
   };
 
+  const handleMoveField = (index: number, direction: "up" | "down") => {
+    if (!appSchema || !appSchema.fields || appSchema.fields.length < 2) return; // 2つ以上ないと移動できない
+    const newFields = [...appSchema.fields];
+    const currentField = newFields[index];
+
+    if (direction === "up") {
+      if (index === 0) return; // 先頭の場合は移動できない
+      newFields.splice(index, 1); // 現在の場所から削除
+      newFields.splice(index - 1, 0, currentField); // 1つ上の位置に挿入
+    } else {
+      // 'down'
+      if (index === newFields.length - 1) return; // 末尾の場合は移動できない
+      newFields.splice(index, 1); // 現在の場所から削除
+      newFields.splice(index + 1, 0, currentField); // 1つ下の位置に挿入
+    }
+    setAppSchema({ ...appSchema, fields: newFields }); // appSchema ステートを更新
+  };
+
   // ローディング中とエラー表示
   if (isLoading) {
     return (
@@ -159,6 +181,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
         onFieldsChange={(newFields) => {
           setAppSchema((prev) => ({ ...prev!, fields: newFields })); // 変更を appSchema ステートに反映
         }}
+        onIndexChange={handleMoveField}
       />
     </Box>
   );

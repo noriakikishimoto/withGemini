@@ -91,6 +91,13 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   lookupDisplayFields?: string;
   //lookupCopyToFields?: LookupCopyField[];
   lookupCopyToFields?: string;
+
+  // ★追加: グループ名
+  group?: string;
+  // ★追加: Grid アイテムの幅（MUI Grid の xs, sm, md プロップに対応）
+  xs?: number;
+  sm?: number;
+  md?: number;
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {

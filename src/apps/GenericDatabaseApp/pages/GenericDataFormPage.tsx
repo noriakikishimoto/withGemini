@@ -186,6 +186,10 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         lookupKeyField: field.lookupKeyField, // 参照元アプリのキーとなるフィールド名
         lookupDisplayFields: field.lookupDisplayFields, // 参照元アプリから表示/コピーするフィールド名リスト
         lookupCopyToFields: field.lookupCopyToFields,
+        group: field.group,
+        xs: field.xs,
+        sm: field.sm,
+        md: field.md,
       };
     });
 
