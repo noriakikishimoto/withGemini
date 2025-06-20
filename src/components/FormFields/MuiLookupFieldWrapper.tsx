@@ -26,6 +26,7 @@ import {
   AppSchema,
   GenericRecord,
   FormField,
+  LookupCopyField,
 } from "../../types/interfaces";
 import { genericDataRepository } from "../../repositories/genericDataRepository"; // 汎用データのリポジトリ
 import { appSchemaRepository } from "../../repositories/appSchemaRepository";
@@ -36,11 +37,12 @@ interface MuiLookupFieldWrapperProps {
   label: string;
   name: string;
   value: string; // 表示用の値（通常はキーフィールドの値）
-  onChange: (value: string, selectedRecord?: GenericRecord) => void; // 変更時に値と選択レコードを返す
+  onChange: (value: string, selectedRecord?: { [key: string]: any }) => void; // 変更時に値と選択レコードを返す
   required?: boolean;
   lookupAppId: string; // ルックアップ元アプリのID (必須)
   lookupKeyField: string; // ルックアップ元アプリのキーとなるフィールド (必須)
-  lookupDisplayFields: string; // ルックアップ元アプリから表示/コピーするフィールド (必須)
+  lookupDisplayFields?: string; // ルックアップ元アプリから表示/コピーするフィールド
+  lookupCopyToFields?: string; // ★追加: ルックアップ転記フィールドのリスト
 }
 
 const MuiLookupFieldWrapper: CommonFormFieldComponent<MuiLookupFieldWrapperProps> = ({
@@ -52,6 +54,7 @@ const MuiLookupFieldWrapper: CommonFormFieldComponent<MuiLookupFieldWrapperProps
   lookupAppId,
   lookupKeyField,
   lookupDisplayFields,
+  lookupCopyToFields,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value || ""); // モーダルの検索フィールドの初期値は現在の値
@@ -136,7 +139,26 @@ const MuiLookupFieldWrapper: CommonFormFieldComponent<MuiLookupFieldWrapperProps
 
   // レコード選択ハンドラ
   const handleSelectRecord = (record: GenericRecord) => {
-    onChange(String(record[lookupKeyField]), record); // 親にキーフィールドの値と選択されたレコード全体を渡す
+    const copyValues: { [key: string]: any } = {}; // 結果を格納するオブジェクト
+    if (lookupCopyToFields && lookupCopyToFields.length > 0) {
+      // 1. カンマで分割
+      const pairs = lookupCopyToFields.split(",");
+      // 2. 各ペアを処理
+      pairs.forEach((pair) => {
+        const parts = pair.split(":");
+        if (parts.length === 2) {
+          const from = parts[0].trim(); // キーの前後の空白を除去
+          const to = parts[1].trim(); // 値の前後の空白を除去
+          copyValues[to] = record[from];
+        } else {
+          // フォーマットが不正な場合（例: "名前" や "名前:顧客名:追加"）はエラーを出すか無視する
+          console.warn(`Skipping malformed pair: "${pair}" in input string "${lookupCopyToFields}"`);
+        }
+      });
+    }
+
+    onChange(String(record[lookupKeyField]), copyValues); // 親にキーフィールドの値と選択されたレコード全体を渡す
+    // onChange(String(record[lookupKeyField]), recordToCopy); // キーフィールドの値と選択されたレコード全体を渡す
     setIsModalOpen(false); // モーダルを閉じる
     setSearchTerm(String(record[lookupKeyField])); // 選択された値を検索フィールドに反映
   };

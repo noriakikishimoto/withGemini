@@ -68,6 +68,11 @@ export type CommonFormFieldComponent<P = {}> = React.ComponentType<P> & {
   // ここでは、共通インターフェースとしては any を許容し、個別の型は実装側で保証する
 };
 
+export interface LookupCopyField {
+  from: string; // ルックアップ元アプリのフィールド名
+  to: string; // 現在のフォームのフィールド名
+}
+
 export interface FormField<T extends object, C extends CommonFormFieldComponent<any>> {
   name: keyof T;
   label: string;
@@ -84,6 +89,8 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   lookupKeyField?: string; // 参照元アプリのキーとなるフィールド名
   //lookupDisplayFields?: string[]; // 参照元アプリから表示/コピーするフィールド名
   lookupDisplayFields?: string;
+  //lookupCopyToFields?: LookupCopyField[];
+  lookupCopyToFields?: string;
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {

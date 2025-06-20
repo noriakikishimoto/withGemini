@@ -1,12 +1,13 @@
-import React, { FC, useState } from "react"; // ★useState をインポート
+import React, { FC, MouseEventHandler, useState } from "react"; // ★useState をインポート
 import DynamicCards from "./DynamicListViews/DynamicCards.tsx";
 import DynamicTable from "./DynamicListViews/DynamicTable.tsx";
 
-import { Box, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Typography, ToggleButton, ToggleButtonGroup, IconButton } from "@mui/material";
 import ViewModuleIcon from "@mui/icons-material/ViewModule"; // カード表示アイコン
 import TableViewIcon from "@mui/icons-material/TableView"; // テーブル表示アイコン
 
 import { FormField, Identifiable } from "../types/interfaces";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 interface DynamicListProps<T extends Identifiable & object> {
   items: T[];
@@ -15,6 +16,7 @@ interface DynamicListProps<T extends Identifiable & object> {
   onDelete: (id: string) => void;
   itemBasePath: string;
   listTitle: string;
+  onEditSchema?: () => void;
 }
 
 function DynamicList<T extends Identifiable & object>({
@@ -24,6 +26,7 @@ function DynamicList<T extends Identifiable & object>({
   onDelete,
   itemBasePath,
   listTitle,
+  onEditSchema,
 }: DynamicListProps<T>) {
   const [currentView, setCurrentView] = useState<"cards" | "table">("table");
 
@@ -40,6 +43,11 @@ function DynamicList<T extends Identifiable & object>({
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        {onEditSchema && (
+          <IconButton onClick={onEditSchema} sx={{ ml: 2 }} aria-label="アプリ設定">
+            <SettingsIcon />
+          </IconButton>
+        )}
         <ToggleButtonGroup
           value={currentView}
           exclusive

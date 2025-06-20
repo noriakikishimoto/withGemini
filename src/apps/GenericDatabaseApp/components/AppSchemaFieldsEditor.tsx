@@ -132,11 +132,20 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
         processedFieldData.options = [];
       }
     }
-    // ★追加: lookupAppId, lookupKeyField, lookupDisplayFields も保存
+
     if (processedFieldData.type === "lookup") {
-      // lookupAppId と lookupKeyField は文字列なのでそのまま
-      // lookupDisplayFields は string[] なのでそのまま
-      // ただし、タイプが lookup 以外の場合には削除する
+      processedFieldData.lookupDisplayFields = processedFieldData.lookupDisplayFields ?? "";
+
+      if (Array.isArray(processedFieldData.lookupCopyToFields)) {
+        try {
+          processedFieldData.lookupCopyToFields = processedFieldData.lookupCopyToFields;
+        } catch (e) {
+          console.error("Error stringifying lookupCopyToFields:", e);
+          processedFieldData.lookupCopyToFields = "";
+        }
+      } else {
+        processedFieldData.lookupCopyToFields = "";
+      }
     } else {
       delete processedFieldData.lookupAppId;
       delete processedFieldData.lookupKeyField;
@@ -222,6 +231,14 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({ fields, onField
           name: "lookupDisplayFields",
           label: "表示フィールド (カンマ区切り)",
           type: "text", // 複数フィールドをカンマ区切りで入力
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        // ★追加: lookupCopyToFields の入力欄 (from/to のペア)
+        fields.push({
+          name: "lookupCopyToFields",
+          label: "コピー先フィールド (元フィールド名:コピー先フィールド名, ...)", // 例: "氏名:顧客名, 住所:顧客住所"
+          type: "text",
           component: MuiTextFieldWrapper,
           initialValue: "",
         });

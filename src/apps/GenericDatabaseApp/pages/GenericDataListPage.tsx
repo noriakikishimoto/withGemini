@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router-dom"; // ★useParams を�
 import DynamicList from "../../../components/DynamicList.tsx";
 
 // MUIコンポーネント
-import { Box, Typography, Button, TextField, CircularProgress } from "@mui/material";
+import { Box, Typography, Button, TextField, CircularProgress, IconButton } from "@mui/material";
 
 // 共通の型定義をインポート
 import { AppSchema, FormField, GenericRecord, TaskData } from "../../../types/interfaces";
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts"; // 汎用データのリポジトリ
+import { SettingsInputComponent } from "@mui/icons-material";
 
 interface GenericDataListPageProps {}
 
@@ -99,6 +100,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     navigate(`/generic-db/data/${appId}/new`);
   };
 
+  const handleEditSchema = () => {
+    if (appId) {
+      navigate(`/generic-db/app-schemas/${appId}`); // アプリスキーマ編集画面へ遷移
+    }
+  };
+
   // ローディング中とエラー表示
   if (isLoading) {
     return (
@@ -163,6 +170,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         onDelete={handleDeleteRecord}
         itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
         listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
+        onEditSchema={handleEditSchema}
       />
     </Box>
   );

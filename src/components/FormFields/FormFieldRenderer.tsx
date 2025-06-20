@@ -11,6 +11,8 @@ import { FormField, CommonFormFieldComponent } from "../../types/interfaces";
 import MuiRadioGroupWrapper from "./MuiRadioGroupWrapper.tsx";
 import MuiLookupFieldWrapper from "./MuiLookupFieldWrapper.tsx";
 
+import { Key } from "@mui/icons-material";
+
 interface FormFieldRendererProps<T extends object> {
   field: FormField<T, CommonFormFieldComponent<any>>;
   formData: Record<string, any>;
@@ -138,11 +140,23 @@ function FormFieldRenderer<T extends object>({
           value={
             formData[fieldNameAsString] ? (formData[fieldNameAsString] as string) : field.initialValue
           }
-          onChange={(val, selectedRecord) => handleChange(field.name, val)} // selectedRecord は一旦無視
+          onChange={(val, selectedRecord) => {
+            handleChange(field.name, val);
+            if (selectedRecord) {
+              for (const key in selectedRecord) {
+                // `hasOwnProperty` を使うことで、プロトタイプチェーン上のプロパティを除外できる (推奨)
+                if (Object.prototype.hasOwnProperty.call(selectedRecord, key)) {
+                  const value = selectedRecord[key]; // キーを使って値にアクセス
+                  handleChange(key as keyof T, value);
+                }
+              }
+            }
+          }}
           required={field.required}
-          lookupAppId={field.lookupAppId || ""} // ★ルックアップ設定を渡す
+          lookupAppId={field.lookupAppId || ""}
           lookupKeyField={field.lookupKeyField || ""}
           lookupDisplayFields={field.lookupDisplayFields || ""}
+          lookupCopyToFields={field.lookupCopyToFields || ""}
         />
       );
 

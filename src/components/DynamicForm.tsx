@@ -64,12 +64,7 @@ function DynamicForm<T extends object>({
       ...prevData,
       [name]: value, // 動的なプロパティ名で値を更新
     }));
-    console.log("通過");
-    console.log(("name:" + name.toString + "value:" + value) as string);
-    // ★追加: onFieldChange コールバックがあれば呼び出す
     if (onFieldChange) {
-      console.log("onchange");
-      console.log(("name:" + name.toString + "value:" + value) as string);
       onFieldChange(name, value);
     }
   };
