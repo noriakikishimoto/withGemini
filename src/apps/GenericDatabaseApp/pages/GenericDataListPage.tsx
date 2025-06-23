@@ -7,6 +7,7 @@ import FilterListIcon from "@mui/icons-material/FilterList"; // フィルタア�
 import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 import {
   Box,
@@ -64,7 +65,10 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [currentViewId, setCurrentViewId] = useState<string | "default">("default"); // 現在選択中のビューID
   const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false); // ビュー保存モーダル
   const [newViewName, setNewViewName] = useState(""); // 新しいビューの名前
-  const [selectedViewToOverwriteId, setSelectedViewToOverwriteId] = useState<string | "new">("new");
+  //const [selectedViewToOverwriteId, setSelectedViewToOverwriteId] = useState<string | "new">("new");
+
+  const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
+  const [editingViewId, setEditingViewId] = useState<string | null>(null);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -314,13 +318,25 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   }, [appSchema]);
 
   // ★追加: ビュー保存モーダル関連ハンドラ
-  const handleOpenSaveViewModal = () => {
+  const handleOpenSaveViewModal = (viewToEditId?: string) => {
     setIsSaveViewModalOpen(true);
-    setNewViewName(""); // 新規作成時は名前をリセット
-    setSelectedViewToOverwriteId("new"); // デフォルトは新規作成
+    if (viewToEditId) {
+      setSaveViewMode("edit");
+      setEditingViewId(viewToEditId);
+      // 編集対象ビューの情報を newViewName にセット
+      const view = customViews.find((v) => v.id === viewToEditId);
+      if (view) {
+        setNewViewName(view.name);
+      }
+    } else {
+      setSaveViewMode("create");
+      setEditingViewId(null);
+      setNewViewName(""); // 新規作成時は名前をリセット
+    }
   };
 
   // ★追加: ビュー保存モーダルの既存ビュー選択ハンドラ
+  /*
   const handleSelectExistingView = (viewId: string | "new") => {
     setSelectedViewToOverwriteId(viewId);
     if (viewId === "new") {
@@ -333,6 +349,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       }
     }
   };
+  */
   const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
 
   const handleSaveView = async () => {
@@ -346,10 +363,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
 
     // ★修正: 既存ビューの上書きロジックを追加
+    /*
     const existingView = customViews.find(
       (view) => view.name === newViewName.trim() && view.appId === appId
     );
-
+*/
     const viewToSave: Omit<CustomView<GenericRecord>, "id"> = {
       name: newViewName.trim(),
       appId: appId,
@@ -358,10 +376,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     };
 
     try {
-      if (existingView) {
-        await customViewRepository.update(existingView.id, viewToSave, appId); // 上書き保存
+      if (saveViewMode === "edit" && editingViewId) {
+        // ★修正: saveViewMode と editingViewId で判定
+        await customViewRepository.update(editingViewId, viewToSave, appId); // 上書き保存
         alert(`ビュー「${newViewName.trim()}」が更新されました！`);
       } else {
+        // 'create' モード
         await customViewRepository.create(viewToSave, appId); // 新規作成
         alert(`ビュー「${newViewName.trim()}」が保存されました！`);
       }
@@ -454,8 +474,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         <Button variant="outlined" startIcon={<FilterListIcon />} onClick={handleOpenFilterModal}>
           絞り込み設定
         </Button>
-        {/* ★追加: ビュー保存ボタン */}
-        <Button variant="outlined" startIcon={<AddIcon />} onClick={handleOpenSaveViewModal}>
+        {/* ★修正: ビュー保存ボタン onClick に引数なしで呼び出す */}
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSaveViewModal()}>
           ビューを保存
         </Button>
       </Box>
@@ -480,6 +500,18 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
                   }}
                 >
                   <Typography variant="inherit">{view.name}</Typography>
+                  {/* ★追加: ビュー編集ボタン (Select の MenuItem 内) */}
+                  <IconButton
+                    edge="end"
+                    aria-label={`ビュー ${view.name} を編集`}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Select のクリックイベントが発火しないように
+                      handleOpenSaveViewModal(view.id); // 編集モードでモーダルを開く
+                    }}
+                    size="small"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
                   {/* ★追加: ビュー削除ボタン */}
                   <IconButton
                     edge="end"
@@ -530,26 +562,37 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         onSave={handleFilterConditionsChange} // モーダルで保存されたフィルタ条件を受け取る
       />
 
-      {/* ★追加: ビュー保存モーダル */}
+      {/* ビュー保存モーダル */}
       <Dialog open={isSaveViewModalOpen} onClose={handleCloseSaveViewModal} fullWidth maxWidth="md">
-        <DialogTitle>ビューを保存</DialogTitle>
+        <DialogTitle>
+          {saveViewMode === "create" ? "新規ビューを保存" : "ビューを編集・上書き"}
+        </DialogTitle>{" "}
+        {/* ★修正: タイトルを動的に変更 */}
         <DialogContent>
-          {/* ★追加: 新規保存 vs 既存ビュー上書き選択 */}
-          <FormControl fullWidth margin="dense">
-            <InputLabel>保存方法</InputLabel>
-            <Select
-              value={selectedViewToOverwriteId}
-              label="保存方法"
-              onChange={(e) => handleSelectExistingView(e.target.value as string)}
-            >
-              <MenuItem value="new">新規ビューとして保存</MenuItem>
-              {customViews.map((view) => (
-                <MenuItem key={view.id} value={view.id}>
-                  {view.name} (既存を上書き)
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {saveViewMode === "edit" &&
+            customViews.length > 0 && ( // ★追加: 編集モードの場合のみ既存ビュー選択を表示
+              <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
+                <InputLabel>編集するビュー</InputLabel>
+                <Select
+                  value={editingViewId || ""} // editingViewId をセット
+                  label="編集するビュー"
+                  onChange={(e) => {
+                    const selectedId = e.target.value as string;
+                    setEditingViewId(selectedId);
+                    const selectedView = customViews.find((v) => v.id === selectedId);
+                    if (selectedView) {
+                      setNewViewName(selectedView.name); // 選択されたビュー名を表示
+                    }
+                  }}
+                >
+                  {customViews.map((view) => (
+                    <MenuItem key={view.id} value={view.id}>
+                      {view.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
           <TextField
             autoFocus
@@ -560,13 +603,16 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             variant="standard"
             value={newViewName}
             onChange={(e) => setNewViewName(e.target.value)}
-            // 既存ビューを選択している場合は読み取り専用にする
-            disabled={selectedViewToOverwriteId !== "new"}
+            // ★修正: 既存ビューの編集モードでも名前は変更可能にする
+            // disabled={selectedViewToOverwriteId !== 'new'} を削除
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseSaveViewModal}>キャンセル</Button>
-          <Button onClick={handleSaveView}>保存</Button>
+          <Button onClick={handleSaveView}>
+            {saveViewMode === "create" ? "保存" : "上書き保存"}{" "}
+            {/* ★修正: ボタンのテキストを動的に変更 */}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
