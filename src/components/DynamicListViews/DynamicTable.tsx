@@ -10,11 +10,15 @@ import {
   TableHead,
   TableRow,
   Typography,
+  TableSortLabel,
 } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 // 共通の型定義をインポート
-import { FormField, Identifiable } from "../../types/interfaces";
+import { FormField, Identifiable, SortDirection } from "../../types/interfaces";
+// ★追加: ソートアイコン
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 // DynamicTableが受け取るPropsの型定義
 interface DynamicTableProps<T extends Identifiable & object> {
@@ -23,6 +27,9 @@ interface DynamicTableProps<T extends Identifiable & object> {
   onEdit: (id: string) => void; // 編集ボタンが押されたときに呼ばれるコールバック
   onDelete: (id: string) => void; // 削除ボタンが押されたときに呼ばれるコールバック
   itemBasePath: string; // 詳細ページへのリンクのベースパス
+  onSortChange: (sortField: keyof T, sortDirection: SortDirection) => void;
+  currentSortField?: keyof T;
+  currentSortDirection?: SortDirection;
 }
 
 // DynamicTable コンポーネントの定義
@@ -32,6 +39,9 @@ function DynamicTable<T extends Identifiable & object>({
   onEdit,
   onDelete,
   itemBasePath,
+  onSortChange, // ★追加: Propsとして受け取る
+  currentSortField, // ★追加: Propsとして受け取る
+  currentSortDirection, // ★追加: Propsとして受け取る
 }: DynamicTableProps<T>) {
   // ★追加: renderFieldValue 関数をここに定義
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {
@@ -67,7 +77,14 @@ function DynamicTable<T extends Identifiable & object>({
           <TableRow>
             {fields.map((field) => (
               <TableCell key={field.name as string} sx={{ fontWeight: "bold" }}>
-                {field.label}
+                <TableSortLabel
+                  active={currentSortField === field.name && currentSortDirection !== undefined}
+                  direction={currentSortField === field.name ? currentSortDirection || "asc" : "asc"} // ソート方向を設定
+                  onClick={() => onSortChange(field.name, currentSortDirection)} // クリックでソート変更を通知
+                  // 矢印アイコンは TableSortLabel が自動で表示
+                >
+                  {field.label}
+                </TableSortLabel>
               </TableCell>
             ))}
             <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">

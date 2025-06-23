@@ -16,7 +16,7 @@ import {
   ListItemButton,
   IconButton,
 } from "@mui/material";
-import { AppSchema, FormField } from "../../../types/interfaces";
+import { AppSchema, FormField, SortDirection } from "../../../types/interfaces";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
@@ -38,6 +38,8 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortField, setSortField] = useState<keyof AppSchema | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
 
   // アプリスキーマデータをロードする関数
   const fetchAppSchemas = async () => {
@@ -60,6 +62,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
   }, []);
 
   // フィルタリングされたアプリスキーマリスト
+  /*
   const filteredAppSchemas = useMemo(() => {
     if (!searchTerm) {
       return appSchemas;
@@ -71,6 +74,50 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
         (schema.description && schema.description.toLowerCase().includes(lowercasedSearchTerm))
     );
   }, [appSchemas, searchTerm]);
+  */
+  const filteredAndSortedAppSchemas = useMemo(() => {
+    let currentAppSchemas = [...appSchemas]; // 元の配列を変更しないようにコピー
+
+    // 1. フィルタリング
+    if (searchTerm) {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      currentAppSchemas = currentAppSchemas.filter(
+        (schema) =>
+          schema.name.toLowerCase().includes(lowercasedSearchTerm) ||
+          (schema.description && schema.description.toLowerCase().includes(lowercasedSearchTerm))
+      );
+    }
+
+    // 2. ソート
+    if (sortField && sortDirection) {
+      currentAppSchemas.sort((a, b) => {
+        const aValue = String(a[sortField] ?? "").toLowerCase();
+        const bValue = String(b[sortField] ?? "").toLowerCase();
+
+        if (aValue < bValue) {
+          return sortDirection === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return currentAppSchemas;
+  }, [appSchemas, searchTerm, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+
+  // ★追加: ソート変更ハンドラ
+  const handleSortChange = (field: keyof AppSchema) => {
+    let newDirection: SortDirection = "asc";
+    if (sortField === field && sortDirection === "asc") {
+      newDirection = "desc";
+    } else if (sortField === field && sortDirection === "desc") {
+      newDirection = undefined; // 3回目のクリックでソートを解除
+    }
+    setSortField(field);
+    setSortDirection(newDirection);
+  };
 
   // アプリスキーマ削除ハンドラ
   const handleDeleteAppSchema = async (id: string) => {
@@ -136,7 +183,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
-        作成済みアプリ ({filteredAppSchemas.length} 件)
+        作成済みアプリ ({filteredAndSortedAppSchemas.length} 件)
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -154,12 +201,15 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
 
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<AppSchema>
-        items={filteredAppSchemas}
+        items={filteredAndSortedAppSchemas}
         fields={appSchemaListFields} // AppSchema のフィールド定義を渡す
         onEdit={handleEditAppSchema}
         onDelete={handleDeleteAppSchema}
         itemBasePath="/generic-db/app-schemas" // アプリスキーマ詳細/編集ページのベースパス
         listTitle="アプリ" // DynamicList 内部で「作成済みアプリ」の文字列を生成
+        onSortChange={handleSortChange}
+        currentSortField={sortField}
+        currentSortDirection={sortDirection}
       />
 
       {/* ★追加: 各アプリのデータ一覧へのリンクボタンも追加 (リスト表示の下) */}
@@ -168,7 +218,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
           データ管理
         </Typography>
         <List>
-          {filteredAppSchemas.map((app) => (
+          {filteredAndSortedAppSchemas.map((app) => (
             <React.Fragment key={app.id}>
               <ListItemButton onClick={() => handleRunApp(app.id)}>
                 <ListItemText primary={app.name} secondary="データ一覧を開く" />
@@ -182,7 +232,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
             </React.Fragment>
           ))}
         </List>
-        {filteredAppSchemas.length === 0 && (
+        {filteredAndSortedAppSchemas.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: "center" }}>
             アプリを作成するとここに表示されます。
           </Typography>

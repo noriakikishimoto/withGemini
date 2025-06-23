@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Layout from "../../../components/Layout.tsx";
 import { Box, Typography, Button, TextField, CircularProgress } from "@mui/material";
 
-import { TaskData } from "../../../types/interfaces.ts";
+import { SortDirection, TaskData } from "../../../types/interfaces.ts";
 import { taskRepository } from "../../../repositories/taskRepository.ts"; // タスクリポジトリをインポート
 
 import DynamicList from "../../../components/DynamicList.tsx";
@@ -18,6 +18,8 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortField, setSortField] = useState<keyof TaskData | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
 
   // タスクデータをロードする関数
   const fetchTasks = async () => {
@@ -40,6 +42,7 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   }, []);
 
   // フィルタリングされたタスクリスト
+  /*
   const filteredTasks = useMemo(() => {
     if (!searchTerm) {
       return tasks;
@@ -52,6 +55,53 @@ const TaskListPage: FC<TaskListPageProps> = () => {
         task.assignee.toLowerCase().includes(lowercasedSearchTerm)
     );
   }, [tasks, searchTerm]);
+*/
+
+  // ★修正: フィルタリングされたレコードリストにソートロジックを追加
+  const filteredAndSortedTasks = useMemo(() => {
+    let currentTasks = [...tasks]; // 元の配列を変更しないようにコピー
+
+    // 1. フィルタリング
+    if (searchTerm) {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      currentTasks = currentTasks.filter(
+        (task) =>
+          task.title.toLowerCase().includes(lowercasedSearchTerm) ||
+          task.description.toLowerCase().includes(lowercasedSearchTerm) ||
+          task.assignee.toLowerCase().includes(lowercasedSearchTerm)
+      );
+    }
+
+    // 2. ソート
+    if (sortField && sortDirection) {
+      currentTasks.sort((a, b) => {
+        const aValue = String(a[sortField] ?? "").toLowerCase();
+        const bValue = String(b[sortField] ?? "").toLowerCase();
+
+        if (aValue < bValue) {
+          return sortDirection === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return currentTasks;
+  }, [tasks, searchTerm, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+
+  // ★追加: ソート変更ハンドラ
+  const handleSortChange = (field: keyof TaskData) => {
+    let newDirection: SortDirection = "asc";
+    if (sortField === field && sortDirection === "asc") {
+      newDirection = "desc";
+    } else if (sortField === field && sortDirection === "desc") {
+      newDirection = undefined; // 3回目のクリックでソートを解除
+    }
+    setSortField(field);
+    setSortDirection(newDirection);
+  };
 
   // タスク削除ハンドラ
   const handleDeleteTask = async (id: string) => {
@@ -111,7 +161,7 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   return (
     <Box sx={{ flex: 1, paddingLeft: "20px" }}>
       <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
-        既存のタスク ({filteredTasks.length} 件)
+        既存のタスク ({filteredAndSortedTasks.length} 件)
       </Typography>
 
       <TextField
@@ -124,12 +174,16 @@ const TaskListPage: FC<TaskListPageProps> = () => {
       />
       {/* ★修正: DynamicList コンポーネントを使用 */}
       <DynamicList<TaskData>
-        items={filteredTasks}
+        items={filteredAndSortedTasks}
         fields={taskFormFields} // TaskData のフィールド定義を渡す
         onEdit={handleEditTask}
         onDelete={handleDeleteTask}
         itemBasePath="/generic-db/tasks" // タスク詳細ページのベースパス
         listTitle="タスク" // DynamicList 内部で「既存のタスク」の文字列を生成
+        // ★追加: ソート関連のPropsを DynamicList に渡す
+        onSortChange={handleSortChange}
+        currentSortField={sortField}
+        currentSortDirection={sortDirection}
       />
     </Box>
   );

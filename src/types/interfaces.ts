@@ -109,6 +109,8 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   // tableFields?: FormField<any, any>[];
 }
 
+export type SortDirection = "asc" | "desc" | undefined;
+
 export interface DynamicListProps<T extends Identifiable & object> {
   // Tはリストのデータオブジェクトの型
   items: T[]; // 表示するデータの配列
@@ -117,6 +119,11 @@ export interface DynamicListProps<T extends Identifiable & object> {
   onDelete: (id: string) => void; // 削除ボタンが押されたときに呼ばれるコールバック
   itemBasePath: string; // 詳細ページへのリンクのベースパス (例: '/generic-db/tasks')
   listTitle: string; // リストのタイトル (例: '既存のタスク')
+
+  // ★追加: ソート関連のProps
+  onSortChange: (sortField: keyof T, sortDirection: SortDirection) => void; // ソート変更を通知するコールバック
+  currentSortField?: keyof T; // 現在ソート中のフィールド
+  currentSortDirection?: SortDirection; // 現在のソート方向
 }
 
 //　アプリケーションスキーマのデータモデル

@@ -8,7 +8,7 @@ import { Box, Button, CircularProgress, TextField, Typography } from "@mui/mater
 // 共通の型定義をインポート
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts"; // 汎用データのリポジトリ
-import { AppSchema, GenericRecord } from "../../../types/interfaces";
+import { AppSchema, GenericRecord, SortDirection } from "../../../types/interfaces";
 
 interface GenericDataListPageProps {}
 
@@ -22,6 +22,9 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const [sortField, setSortField] = useState<keyof GenericRecord | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -55,6 +58,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
   // フィルタリングされたレコードリスト
   // filteredFields は AppSchema から取得した fields を使う
+  /*
   const filteredRecords = useMemo(() => {
     if (!searchTerm || !appSchema) {
       return records;
@@ -68,6 +72,52 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       });
     });
   }, [records, searchTerm, appSchema]);
+*/
+
+  const filteredAndSortedRecords = useMemo(() => {
+    let currentRecords = [...records]; // 元の配列を変更しないようにコピー
+
+    // 1. フィルタリング
+    if (searchTerm && appSchema) {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      currentRecords = currentRecords.filter((record) => {
+        return appSchema.fields.some((field) => {
+          const fieldValue = record[field.name as string];
+          return String(fieldValue).toLowerCase().includes(lowercasedSearchTerm);
+        });
+      });
+    }
+
+    // 2. ソート
+    if (sortField && sortDirection) {
+      currentRecords.sort((a, b) => {
+        const aValue = String(a[sortField] ?? "").toLowerCase();
+        const bValue = String(b[sortField] ?? "").toLowerCase();
+
+        if (aValue < bValue) {
+          return sortDirection === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return currentRecords;
+  }, [records, searchTerm, appSchema, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+
+  // ★追加: ソート変更ハンドラ
+  const handleSortChange = (field: keyof GenericRecord) => {
+    let newDirection: SortDirection = "asc";
+    if (sortField === field && sortDirection === "asc") {
+      newDirection = "desc";
+    } else if (sortField === field && sortDirection === "desc") {
+      newDirection = undefined; // 3回目のクリックでソートを解除
+    }
+    setSortField(field);
+    setSortDirection(newDirection);
+  };
 
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
@@ -145,7 +195,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
-        {appSchema.name} レコード ({filteredRecords.length} 件)
+        {appSchema.name} レコード ({filteredAndSortedRecords.length} 件)
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -163,13 +213,17 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<GenericRecord> // GenericRecord 型を渡す
-        items={filteredRecords}
+        items={filteredAndSortedRecords}
         fields={appSchema.fields} // アプリスキーマから読み込んだフィールド定義を渡す
         onEdit={handleEditRecord}
         onDelete={handleDeleteRecord}
         itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
         listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
         onEditSchema={handleEditSchema}
+        // ★追加: ソート関連のPropsを DynamicList に渡す
+        onSortChange={handleSortChange}
+        currentSortField={sortField}
+        currentSortDirection={sortDirection}
       />
     </Box>
   );
