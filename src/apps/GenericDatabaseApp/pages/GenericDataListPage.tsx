@@ -64,6 +64,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [currentViewId, setCurrentViewId] = useState<string | "default">("default"); // 現在選択中のビューID
   const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false); // ビュー保存モーダル
   const [newViewName, setNewViewName] = useState(""); // 新しいビューの名前
+  const [selectedViewToOverwriteId, setSelectedViewToOverwriteId] = useState<string | "new">("new");
 
   // データをロードする関数
   const fetchData = async () => {
@@ -315,7 +316,22 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   // ★追加: ビュー保存モーダル関連ハンドラ
   const handleOpenSaveViewModal = () => {
     setIsSaveViewModalOpen(true);
-    setNewViewName(""); // 名前をリセット
+    setNewViewName(""); // 新規作成時は名前をリセット
+    setSelectedViewToOverwriteId("new"); // デフォルトは新規作成
+  };
+
+  // ★追加: ビュー保存モーダルの既存ビュー選択ハンドラ
+  const handleSelectExistingView = (viewId: string | "new") => {
+    setSelectedViewToOverwriteId(viewId);
+    if (viewId === "new") {
+      setNewViewName("");
+    } else {
+      // 既存ビューを選択した場合、そのビュー名をテキストフィールドにセット
+      const selectedView = customViews.find((view) => view.id === viewId);
+      if (selectedView) {
+        setNewViewName(selectedView.name);
+      }
+    }
   };
   const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
 
@@ -329,7 +345,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       return;
     }
 
-    const newView: Omit<CustomView<GenericRecord>, "id"> = {
+    // ★修正: 既存ビューの上書きロジックを追加
+    const existingView = customViews.find(
+      (view) => view.name === newViewName.trim() && view.appId === appId
+    );
+
+    const viewToSave: Omit<CustomView<GenericRecord>, "id"> = {
       name: newViewName.trim(),
       appId: appId,
       filterConditions: filterConditions,
@@ -337,8 +358,13 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     };
 
     try {
-      await customViewRepository.create(newView, appId); // appId を渡して作成
-      alert("ビューが保存されました！");
+      if (existingView) {
+        await customViewRepository.update(existingView.id, viewToSave, appId); // 上書き保存
+        alert(`ビュー「${newViewName.trim()}」が更新されました！`);
+      } else {
+        await customViewRepository.create(viewToSave, appId); // 新規作成
+        alert(`ビュー「${newViewName.trim()}」が保存されました！`);
+      }
       fetchData(); // ビューリストを再ロード
       setIsSaveViewModalOpen(false);
     } catch (err) {
@@ -508,6 +534,23 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       <Dialog open={isSaveViewModalOpen} onClose={handleCloseSaveViewModal} fullWidth maxWidth="md">
         <DialogTitle>ビューを保存</DialogTitle>
         <DialogContent>
+          {/* ★追加: 新規保存 vs 既存ビュー上書き選択 */}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>保存方法</InputLabel>
+            <Select
+              value={selectedViewToOverwriteId}
+              label="保存方法"
+              onChange={(e) => handleSelectExistingView(e.target.value as string)}
+            >
+              <MenuItem value="new">新規ビューとして保存</MenuItem>
+              {customViews.map((view) => (
+                <MenuItem key={view.id} value={view.id}>
+                  {view.name} (既存を上書き)
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             autoFocus
             margin="dense"
@@ -517,6 +560,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             variant="standard"
             value={newViewName}
             onChange={(e) => setNewViewName(e.target.value)}
+            // 既存ビューを選択している場合は読み取り専用にする
+            disabled={selectedViewToOverwriteId !== "new"}
           />
         </DialogContent>
         <DialogActions>
