@@ -1,42 +1,32 @@
 // src/apps/GenericDatabaseApp/components/FilterSettingsModal.tsx
 
-import React, { FC, useState, useEffect, useMemo } from "react";
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Box,
-  Typography,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
   List,
   ListItem,
-  ListItemText,
   ListItemSecondaryAction,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
+  ListItemText,
   MenuItem,
+  Select,
   TextField,
+  Typography,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  AppSchema,
-  GenericRecord,
-  FormField,
-  FilterCondition,
-  FilterOperator,
-  FormFieldType,
-  FormFieldSelectOption,
-} from "../../../types/interfaces";
-import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx"; // DynamicForm が必要なので
-import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx"; // DynamicForm が必要なので
-import MuiDatePickerWrapper from "../../../components/FormFields/MuiDatePickerWrapper.tsx"; // DynamicForm が必要なので
 import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrapper.tsx"; // DynamicForm が必要なので
-import MuiRadioGroupWrapper from "../../../components/FormFields/MuiRadioGroupWrapper.tsx"; // DynamicForm が必要なので
-import MuiLookupFieldWrapper from "../../../components/FormFields/MuiLookupFieldWrapper.tsx"; // DynamicForm が必要なので
+import MuiDatePickerWrapper from "../../../components/FormFields/MuiDatePickerWrapper.tsx"; // DynamicForm が必要なので
+import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx"; // DynamicForm が必要なので
+import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx"; // DynamicForm が必要なので
+import { FilterCondition, FilterOperator, FormField } from "../../../types/interfaces";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper"; // fieldComponentMapper も使用
 import { getFilterConditionValueDisplay } from "../utils/filterOperatorLabels.ts";
 
