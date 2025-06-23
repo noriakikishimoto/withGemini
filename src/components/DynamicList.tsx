@@ -6,7 +6,7 @@ import { Box, Typography, ToggleButton, ToggleButtonGroup, IconButton } from "@m
 import ViewModuleIcon from "@mui/icons-material/ViewModule"; // カード表示アイコン
 import TableViewIcon from "@mui/icons-material/TableView"; // テーブル表示アイコン
 
-import { FormField, Identifiable, SortDirection } from "../types/interfaces";
+import { FormField, Identifiable, SortCondition, SortDirection } from "../types/interfaces";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 interface DynamicListProps<T extends Identifiable & object> {
@@ -17,10 +17,9 @@ interface DynamicListProps<T extends Identifiable & object> {
   itemBasePath: string;
   listTitle: string;
   onEditSchema?: () => void;
-  // ★追加: ソート関連のProps
-  onSortChange: (sortField: keyof T, sortDirection: SortDirection) => void;
-  currentSortField?: keyof T;
-  currentSortDirection?: SortDirection;
+  // ★修正: ソート関連のProps
+  onSortChange: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
+  currentSortConditions?: SortCondition<T>[]; // 現在のソート条件の配列
 }
 
 function DynamicList<T extends Identifiable & object>({
@@ -32,8 +31,7 @@ function DynamicList<T extends Identifiable & object>({
   listTitle,
   onEditSchema,
   onSortChange, // ★追加: Propsとして受け取る
-  currentSortField, // ★追加: Propsとして受け取る
-  currentSortDirection, // ★追加: Propsとして受け取る
+  currentSortConditions, // ★追加: Propsとして受け取る
 }: DynamicListProps<T>) {
   const [currentView, setCurrentView] = useState<"cards" | "table">("table");
 
@@ -82,6 +80,9 @@ function DynamicList<T extends Identifiable & object>({
           onDelete={onDelete}
           itemBasePath={itemBasePath}
           listTitle={listTitle}
+          // ソート関連のPropsは DynamicCards では利用しない
+          onSortChange={onSortChange}
+          currentSortConditions={currentSortConditions}
         />
       ) : (
         // デフォルトは 'table'
@@ -91,9 +92,9 @@ function DynamicList<T extends Identifiable & object>({
           onEdit={onEdit}
           onDelete={onDelete}
           itemBasePath={itemBasePath}
-          onSortChange={onSortChange} // ★追加: onSortChange を渡す
-          currentSortField={currentSortField} // ★追加: currentSortField を渡す
-          currentSortDirection={currentSortDirection} // ★追加: currentSortDirection を渡す
+          // ソート関連のPropsは DynamicCards では利用しない
+          onSortChange={onSortChange}
+          currentSortConditions={currentSortConditions}
         />
       )}
     </Box>

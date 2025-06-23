@@ -3,12 +3,26 @@ import { useNavigate, useParams } from "react-router-dom"; // ★useParams を�
 import DynamicList from "../../../components/DynamicList.tsx";
 
 // MUIコンポーネント
-import { Box, Button, CircularProgress, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemText,
+  TextField,
+  Typography,
+} from "@mui/material";
+import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
 
 // 共通の型定義をインポート
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts"; // 汎用データのリポジトリ
-import { AppSchema, GenericRecord, SortDirection } from "../../../types/interfaces";
+import { AppSchema, GenericRecord, SortCondition, SortDirection } from "../../../types/interfaces";
 
 interface GenericDataListPageProps {}
 
@@ -22,9 +36,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-
-  const [sortField, setSortField] = useState<keyof GenericRecord | undefined>(undefined);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
+  // ★修正: ソートの状態を SortCondition[] で管理
+  const [sortConditions, setSortConditions] = useState<SortCondition<GenericRecord>[]>([]);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -56,24 +69,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     fetchData();
   }, [appId]); // appId が変更されたらデータを再フェッチ
 
-  // フィルタリングされたレコードリスト
-  // filteredFields は AppSchema から取得した fields を使う
-  /*
-  const filteredRecords = useMemo(() => {
-    if (!searchTerm || !appSchema) {
-      return records;
-    }
-    const lowercasedSearchTerm = searchTerm.toLowerCase();
-    // ユーザー定義フィールドに基づいて検索
-    return records.filter((record) => {
-      return appSchema.fields.some((field) => {
-        const fieldValue = record[field.name as string];
-        return String(fieldValue).toLowerCase().includes(lowercasedSearchTerm);
-      });
-    });
-  }, [records, searchTerm, appSchema]);
-*/
-
   const filteredAndSortedRecords = useMemo(() => {
     let currentRecords = [...records]; // 元の配列を変更しないようにコピー
 
@@ -89,36 +84,30 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
 
     // 2. ソート
-    if (sortField && sortDirection) {
+    if (sortConditions.length > 0) {
       currentRecords.sort((a, b) => {
-        const aValue = String(a[sortField] ?? "").toLowerCase();
-        const bValue = String(b[sortField] ?? "").toLowerCase();
+        for (const condition of sortConditions) {
+          const aValue = String(a[condition.field] ?? "").toLowerCase();
+          const bValue = String(b[condition.field] ?? "").toLowerCase();
 
-        if (aValue < bValue) {
-          return sortDirection === "asc" ? -1 : 1;
+          if (aValue < bValue) {
+            return condition.direction === "asc" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return condition.direction === "asc" ? 1 : -1;
+          }
         }
-        if (aValue > bValue) {
-          return sortDirection === "asc" ? 1 : -1;
-        }
-        return 0;
+        return 0; // 全ての条件で同値の場合
       });
     }
 
     return currentRecords;
-  }, [records, searchTerm, appSchema, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+  }, [records, searchTerm, appSchema, sortConditions]); // ★依存配列にソート関連のステートを追加
 
   // ★追加: ソート変更ハンドラ
-  const handleSortChange = (field: keyof GenericRecord) => {
-    let newDirection: SortDirection = "asc";
-    if (sortField === field && sortDirection === "asc") {
-      newDirection = "desc";
-    } else if (sortField === field && sortDirection === "desc") {
-      newDirection = undefined; // 3回目のクリックでソートを解除
-    }
-    setSortField(field);
-    setSortDirection(newDirection);
+  const handleSortConditionsChange = (newSortConditions: SortCondition<GenericRecord>[]) => {
+    setSortConditions(newSortConditions);
   };
-
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
     if (window.confirm("このレコードを本当に削除しますか？")) {
@@ -154,6 +143,10 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       navigate(`/generic-db/app-schemas/${appId}`); // アプリスキーマ編集画面へ遷移
     }
   };
+  // ★追加: ソート設定モーダルを開くステートとハンドラ
+  const [isSortModalOpen, setIsSortModalOpen] = useState(false);
+  const handleOpenSortModal = () => setIsSortModalOpen(true);
+  const handleCloseSortModal = () => setIsSortModalOpen(false);
 
   // ローディング中とエラー表示
   if (isLoading) {
@@ -210,7 +203,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           新規レコードを作成
         </Button>
       </Box>
-
+      {/* ★追加: ソート設定ボタン */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <Button variant="outlined" startIcon={<SortIcon />} onClick={handleOpenSortModal}>
+          ソート設定
+        </Button>
+      </Box>
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<GenericRecord> // GenericRecord 型を渡す
         items={filteredAndSortedRecords}
@@ -221,10 +219,37 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
         onEditSchema={handleEditSchema}
         // ★追加: ソート関連のPropsを DynamicList に渡す
-        onSortChange={handleSortChange}
-        currentSortField={sortField}
-        currentSortDirection={sortDirection}
+        onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
+        currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
       />
+
+      {/* ★追加: ソート設定モーダル (後で SortSettingsModal.tsx に切り出す) */}
+      <Dialog open={isSortModalOpen} onClose={handleCloseSortModal} fullWidth maxWidth="sm">
+        <DialogTitle>ソート設定</DialogTitle>
+        <DialogContent>
+          <Typography>ここに複数のソート条件を設定するUIが入ります。</Typography>
+          <Typography sx={{ mt: 2 }}>現在のソート:</Typography>
+          <List dense>
+            {sortConditions.length === 0 ? (
+              <ListItem>
+                <ListItemText primary="なし" />
+              </ListItem>
+            ) : (
+              sortConditions.map((condition, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={`${index + 1}. ${String(condition.field)} (${condition.direction === "asc" ? "昇順" : "降順"})`}
+                  />
+                </ListItem>
+              ))
+            )}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSortModal}>閉じる</Button>
+          {/* ソート適用ボタン、ソート条件クリアボタンなどを追加 */}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

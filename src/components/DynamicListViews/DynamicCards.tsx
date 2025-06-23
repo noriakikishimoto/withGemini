@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Box, Typography, Button, Card, CardContent, CardActions, IconButton } from "@mui/material"; // IconButton をインポート
 
 // 共通の型定義をインポート
-import { FormField, Identifiable, SortDirection } from "../../types/interfaces";
+import { FormField, Identifiable, SortCondition, SortDirection } from "../../types/interfaces";
 
 // 必要なMUIアイコンをインポート
 import EditIcon from "@mui/icons-material/Edit";
@@ -20,9 +20,8 @@ interface DynamicCardsProps<T extends Identifiable & object> {
   itemBasePath: string; // 詳細ページへのリンクのベースパス (例: '/generic-db/tasks')
   listTitle: string; // DynamicListから渡されるリストタイトル（メッセージ表示用）
   // ★追加: ソート関連のProps (DynamicCards では利用しないが、型は合わせる)
-  onSortChange?: (sortField: keyof T, sortDirection: SortDirection) => void;
-  currentSortField?: keyof T;
-  currentSortDirection?: SortDirection;
+  onSortChange?: (newSortConditions: SortCondition<T>[]) => void;
+  currentSortConditions?: SortCondition<T>[];
 }
 
 // DynamicCards コンポーネントの定義
@@ -34,7 +33,7 @@ function DynamicCards<T extends Identifiable & object>({
   itemBasePath,
   listTitle,
   // ソート関連のPropsはここで利用しない
-  // onSortChange, currentSortField, currentSortDirection
+  // onSortChange, currentSortConditions
 }: DynamicCardsProps<T>) {
   // ★追加: renderFieldValue 関数をここに定義
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {

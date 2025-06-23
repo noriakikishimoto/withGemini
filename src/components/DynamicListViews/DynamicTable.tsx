@@ -15,7 +15,7 @@ import {
 import React from "react";
 import { Link } from "react-router-dom";
 // 共通の型定義をインポート
-import { FormField, Identifiable, SortDirection } from "../../types/interfaces";
+import { FormField, Identifiable, SortCondition, SortDirection } from "../../types/interfaces";
 // ★追加: ソートアイコン
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -27,9 +27,9 @@ interface DynamicTableProps<T extends Identifiable & object> {
   onEdit: (id: string) => void; // 編集ボタンが押されたときに呼ばれるコールバック
   onDelete: (id: string) => void; // 削除ボタンが押されたときに呼ばれるコールバック
   itemBasePath: string; // 詳細ページへのリンクのベースパス
-  onSortChange: (sortField: keyof T, sortDirection: SortDirection) => void;
-  currentSortField?: keyof T;
-  currentSortDirection?: SortDirection;
+  // ★修正: ソート関連のProps
+  onSortChange: (newSortConditions: SortCondition<T>[]) => void;
+  currentSortConditions?: SortCondition<T>[];
 }
 
 // DynamicTable コンポーネントの定義
@@ -39,9 +39,8 @@ function DynamicTable<T extends Identifiable & object>({
   onEdit,
   onDelete,
   itemBasePath,
-  onSortChange, // ★追加: Propsとして受け取る
-  currentSortField, // ★追加: Propsとして受け取る
-  currentSortDirection, // ★追加: Propsとして受け取る
+  onSortChange,
+  currentSortConditions,
 }: DynamicTableProps<T>) {
   // ★追加: renderFieldValue 関数をここに定義
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {
@@ -70,63 +69,99 @@ function DynamicTable<T extends Identifiable & object>({
 
   return (
     <TableContainer component={Paper} sx={{ mt: 2 }}>
-      {" "}
-      {/* Paper で囲む */}
       <Table sx={{ minWidth: 650 }} aria-label="dynamic list table">
         <TableHead>
           <TableRow>
-            {fields.map((field) => (
-              <TableCell key={field.name as string} sx={{ fontWeight: "bold" }}>
-                <TableSortLabel
-                  active={currentSortField === field.name && currentSortDirection !== undefined}
-                  direction={currentSortField === field.name ? currentSortDirection || "asc" : "asc"} // ソート方向を設定
-                  onClick={() => onSortChange(field.name, currentSortDirection)} // クリックでソート変更を通知
-                  // 矢印アイコンは TableSortLabel が自動で表示
-                >
-                  {field.label}
-                </TableSortLabel>
-              </TableCell>
-            ))}
+            {fields.map((field) => {
+              // 現在のフィールドがソート条件に含まれているか、何番目かをチェック
+              const currentSortCondition = currentSortConditions?.find(
+                (cond) => cond.field === field.name
+              );
+              const sortIndex = currentSortConditions?.findIndex((cond) => cond.field === field.name);
+              const isActive = sortIndex !== undefined && sortIndex !== -1;
+
+              // ソートクリックハンドラ
+              const handleHeaderClick = () => {
+                let newSortConditions = [...(currentSortConditions || [])];
+                const existingIndex = newSortConditions.findIndex((cond) => cond.field === field.name);
+
+                if (existingIndex !== -1) {
+                  // 既にソート条件にある場合
+                  const currentDir = newSortConditions[existingIndex].direction;
+                  if (currentDir === "asc") {
+                    newSortConditions[existingIndex].direction = "desc"; // 昇順 -> 降順
+                  } else {
+                    newSortConditions.splice(existingIndex, 1); // 降順 -> 解除 (配列から削除)
+                  }
+                } else {
+                  // 新しいソート条件を追加 (デフォルトは昇順)
+                  newSortConditions.push({ field: field.name, direction: "asc" });
+                }
+                onSortChange(newSortConditions);
+              };
+
+              return (
+                <TableCell key={field.name as string} sx={{ fontWeight: "bold" }}>
+                  <TableSortLabel
+                    active={isActive} // active はソートが適用されていて、かつソート解除状態ではない
+                    direction={currentSortCondition?.direction} // ソート方向
+                    onClick={handleHeaderClick}
+                  >
+                    {field.label}
+                    {isActive && sortIndex !== undefined && sortIndex !== -1 && (
+                      <Typography variant="caption" sx={{ ml: 0.5, color: "text.secondary" }}>
+                        {sortIndex + 1}
+                      </Typography>
+                    )}
+                  </TableSortLabel>
+                </TableCell>
+              );
+            })}
             <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">
               アクション
-            </TableCell>{" "}
-            {/* アクション列 */}
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-              {fields.map((field) => (
-                <TableCell key={field.name as string}>
-                  {field.name === fields[0].name ? ( // 最初のフィールドは詳細リンク
-                    <Link
-                      to={`${itemBasePath}/${item.id}`}
-                      style={{ textDecoration: "none", color: "primary.main", fontWeight: "bold" }}
-                    >
-                      {renderFieldValue(item, field)} {/* ★renderFieldValue を呼び出す */}
-                    </Link>
-                  ) : (
-                    <Typography variant="body2">
-                      {renderFieldValue(item, field)} {/* ★renderFieldValue を呼び出す */}
-                    </Typography>
-                  )}
-                </TableCell>
-              ))}
-              <TableCell align="right">
-                <IconButton aria-label="編集" color="warning" onClick={() => onEdit(item.id)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  aria-label="削除"
-                  color="error"
-                  onClick={() => onDelete(item.id)}
-                  sx={{ ml: 1 }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+          {items.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={fields.length + 1} sx={{ textAlign: "center", py: 2 }}>
+                該当するデータがありません
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            items.map((item) => (
+              <TableRow key={item.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                {fields.map((field) => (
+                  <TableCell key={field.name as string}>
+                    {field.name === fields[0].name ? (
+                      <Link
+                        to={`${itemBasePath}/${item.id}`}
+                        style={{ textDecoration: "none", color: "primary.main", fontWeight: "bold" }}
+                      >
+                        {renderFieldValue(item, field)}
+                      </Link>
+                    ) : (
+                      <Typography variant="body2">{renderFieldValue(item, field)}</Typography>
+                    )}
+                  </TableCell>
+                ))}
+                <TableCell align="right">
+                  <IconButton aria-label="編集" color="warning" onClick={() => onEdit(item.id)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    aria-label="削除"
+                    color="error"
+                    onClick={() => onDelete(item.id)}
+                    sx={{ ml: 1 }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </TableContainer>

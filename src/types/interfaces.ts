@@ -110,6 +110,11 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
 }
 
 export type SortDirection = "asc" | "desc" | undefined;
+// ★追加: ソート条件のインターフェース
+export interface SortCondition<T extends object> {
+  field: keyof T;
+  direction: Exclude<SortDirection, undefined>; // 'asc' または 'desc' のみ
+}
 
 export interface DynamicListProps<T extends Identifiable & object> {
   // Tはリストのデータオブジェクトの型
@@ -121,9 +126,8 @@ export interface DynamicListProps<T extends Identifiable & object> {
   listTitle: string; // リストのタイトル (例: '既存のタスク')
 
   // ★追加: ソート関連のProps
-  onSortChange: (sortField: keyof T, sortDirection: SortDirection) => void; // ソート変更を通知するコールバック
-  currentSortField?: keyof T; // 現在ソート中のフィールド
-  currentSortDirection?: SortDirection; // 現在のソート方向
+  onSortChange?: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
+  currentSortConditions?: SortCondition<T>[]; // 現在のソート条件の配列
 }
 
 //　アプリケーションスキーマのデータモデル

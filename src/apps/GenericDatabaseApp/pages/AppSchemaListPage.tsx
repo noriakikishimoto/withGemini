@@ -16,7 +16,13 @@ import {
   ListItemButton,
   IconButton,
 } from "@mui/material";
-import { AppSchema, FormField, SortDirection } from "../../../types/interfaces";
+import {
+  AppSchema,
+  FormField,
+  GenericRecord,
+  SortCondition,
+  SortDirection,
+} from "../../../types/interfaces";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
@@ -38,8 +44,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [sortField, setSortField] = useState<keyof AppSchema | undefined>(undefined);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
+  const [sortConditions, setSortConditions] = useState<SortCondition<AppSchema>[]>([]);
 
   // アプリスキーマデータをロードする関数
   const fetchAppSchemas = async () => {
@@ -61,20 +66,6 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
     fetchAppSchemas();
   }, []);
 
-  // フィルタリングされたアプリスキーマリスト
-  /*
-  const filteredAppSchemas = useMemo(() => {
-    if (!searchTerm) {
-      return appSchemas;
-    }
-    const lowercasedSearchTerm = searchTerm.toLowerCase();
-    return appSchemas.filter(
-      (schema) =>
-        schema.name.toLowerCase().includes(lowercasedSearchTerm) ||
-        (schema.description && schema.description.toLowerCase().includes(lowercasedSearchTerm))
-    );
-  }, [appSchemas, searchTerm]);
-  */
   const filteredAndSortedAppSchemas = useMemo(() => {
     let currentAppSchemas = [...appSchemas]; // 元の配列を変更しないようにコピー
 
@@ -89,34 +80,29 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
     }
 
     // 2. ソート
-    if (sortField && sortDirection) {
+    if (sortConditions.length > 0) {
       currentAppSchemas.sort((a, b) => {
-        const aValue = String(a[sortField] ?? "").toLowerCase();
-        const bValue = String(b[sortField] ?? "").toLowerCase();
+        for (const condition of sortConditions) {
+          const aValue = String(a[condition.field] ?? "").toLowerCase();
+          const bValue = String(b[condition.field] ?? "").toLowerCase();
 
-        if (aValue < bValue) {
-          return sortDirection === "asc" ? -1 : 1;
+          if (aValue < bValue) {
+            return condition.direction === "asc" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return condition.direction === "asc" ? 1 : -1;
+          }
         }
-        if (aValue > bValue) {
-          return sortDirection === "asc" ? 1 : -1;
-        }
-        return 0;
+        return 0; // 全ての条件で同値の場合
       });
     }
 
     return currentAppSchemas;
-  }, [appSchemas, searchTerm, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+  }, [appSchemas, searchTerm, sortConditions]); // ★依存配列にソート関連のステートを追加
 
   // ★追加: ソート変更ハンドラ
-  const handleSortChange = (field: keyof AppSchema) => {
-    let newDirection: SortDirection = "asc";
-    if (sortField === field && sortDirection === "asc") {
-      newDirection = "desc";
-    } else if (sortField === field && sortDirection === "desc") {
-      newDirection = undefined; // 3回目のクリックでソートを解除
-    }
-    setSortField(field);
-    setSortDirection(newDirection);
+  const handleSortConditionsChange = (newSortConditions: SortCondition<AppSchema>[]) => {
+    setSortConditions(newSortConditions);
   };
 
   // アプリスキーマ削除ハンドラ
@@ -207,9 +193,8 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
         onDelete={handleDeleteAppSchema}
         itemBasePath="/generic-db/app-schemas" // アプリスキーマ詳細/編集ページのベースパス
         listTitle="アプリ" // DynamicList 内部で「作成済みアプリ」の文字列を生成
-        onSortChange={handleSortChange}
-        currentSortField={sortField}
-        currentSortDirection={sortDirection}
+        onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
+        currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
       />
 
       {/* ★追加: 各アプリのデータ一覧へのリンクボタンも追加 (リスト表示の下) */}

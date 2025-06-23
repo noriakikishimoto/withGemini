@@ -1,10 +1,23 @@
-import React, { FC, useState, useMemo, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemText,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { FC, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../../components/Layout.tsx";
-import { Box, Typography, Button, TextField, CircularProgress } from "@mui/material";
-
-import { SortDirection, TaskData } from "../../../types/interfaces.ts";
 import { taskRepository } from "../../../repositories/taskRepository.ts"; // タスクリポジトリをインポート
+import { SortCondition, TaskData } from "../../../types/interfaces.ts";
 
 import DynamicList from "../../../components/DynamicList.tsx";
 import { taskFormFields } from "./TaskFormPage.tsx"; // TaskFormPage で定義したものを共有
@@ -18,8 +31,8 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [sortField, setSortField] = useState<keyof TaskData | undefined>(undefined);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(undefined);
+  // ★修正: ソートの状態を SortCondition[] で管理
+  const [sortConditions, setSortConditions] = useState<SortCondition<TaskData>[]>([]);
 
   // タスクデータをロードする関数
   const fetchTasks = async () => {
@@ -73,34 +86,31 @@ const TaskListPage: FC<TaskListPageProps> = () => {
     }
 
     // 2. ソート
-    if (sortField && sortDirection) {
+    if (sortConditions.length > 0) {
       currentTasks.sort((a, b) => {
-        const aValue = String(a[sortField] ?? "").toLowerCase();
-        const bValue = String(b[sortField] ?? "").toLowerCase();
+        for (const condition of sortConditions) {
+          const aValue = String(a[condition.field] ?? "").toLowerCase();
+          const bValue = String(b[condition.field] ?? "").toLowerCase();
 
-        if (aValue < bValue) {
-          return sortDirection === "asc" ? -1 : 1;
+          if (aValue < bValue) {
+            return condition.direction === "asc" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return condition.direction === "asc" ? 1 : -1;
+          }
         }
-        if (aValue > bValue) {
-          return sortDirection === "asc" ? 1 : -1;
-        }
-        return 0;
+        return 0; // 全ての条件で同値の場合
       });
     }
 
     return currentTasks;
-  }, [tasks, searchTerm, sortField, sortDirection]); // ★依存配列にソート関連のステートを追加
+  }, [tasks, searchTerm, sortConditions]); // ★依存配列にソート関連のステートを追加
 
   // ★追加: ソート変更ハンドラ
-  const handleSortChange = (field: keyof TaskData) => {
-    let newDirection: SortDirection = "asc";
-    if (sortField === field && sortDirection === "asc") {
-      newDirection = "desc";
-    } else if (sortField === field && sortDirection === "desc") {
-      newDirection = undefined; // 3回目のクリックでソートを解除
-    }
-    setSortField(field);
-    setSortDirection(newDirection);
+  // ★追加: ソート条件変更ハンドラ (DynamicList に渡す)
+  // ソート設定モーダルから呼び出されることを想定
+  const handleSortConditionsChange = (newSortConditions: SortCondition<TaskData>[]) => {
+    setSortConditions(newSortConditions);
   };
 
   // タスク削除ハンドラ
@@ -172,18 +182,16 @@ const TaskListPage: FC<TaskListPageProps> = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         sx={{ mb: 3 }}
       />
-      {/* ★修正: DynamicList コンポーネントを使用 */}
+
       <DynamicList<TaskData>
         items={filteredAndSortedTasks}
-        fields={taskFormFields} // TaskData のフィールド定義を渡す
+        fields={taskFormFields}
         onEdit={handleEditTask}
         onDelete={handleDeleteTask}
-        itemBasePath="/generic-db/tasks" // タスク詳細ページのベースパス
-        listTitle="タスク" // DynamicList 内部で「既存のタスク」の文字列を生成
-        // ★追加: ソート関連のPropsを DynamicList に渡す
-        onSortChange={handleSortChange}
-        currentSortField={sortField}
-        currentSortDirection={sortDirection}
+        itemBasePath="/generic-db/tasks"
+        listTitle="タスク"
+        onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
+        currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
       />
     </Box>
   );
