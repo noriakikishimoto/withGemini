@@ -168,4 +168,5 @@ export interface CustomView<T extends object> extends Identifiable {
   appId: string; // このビューが紐づくアプリのID
   filterConditions: FilterCondition<T>[];
   sortConditions: SortCondition<T>[];
+  displayFields?: (keyof T)[]; // ★追加: ビューで表示するフィールド名 (keyof T の配列)
 }

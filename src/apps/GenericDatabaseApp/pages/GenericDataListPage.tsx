@@ -12,12 +12,15 @@ import EditIcon from "@mui/icons-material/Edit";
 import {
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
+  FormGroup,
   IconButton,
   InputLabel,
   MenuItem,
@@ -44,6 +47,9 @@ import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 
+// DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせる
+type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
+
 interface GenericDataListPageProps {}
 
 const GenericDataListPage: FC<GenericDataListPageProps> = () => {
@@ -69,6 +75,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
+  // ★追加: ビュー保存モーダル内の表示フィールド選択ステート
+  const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -106,17 +114,35 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
   // ★追加: 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
+    // appSchema がまだロードされていない場合は何もしない
+    if (!appSchema) {
+      // ただし、isLoading が false になった後も appSchema が null ならエラー表示
+      if (!isLoading && !appSchema) {
+        setError("アプリスキーマが見つからないか、読み込みに失敗しました。");
+      }
+      return;
+    }
+
     if (currentViewId === "default") {
       setFilterConditions([]);
       setSortConditions([]);
+      // デフォルトビューでは全てのフィールドを表示 (appSchema が存在する場合のみ)
+      setSelectedDisplayFields(appSchema.fields.map((f) => f.name as keyof GenericRecord));
     } else {
       const selectedView = customViews.find((view) => view.id === currentViewId);
       if (selectedView) {
-        setFilterConditions(selectedView.filterConditions as FilterCondition<GenericRecord>[]);
-        setSortConditions(selectedView.sortConditions as SortCondition<GenericRecord>[]);
+        setFilterConditions([...selectedView.filterConditions] as FilterCondition<GenericRecord>[]);
+        setSortConditions([...selectedView.sortConditions] as SortCondition<GenericRecord>[]);
+        // ビューに displayFields が設定されていればそれを適用、なければ appSchema の全フィールド
+        setSelectedDisplayFields(
+          selectedView.displayFields || appSchema.fields.map((f) => f.name as keyof GenericRecord)
+        );
+      } else {
+        // 選択されたビューが見つからない場合は、デフォルトビューに戻す
+        setCurrentViewId("default");
       }
     }
-  }, [currentViewId, customViews]); // customViews がロードされたら適用
+  }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
 
   const filteredAndSortedRecords = useMemo(() => {
     let currentRecords = [...records]; // 元の配列を変更しないようにコピー
@@ -309,13 +335,22 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const handleCloseFilterModal = () => setIsFilterModalOpen(false);
 
   // ★追加: DynamicList に渡す fields を変換するロジック
+  // DynamicList に渡す fields を変換するロジック (変更なし)
   const fieldsForDynamicList = useMemo(() => {
     if (!appSchema) return [];
-    return appSchema.fields.map((field) => ({
+    // selectedDisplayFields が空の場合 (ビューで何も選択されていない場合)、全てのフィールドを表示
+    const fieldsToDisplay =
+      selectedDisplayFields.length > 0
+        ? appSchema.fields.filter((field) =>
+            selectedDisplayFields.includes(field.name as keyof GenericRecord)
+          )
+        : appSchema.fields;
+
+    return fieldsToDisplay.map((field) => ({
       ...field,
-      component: getFieldComponentByType(field.type), // type に基づいて component を付与
-    })) as FormField<GenericRecord, CommonFormFieldComponent<any>>[];
-  }, [appSchema]);
+      component: getFieldComponentByType(field.type),
+    })) as FormFieldForDynamicList<GenericRecord>[];
+  }, [appSchema, selectedDisplayFields, customViews]);
 
   // ★追加: ビュー保存モーダル関連ハンドラ
   const handleOpenSaveViewModal = (viewToEditId?: string) => {
@@ -352,6 +387,16 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   */
   const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
 
+  // ビュー保存モーダル内の表示フィールド選択ハンドラ (変更なし)
+  const handleToggleDisplayField = (fieldName: keyof GenericRecord) => {
+    setSelectedDisplayFields((prev) => {
+      if (prev.includes(fieldName)) {
+        return prev.filter((f) => f !== fieldName);
+      } else {
+        return [...prev, fieldName];
+      }
+    });
+  };
   const handleSaveView = async () => {
     if (!newViewName.trim()) {
       alert("ビュー名を入力してください。");
@@ -373,6 +418,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       appId: appId,
       filterConditions: filterConditions,
       sortConditions: sortConditions,
+      displayFields: selectedDisplayFields, // ★追加: displayFields を保存
     };
 
     try {
@@ -606,6 +652,25 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             // ★修正: 既存ビューの編集モードでも名前は変更可能にする
             // disabled={selectedViewToOverwriteId !== 'new'} を削除
           />
+          {/* 表示する列の選択UI */}
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            表示する列:
+          </Typography>
+          <FormGroup>
+            {appSchema &&
+              appSchema.fields.map((field) => (
+                <FormControlLabel
+                  key={field.name as string}
+                  control={
+                    <Checkbox
+                      checked={selectedDisplayFields.includes(field.name as keyof GenericRecord)}
+                      onChange={() => handleToggleDisplayField(field.name as keyof GenericRecord)}
+                    />
+                  }
+                  label={field.label}
+                />
+              ))}
+          </FormGroup>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseSaveViewModal}>キャンセル</Button>
