@@ -7,9 +7,10 @@ import MuiDatePickerWrapper from "./MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "./MuiSelectFieldWrapper.tsx";
 
 // 共通の型定義をインポート
-import { FormField, CommonFormFieldComponent } from "../../types/interfaces";
+import { FormField, CommonFormFieldComponent, GenericRecord } from "../../types/interfaces";
 import MuiRadioGroupWrapper from "./MuiRadioGroupWrapper.tsx";
 import MuiLookupFieldWrapper from "./MuiLookupFieldWrapper.tsx";
+import MuiTableFieldWrapper from "./MuiTableFieldWrapper.tsx";
 
 import { Key } from "@mui/icons-material";
 
@@ -159,7 +160,21 @@ function FormFieldRenderer<T extends object>({
           lookupCopyToFields={field.lookupCopyToFields || ""}
         />
       );
-
+    case "table": // ★追加: table タイプ
+      return (
+        <MuiTableFieldWrapper
+          label={field.label}
+          name={fieldNameAsString} // 親フォームの formData のキーとして使う
+          value={(formData[fieldNameAsString] as GenericRecord[] | undefined) || []} // テーブルのデータ
+          onChange={(val) => handleChange(field.name, val)} // テーブルデータの変更を親に通知
+          required={field.required}
+          tableFields={field.tableFields || ""} // テーブルの列定義
+          tableSourceAppId={field.tableSourceAppId || ""}
+          tableFilterField={field.tableFilterField || ""}
+          tableFilterValue={field.tableFilterValue || ""}
+          parentFormData={formData}
+        />
+      );
     default:
       // 未知のフィールドタイプの場合のフォールバック
       return (

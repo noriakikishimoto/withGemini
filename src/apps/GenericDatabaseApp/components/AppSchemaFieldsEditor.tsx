@@ -65,6 +65,7 @@ const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldC
       { value: "radio", label: "ラジオボタン" },
       { value: "email", label: "メールアドレス" },
       { value: "lookup", label: "ルックアップ" },
+      { value: "table", label: "テーブル" },
     ] as FormFieldSelectOption[],
     component: MuiSelectFieldWrapper,
   },
@@ -160,8 +161,13 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       delete processedFieldData.lookupAppId;
       delete processedFieldData.lookupKeyField;
       delete processedFieldData.lookupDisplayFields;
+      delete processedFieldData.lookupCopyToFields;
     }
-
+    // ★追加: tableFields も保存 (JSON文字列に変換)
+    if (processedFieldData.type === "table") {
+    } else {
+      delete processedFieldData.tableFields;
+    }
     // rows や multiline も保存されるが、DynamicForm からは適切な型で渡されるはずなのでそのまま
 
     if (
@@ -275,6 +281,38 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
         fields.push({
           name: "lookupCopyToFields",
           label: "コピー先フィールド (元フィールド名:コピー先フィールド名, ...)", // 例: "氏名:顧客名, 住所:顧客住所"
+          type: "text",
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        break;
+      case "table": // ★追加: table タイプ
+        // ★追加: テーブルのデータソース関連
+        fields.push({
+          name: "tableSourceAppId",
+          label: "参照元アプリID",
+          type: "text",
+          component: MuiTextFieldWrapper,
+          required: true,
+          initialValue: "",
+        });
+        fields.push({
+          name: "tableFilterField",
+          label: "抽出条件フィールド名",
+          type: "text",
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        fields.push({
+          name: "tableFilterValue",
+          label: "抽出条件値",
+          type: "text",
+          component: MuiTextFieldWrapper,
+          initialValue: "",
+        });
+        fields.push({
+          name: "tableFields",
+          label: "テーブルの列定義 (カンマ区切り)", // JSON文字列ではなくカンマ区切り
           type: "text",
           component: MuiTextFieldWrapper,
           initialValue: "",

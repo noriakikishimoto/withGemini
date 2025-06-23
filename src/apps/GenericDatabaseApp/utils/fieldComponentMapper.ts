@@ -8,6 +8,7 @@ import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectField
 import { FormFieldType, CommonFormFieldComponent } from "../../../types/interfaces";
 import MuiRadioGroupWrapper from "../../../components/FormFields/MuiRadioGroupWrapper.tsx";
 import MuiLookupFieldWrapper from "../../../components/FormFields/MuiLookupFieldWrapper.tsx";
+import MuiTableFieldWrapper from "../../../components/FormFields/MuiTableFieldWrapper.tsx";
 
 /**
  * フィールドタイプに基づいて、対応する汎用フォームパーツコンポーネントを返すヘルパー関数。
@@ -31,6 +32,8 @@ export const getFieldComponentByType = (fieldType: FormFieldType): CommonFormFie
       return MuiRadioGroupWrapper;
     case "lookup":
       return MuiLookupFieldWrapper;
+    case "table":
+      return MuiTableFieldWrapper;
     default:
       console.error(`Unknown field type: ${fieldType}. Falling back to MuiTextFieldWrapper.`);
       return MuiTextFieldWrapper;

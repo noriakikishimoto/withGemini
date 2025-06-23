@@ -1,21 +1,18 @@
-import React, { FC } from "react";
-import { Link } from "react-router-dom";
-// ★追加: テーブル表示に必要なMUIコンポーネントをインポート
-import {
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Paper,
-  Button,
-  Typography,
-  IconButton,
-  Box,
-} from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import {
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import React from "react";
+import { Link } from "react-router-dom";
 // 共通の型定義をインポート
 import { FormField, Identifiable } from "../../types/interfaces";
 
@@ -36,6 +33,31 @@ function DynamicTable<T extends Identifiable & object>({
   onDelete,
   itemBasePath,
 }: DynamicTableProps<T>) {
+  // ★追加: renderFieldValue 関数をここに定義
+  const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {
+    const value = item[field.name as keyof T]; // 型は any なので、as keyof T でアクセスを安全にする
+
+    // ★修正: table タイプの場合の表示ロジック
+    if (field.type === "table") {
+      if (Array.isArray(value)) {
+        return `明細 ${value.length} 件`; // 例: 「明細 3 件」
+      }
+      return "明細なし"; // テーブルデータがなければ
+    }
+
+    // completed フィールドの表示ロジック (以前のものを再利用)
+    if (field.name === "completed") {
+      return value === true || value === "true" ? (
+        <span style={{ marginLeft: "10px", color: "green", fontSize: "0.8em" }}>✅ 完了</span>
+      ) : (
+        <span style={{ marginLeft: "10px", color: "gray", fontSize: "0.8em" }}>❌ 未完了</span>
+      );
+    }
+
+    // その他のフィールドは単純に文字列として表示
+    return String(value ?? ""); // nullish coalescing を使用して undefined の場合も安全に
+  };
+
   return (
     <TableContainer component={Paper} sx={{ mt: 2 }}>
       {" "}
@@ -64,27 +86,11 @@ function DynamicTable<T extends Identifiable & object>({
                       to={`${itemBasePath}/${item.id}`}
                       style={{ textDecoration: "none", color: "primary.main", fontWeight: "bold" }}
                     >
-                      {/* ★修正: completed の表示ロジックを削除するか、field.name で判定 */}
-                      {/* DynamicTable は汎用なので、'completed' という特定のフィールド名に依存しない */}
-                      {/* もし 'completed' フィールドがあれば、その値に応じて表示 */}
-                      {field.name === "completed" &&
-                      (item[field.name] === true || item[field.name] === "true") ? (
-                        <span style={{ marginLeft: "10px", color: "green", fontSize: "0.8em" }}>✅</span>
-                      ) : (
-                        // 他のフィールドの表示
-                        (item[field.name] as string) // string としてキャスト
-                      )}
+                      {renderFieldValue(item, field)} {/* ★renderFieldValue を呼び出す */}
                     </Link>
                   ) : (
                     <Typography variant="body2">
-                      {/* ★修正: completed フィールドの表示ロジックを汎用的にする */}
-                      {field.name === "completed"
-                        ? // 'completed' という名前のフィールドがあれば、その真偽値に応じて表示
-                          item[field.name] === true || item[field.name] === "true"
-                          ? "完了"
-                          : "未完了"
-                        : // それ以外のフィールドは単純に文字列として表示
-                          String(item[field.name])}
+                      {renderFieldValue(item, field)} {/* ★renderFieldValue を呼び出す */}
                     </Typography>
                   )}
                 </TableCell>

@@ -49,7 +49,8 @@ export type FormFieldType =
   | "select"
   | "radio"
   | "email"
-  | "lookup";
+  | "lookup"
+  | "table";
 
 // ★追加: セレクトボックスの選択肢の型
 export interface FormFieldSelectOption {
@@ -98,6 +99,14 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   xs?: number;
   sm?: number;
   md?: number;
+
+  // ★追加: table タイプの場合の、テーブルの列定義
+
+  tableSourceAppId?: string; // 参照元アプリのID (テーブル表示データ用)
+  tableFilterField?: string; // 抽出条件フィールド名 (テーブル表示データ用)
+  tableFilterValue?: string; // 抽出条件値 (テーブル表示データ用)
+  tableFields?: string;
+  // tableFields?: FormField<any, any>[];
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {

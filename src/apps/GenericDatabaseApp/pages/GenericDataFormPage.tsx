@@ -190,6 +190,10 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         xs: field.xs,
         sm: field.sm,
         md: field.md,
+        tableSourceAppId: field.tableSourceAppId,
+        tableFilterField: field.tableFilterField,
+        tableFilterValue: field.tableFilterValue,
+        tableFields: field.tableFields,
       };
     });
 

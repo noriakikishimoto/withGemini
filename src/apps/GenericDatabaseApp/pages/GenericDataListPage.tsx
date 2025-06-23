@@ -1,15 +1,14 @@
-import React, { FC, useState, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"; // ★useParams を追加
 import DynamicList from "../../../components/DynamicList.tsx";
 
 // MUIコンポーネント
-import { Box, Typography, Button, TextField, CircularProgress, IconButton } from "@mui/material";
+import { Box, Button, CircularProgress, TextField, Typography } from "@mui/material";
 
 // 共通の型定義をインポート
-import { AppSchema, FormField, GenericRecord, TaskData } from "../../../types/interfaces";
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts"; // 汎用データのリポジトリ
-import { SettingsInputComponent } from "@mui/icons-material";
+import { AppSchema, GenericRecord } from "../../../types/interfaces";
 
 interface GenericDataListPageProps {}
 
