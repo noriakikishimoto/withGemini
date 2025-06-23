@@ -5,7 +5,13 @@ import { Link } from "react-router-dom";
 import { Box, Typography, Button, Card, CardContent, CardActions, IconButton } from "@mui/material"; // IconButton をインポート
 
 // 共通の型定義をインポート
-import { FormField, Identifiable, SortCondition, SortDirection } from "../../types/interfaces";
+import {
+  FilterCondition,
+  FormField,
+  Identifiable,
+  SortCondition,
+  SortDirection,
+} from "../../types/interfaces";
 
 // 必要なMUIアイコンをインポート
 import EditIcon from "@mui/icons-material/Edit";
@@ -22,6 +28,8 @@ interface DynamicCardsProps<T extends Identifiable & object> {
   // ★追加: ソート関連のProps (DynamicCards では利用しないが、型は合わせる)
   onSortChange?: (newSortConditions: SortCondition<T>[]) => void;
   currentSortConditions?: SortCondition<T>[];
+  onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void;
+  currentFilterConditions?: FilterCondition<T>[];
 }
 
 // DynamicCards コンポーネントの定義
@@ -33,7 +41,7 @@ function DynamicCards<T extends Identifiable & object>({
   itemBasePath,
   listTitle,
   // ソート関連のPropsはここで利用しない
-  // onSortChange, currentSortConditions
+  // onSortChange, currentSortConditions,onFilterChange,currentFilterConditions
 }: DynamicCardsProps<T>) {
   // ★追加: renderFieldValue 関数をここに定義
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {

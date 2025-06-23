@@ -15,7 +15,13 @@ import {
 import React from "react";
 import { Link } from "react-router-dom";
 // 共通の型定義をインポート
-import { FormField, Identifiable, SortCondition, SortDirection } from "../../types/interfaces";
+import {
+  FilterCondition,
+  FormField,
+  Identifiable,
+  SortCondition,
+  SortDirection,
+} from "../../types/interfaces";
 // ★追加: ソートアイコン
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -30,6 +36,9 @@ interface DynamicTableProps<T extends Identifiable & object> {
   // ★修正: ソート関連のProps
   onSortChange: (newSortConditions: SortCondition<T>[]) => void;
   currentSortConditions?: SortCondition<T>[];
+  // ★追加: フィルタリング関連のProps
+  onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void;
+  currentFilterConditions?: FilterCondition<T>[];
 }
 
 // DynamicTable コンポーネントの定義
@@ -41,6 +50,8 @@ function DynamicTable<T extends Identifiable & object>({
   itemBasePath,
   onSortChange,
   currentSortConditions,
+  onFilterChange, // Propsとして受け取る
+  currentFilterConditions, // Propsとして受け取る
 }: DynamicTableProps<T>) {
   // ★追加: renderFieldValue 関数をここに定義
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {

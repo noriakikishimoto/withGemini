@@ -119,7 +119,7 @@ function SortSettingsModal<T extends object>({
       <DialogContent>
         {/* ソート条件追加フォーム */}
         <Box sx={{ display: "flex", gap: 1, mb: 2, pt: 2 }}>
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>フィールド</InputLabel>
             <Select
               value={newSortField}
@@ -135,7 +135,7 @@ function SortSettingsModal<T extends object>({
               <MenuItem value="id">ID</MenuItem>
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 100 }}>
+          <FormControl sx={{ minWidth: 100 }} size="small">
             <InputLabel>方向</InputLabel>
             <Select
               value={newSortDirection}

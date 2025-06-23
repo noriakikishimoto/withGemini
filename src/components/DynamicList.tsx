@@ -7,20 +7,7 @@ import ViewModuleIcon from "@mui/icons-material/ViewModule"; // カード表示�
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 
 import SettingsIcon from "@mui/icons-material/Settings";
-import { FormField, Identifiable, SortCondition } from "../types/interfaces";
-
-interface DynamicListProps<T extends Identifiable & object> {
-  items: T[];
-  fields: FormField<T, any>[];
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  itemBasePath: string;
-  listTitle: string;
-  onEditSchema?: () => void;
-  // ★修正: ソート関連のProps
-  onSortChange: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
-  currentSortConditions?: SortCondition<T>[]; // 現在のソート条件の配列
-}
+import { DynamicListProps, Identifiable } from "../types/interfaces";
 
 function DynamicList<T extends Identifiable & object>({
   items,
@@ -32,6 +19,8 @@ function DynamicList<T extends Identifiable & object>({
   onEditSchema,
   onSortChange, // ★追加: Propsとして受け取る
   currentSortConditions, // ★追加: Propsとして受け取る
+  onFilterChange, // ★追加: Propsとして受け取る
+  currentFilterConditions, // ★追加: Propsとして受け取る
 }: DynamicListProps<T>) {
   const [currentView, setCurrentView] = useState<"cards" | "table">("table");
 
@@ -83,6 +72,8 @@ function DynamicList<T extends Identifiable & object>({
           // ソート関連のPropsは DynamicCards では利用しない
           onSortChange={onSortChange}
           currentSortConditions={currentSortConditions}
+          onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
+          currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
         />
       ) : (
         // デフォルトは 'table'
@@ -95,6 +86,8 @@ function DynamicList<T extends Identifiable & object>({
           // ソート関連のPropsは DynamicCards では利用しない
           onSortChange={onSortChange}
           currentSortConditions={currentSortConditions}
+          onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
+          currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
         />
       )}
     </Box>

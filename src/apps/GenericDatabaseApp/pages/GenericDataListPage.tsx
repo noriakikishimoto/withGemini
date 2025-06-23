@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"; // ★useParams を�
 import DynamicList from "../../../components/DynamicList.tsx";
 
 // MUIコンポーネント
+import FilterListIcon from "@mui/icons-material/FilterList"; // フィルタアイコン
 import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
 import { Box, Button, CircularProgress, TextField, Typography } from "@mui/material";
 
@@ -12,10 +13,12 @@ import { genericDataRepository } from "../../../repositories/genericDataReposito
 import {
   AppSchema,
   CommonFormFieldComponent,
+  FilterCondition,
   FormField,
   GenericRecord,
   SortCondition,
 } from "../../../types/interfaces";
+import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 
@@ -33,6 +36,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   // ★修正: ソートの状態を SortCondition[] で管理
   const [sortConditions, setSortConditions] = useState<SortCondition<GenericRecord>[]>([]);
+  // ★追加: フィルタリングの状態を管理
+  const [filterConditions, setFilterConditions] = useState<FilterCondition<GenericRecord>[]>([]);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -66,7 +71,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
   const filteredAndSortedRecords = useMemo(() => {
     let currentRecords = [...records]; // 元の配列を変更しないようにコピー
-
+    /*
     // 1. フィルタリング
     if (searchTerm && appSchema) {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
@@ -77,7 +82,120 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         });
       });
     }
+*/
+    if (appSchema) {
+      // appSchema が存在する場合のみフィルタリング
+      currentRecords = currentRecords.filter((record) => {
+        // テキスト検索
+        const passesSearchTerm =
+          !searchTerm ||
+          appSchema.fields.some((field) => {
+            const fieldValue = record[field.name as string];
+            return String(fieldValue ?? "")
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase());
+          });
 
+        // 複数条件フィルタリング
+        const passesFilterConditions = filterConditions.every((condition) => {
+          const fieldDef = appSchema.fields.find((f) => f.name === condition.field);
+          if (!fieldDef) return false; // フィールド定義が見つからない場合はスキップ
+
+          let fieldValue = record[condition.field as string];
+          let filterValue = condition.value;
+
+          // ★修正: 日付型の比較ロジック
+          if (fieldDef.type === "date") {
+            const dateFieldValue = fieldValue ? new Date(String(fieldValue)) : null;
+            const dateFilterValue = filterValue ? new Date(String(filterValue)) : null;
+
+            // 日付が不正な場合（NaN）は比較しない
+            if (
+              dateFieldValue === null ||
+              dateFilterValue === null ||
+              isNaN(dateFieldValue.getTime()) ||
+              isNaN(dateFilterValue.getTime())
+            ) {
+              return false; // または true, 要件によるがここでは false (比較できないので合致しない)
+            }
+            switch (condition.operator) {
+              case "eq":
+                return dateFieldValue.getTime() === dateFilterValue.getTime();
+              case "ne":
+                return dateFieldValue.getTime() !== dateFilterValue.getTime();
+              case "gt":
+                return dateFieldValue.getTime() > dateFilterValue.getTime();
+              case "lt":
+                return dateFieldValue.getTime() < dateFilterValue.getTime();
+              case "ge":
+                return dateFieldValue.getTime() >= dateFilterValue.getTime();
+              case "le":
+                return dateFieldValue.getTime() <= dateFilterValue.getTime();
+              default:
+                return true;
+            }
+          }
+          // 数値型の比較ロジック (Number に変換)
+          else if (fieldDef.type === "number") {
+            const numFieldValue = Number(fieldValue);
+            const numFilterValue = Number(filterValue);
+            if (isNaN(numFieldValue) || isNaN(numFilterValue)) return false; // 数値でない場合は比較しない
+            switch (condition.operator) {
+              case "eq":
+                return numFieldValue === numFilterValue;
+              case "ne":
+                return numFieldValue !== numFilterValue;
+              case "gt":
+                return numFieldValue > numFilterValue;
+              case "lt":
+                return numFieldValue < numFilterValue;
+              case "ge":
+                return numFieldValue >= numFilterValue;
+              case "le":
+                return numFieldValue <= numFilterValue;
+              default:
+                return true;
+            }
+          }
+          // チェックボックスの比較ロジック
+          else if (fieldDef.type === "checkbox") {
+            const boolFieldValue = Boolean(fieldValue); // 真偽値に変換
+            const boolFilterValue = Boolean(filterValue);
+            switch (condition.operator) {
+              case "eq":
+                return boolFieldValue === boolFilterValue;
+              case "ne":
+                return boolFieldValue !== boolFilterValue;
+              default:
+                return true;
+            }
+          }
+          // テキストベースの比較ロジック (文字列に変換して比較)
+          else {
+            const strFieldValue = String(fieldValue ?? "").toLowerCase();
+            const strFilterValue = String(filterValue ?? "").toLowerCase();
+            switch (condition.operator) {
+              case "eq":
+                return strFieldValue === strFilterValue;
+              case "ne":
+                return strFieldValue !== strFilterValue;
+              case "contains":
+                return strFieldValue.includes(strFilterValue);
+              case "not_contains":
+                return !strFieldValue.includes(strFilterValue);
+              case "starts_with":
+                return strFieldValue.startsWith(strFilterValue);
+              case "ends_with":
+                return strFieldValue.endsWith(strFilterValue);
+              default:
+                return true;
+            }
+          }
+        });
+
+        return passesSearchTerm && passesFilterConditions;
+      });
+    }
     // 2. ソート
     if (sortConditions.length > 0) {
       currentRecords.sort((a, b) => {
@@ -97,12 +215,17 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
 
     return currentRecords;
-  }, [records, searchTerm, appSchema, sortConditions]); // ★依存配列にソート関連のステートを追加
+  }, [records, searchTerm, appSchema, sortConditions, filterConditions]); // ★依存配列にソート関連のステートを追加
 
   // ★追加: ソート変更ハンドラ
   const handleSortConditionsChange = (newSortConditions: SortCondition<GenericRecord>[]) => {
     setSortConditions(newSortConditions);
   };
+  // ★追加: フィルタリング条件変更ハンドラ (フィルタ設定モーダルに渡す)
+  const handleFilterConditionsChange = (newFilterConditions: FilterCondition<GenericRecord>[]) => {
+    setFilterConditions(newFilterConditions);
+  };
+
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
     if (window.confirm("このレコードを本当に削除しますか？")) {
@@ -142,6 +265,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const handleOpenSortModal = () => setIsSortModalOpen(true);
   const handleCloseSortModal = () => setIsSortModalOpen(false);
+  // ★追加: フィルタリング設定モーダルを開くステートとハンドラ
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const handleOpenFilterModal = () => setIsFilterModalOpen(true);
+  const handleCloseFilterModal = () => setIsFilterModalOpen(false);
+
   /*
   // ★追加: ソート条件追加モーダル内のステート
   const [newSortField, setNewSortField] = useState<keyof GenericRecord | undefined>(undefined);
@@ -245,10 +373,15 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           新規レコードを作成
         </Button>
       </Box>
-      {/* ★追加: ソート設定ボタン */}
+
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        {/* ★追加: ソート設定ボタン */}
         <Button variant="outlined" startIcon={<SortIcon />} onClick={handleOpenSortModal}>
           ソート設定
+        </Button>
+        {/* ★追加: フィルタリング設定ボタン */}
+        <Button variant="outlined" startIcon={<FilterListIcon />} onClick={handleOpenFilterModal}>
+          絞り込み設定
         </Button>
       </Box>
       {/* DynamicList コンポーネントを使用 */}
@@ -263,6 +396,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         // ★追加: ソート関連のPropsを DynamicList に渡す
         onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
         currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
+        onFilterChange={handleFilterConditionsChange} // ★追加: onFilterChange を渡す
+        currentFilterConditions={filterConditions} // ★追加: currentFilterConditions を渡す
       />
 
       {/* ★修正: SortSettingsModal コンポーネントをレンダリング */}
@@ -272,6 +407,15 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         fields={fieldsForDynamicList} // ソート対象フィールド選択用に全フィールドを渡す
         currentSortConditions={sortConditions}
         onSave={handleSortConditionsChange} // モーダルで保存されたソート条件を受け取る
+      />
+
+      {/* ★修正: フィルタリング設定モーダルを SortSettingsModal と同様にレンダリング */}
+      <FilterSettingsModal<GenericRecord>
+        open={isFilterModalOpen}
+        onClose={handleCloseFilterModal}
+        fields={fieldsForDynamicList} // フィルタ対象フィールド選択用に全フィールドを渡す
+        currentFilterConditions={filterConditions}
+        onSave={handleFilterConditionsChange} // モーダルで保存されたフィルタ条件を受け取る
       />
     </Box>
   );

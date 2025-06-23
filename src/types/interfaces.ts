@@ -117,17 +117,19 @@ export interface SortCondition<T extends object> {
 }
 
 export interface DynamicListProps<T extends Identifiable & object> {
-  // Tはリストのデータオブジェクトの型
-  items: T[]; // 表示するデータの配列
-  fields: FormField<T, any>[]; // 表示するフィールドの定義 (DynamicForm と同じ FormField を利用)
-  onEdit: (id: string) => void; // 編集ボタンが押されたときに呼ばれるコールバック
-  onDelete: (id: string) => void; // 削除ボタンが押されたときに呼ばれるコールバック
-  itemBasePath: string; // 詳細ページへのリンクのベースパス (例: '/generic-db/tasks')
-  listTitle: string; // リストのタイトル (例: '既存のタスク')
-
-  // ★追加: ソート関連のProps
-  onSortChange?: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
+  items: T[];
+  fields: FormField<T, any>[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  itemBasePath: string;
+  listTitle: string;
+  onEditSchema?: () => void;
+  // ★修正: ソート関連のProps
+  onSortChange: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
   currentSortConditions?: SortCondition<T>[]; // 現在のソート条件の配列
+  // ★追加: フィルタリング関連のProps
+  onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void; // フィルタリング条件全体を通知
+  currentFilterConditions?: FilterCondition<T>[]; // 現在のフィルタリング条件の配列
 }
 
 //　アプリケーションスキーマのデータモデル
@@ -140,4 +142,30 @@ export interface AppSchema extends Identifiable {
 
 export interface GenericRecord extends Identifiable {
   [key: string]: any; // フィールド名 (string) に対応する値 (any)
+}
+// ★追加: フィルタリングの比較演算子
+export type FilterOperator =
+  | "eq"
+  | "ne"
+  | "gt"
+  | "lt"
+  | "ge"
+  | "le"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with";
+
+// ★追加: フィルタリング条件のインターフェース
+export interface FilterCondition<T extends object> {
+  field: keyof T;
+  operator: FilterOperator;
+  value: any; // 比較対象の値
+}
+
+export interface CustomView<T extends object> extends Identifiable {
+  name: string;
+  appId: string; // このビューが紐づくアプリのID
+  filterConditions: FilterCondition<T>[];
+  sortConditions: SortCondition<T>[];
 }
