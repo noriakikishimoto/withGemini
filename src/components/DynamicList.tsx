@@ -1,13 +1,13 @@
-import React, { FC, MouseEventHandler, useState } from "react"; // ★useState をインポート
+import React, { useState } from "react"; // ★useState をインポート
 import DynamicCards from "./DynamicListViews/DynamicCards.tsx";
 import DynamicTable from "./DynamicListViews/DynamicTable.tsx";
 
-import { Box, Typography, ToggleButton, ToggleButtonGroup, IconButton } from "@mui/material";
-import ViewModuleIcon from "@mui/icons-material/ViewModule"; // カード表示アイコン
 import TableViewIcon from "@mui/icons-material/TableView"; // テーブル表示アイコン
+import ViewModuleIcon from "@mui/icons-material/ViewModule"; // カード表示アイコン
+import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 
-import { FormField, Identifiable, SortCondition, SortDirection } from "../types/interfaces";
 import SettingsIcon from "@mui/icons-material/Settings";
+import { FormField, Identifiable, SortCondition } from "../types/interfaces";
 
 interface DynamicListProps<T extends Identifiable & object> {
   items: T[];

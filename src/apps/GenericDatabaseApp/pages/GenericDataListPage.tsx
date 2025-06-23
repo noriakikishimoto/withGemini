@@ -3,38 +3,21 @@ import { useNavigate, useParams } from "react-router-dom"; // ★useParams を�
 import DynamicList from "../../../components/DynamicList.tsx";
 
 // MUIコンポーネント
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  IconButton,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemSecondaryAction,
-  ListItemText,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from "@mui/material";
 import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
-
-import DeleteIcon from "@mui/icons-material/Delete";
-
-import AddIcon from "@mui/icons-material/Add"; // AddIcon を追加
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward"; // ArrowUpwardIcon を追加
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward"; // ArrowDownwardIcon を追加
+import { Box, Button, CircularProgress, TextField, Typography } from "@mui/material";
 
 // 共通の型定義をインポート
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts"; // 汎用データのリポジトリ
-import { AppSchema, GenericRecord, SortCondition, SortDirection } from "../../../types/interfaces";
+import {
+  AppSchema,
+  CommonFormFieldComponent,
+  FormField,
+  GenericRecord,
+  SortCondition,
+} from "../../../types/interfaces";
+import SortSettingsModal from "../components/SortSettingsModal.tsx";
+import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 
 interface GenericDataListPageProps {}
 
@@ -159,10 +142,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const handleOpenSortModal = () => setIsSortModalOpen(true);
   const handleCloseSortModal = () => setIsSortModalOpen(false);
+  /*
   // ★追加: ソート条件追加モーダル内のステート
   const [newSortField, setNewSortField] = useState<keyof GenericRecord | undefined>(undefined);
   const [newSortDirection, setNewSortDirection] = useState<SortDirection>("asc");
-
+  
   // ★追加: ソート条件をモーダルで追加するハンドラ
   const handleAddSortCondition = () => {
     if (newSortField && newSortDirection) {
@@ -196,6 +180,15 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
     setSortConditions(newConditions);
   };
+  */
+  // ★追加: DynamicList に渡す fields を変換するロジック
+  const fieldsForDynamicList = useMemo(() => {
+    if (!appSchema) return [];
+    return appSchema.fields.map((field) => ({
+      ...field,
+      component: getFieldComponentByType(field.type), // type に基づいて component を付与
+    })) as FormField<GenericRecord, CommonFormFieldComponent<any>>[];
+  }, [appSchema]);
 
   // ローディング中とエラー表示
   if (isLoading) {
@@ -261,7 +254,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<GenericRecord> // GenericRecord 型を渡す
         items={filteredAndSortedRecords}
-        fields={appSchema.fields} // アプリスキーマから読み込んだフィールド定義を渡す
+        fields={fieldsForDynamicList} // アプリスキーマから読み込んだフィールド定義を渡す
         onEdit={handleEditRecord}
         onDelete={handleDeleteRecord}
         itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
@@ -272,95 +265,14 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
       />
 
-      {/* ★追加: ソート設定モーダル (後で SortSettingsModal.tsx に切り出す) */}
-      <Dialog open={isSortModalOpen} onClose={handleCloseSortModal} fullWidth maxWidth="sm">
-        <DialogTitle>ソート設定</DialogTitle>
-        <DialogContent>
-          {/* ソート条件追加フォーム */}
-          <Box sx={{ display: "flex", gap: 1, mb: 2, pt: 2 }}>
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>フィールド</InputLabel>
-              <Select
-                value={newSortField}
-                label="フィールド"
-                onChange={(e) => setNewSortField(e.target.value as keyof GenericRecord)}
-              >
-                {appSchema.fields.map((field) => (
-                  <MenuItem key={field.name as string} value={field.name as string}>
-                    {field.label}
-                  </MenuItem>
-                ))}
-                {/* IDフィールドもソート対象に含める */}
-                <MenuItem value="id">ID</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl sx={{ minWidth: 100 }}>
-              <InputLabel>方向</InputLabel>
-              <Select
-                value={newSortDirection}
-                label="方向"
-                onChange={(e) => setNewSortDirection(e.target.value as SortDirection)}
-              >
-                <MenuItem value="asc">昇順</MenuItem>
-                <MenuItem value="desc">降順</MenuItem>
-              </Select>
-            </FormControl>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddSortCondition}>
-              追加
-            </Button>
-          </Box>
-
-          {/* 現在のソート条件リスト */}
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            設定済みソート条件:
-          </Typography>
-          <List dense>
-            {sortConditions.length === 0 ? (
-              <ListItem>
-                <ListItemText primary="なし" />
-              </ListItem>
-            ) : (
-              sortConditions.map((condition, index) => (
-                <ListItem key={index}>
-                  <ListItemText
-                    primary={`${index + 1}. ${String(
-                      appSchema.fields.find((f) => f.name === condition.field)?.label || condition.field
-                    )} (${condition.direction === "asc" ? "昇順" : "降順"})`}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMoveSortCondition(index, "up")}
-                      disabled={index === 0}
-                    >
-                      <ArrowUpwardIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMoveSortCondition(index, "down")}
-                      disabled={index === sortConditions.length - 1}
-                    >
-                      <ArrowDownwardIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" edge="end" onClick={() => handleRemoveSortCondition(index)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))
-            )}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSortModal} color="secondary">
-            閉じる
-          </Button>
-          {/* クリアボタンはオプションで追加可能 */}
-          <Button onClick={() => setSortConditions([])} color="error">
-            全クリア
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* ★修正: SortSettingsModal コンポーネントをレンダリング */}
+      <SortSettingsModal<GenericRecord>
+        open={isSortModalOpen}
+        onClose={handleCloseSortModal}
+        fields={fieldsForDynamicList} // ソート対象フィールド選択用に全フィールドを渡す
+        currentSortConditions={sortConditions}
+        onSave={handleSortConditionsChange} // モーダルで保存されたソート条件を受け取る
+      />
     </Box>
   );
 };
