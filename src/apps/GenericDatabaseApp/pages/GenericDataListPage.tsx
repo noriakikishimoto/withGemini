@@ -39,6 +39,7 @@ import SaveViewModal from "../components/SaveViewModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
 import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
+import { useListSettings } from "../hooks/useListSettings.ts";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -50,18 +51,24 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const navigate = useNavigate();
 
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
-
-  const [searchTerm, setSearchTerm] = useState<string>("");
-
-  //ソート条件、フィルター条件、表示列条件
-  const [sortConditions, setSortConditions] = useState<SortCondition<GenericRecord>[]>([]);
-  const [filterConditions, setFilterConditions] = useState<FilterCondition<GenericRecord>[]>([]);
-  const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
-
-  //カスタムビュー関連
-  // const [customViews, setCustomViews] = useState<CustomView<GenericRecord>[]>([]);
-
-  const [currentViewId, setCurrentViewId] = useState<string | "default">("default"); // 現在選択中のビューID
+  // ★追加: useListSettings からリスト関連のステートとハンドラを取得
+  const {
+    searchTerm,
+    setSearchTerm,
+    sortConditions,
+    setSortConditions, // setSortConditions も公開
+    handleSortConditionsChange,
+    filterConditions,
+    setFilterConditions, // setFilterConditions も公開
+    handleFilterConditionsChange,
+    selectedDisplayFields,
+    setSelectedDisplayFields, // setSelectedDisplayFields も公開
+    handleDisplayFieldsChange,
+    filteredAndSortedRecords,
+    fieldsForDynamicList,
+    currentViewId,
+    setCurrentViewId, // setCurrentViewId も公開
+  } = useListSettings({ appId, appSchema, records, customViews, isLoading });
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
@@ -122,155 +129,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
 
-  const filteredAndSortedRecords = useMemo(() => {
-    let currentRecords = [...records];
-
-    if (appSchema) {
-      currentRecords = currentRecords.filter((record) => {
-        // テキスト検索
-        const passesSearchTerm =
-          !searchTerm ||
-          appSchema.fields.some((field) => {
-            const fieldValue = record[field.name as string];
-            return String(fieldValue ?? "")
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase());
-          });
-
-        // 複数条件フィルタリング
-        const passesFilterConditions = filterConditions.every((condition) => {
-          const fieldDef = appSchema.fields.find((f) => f.name === condition.field);
-          if (!fieldDef) return false; // フィールド定義が見つからない場合はスキップ
-
-          let fieldValue = record[condition.field as string];
-          let filterValue = condition.value;
-
-          // ★修正: 日付型の比較ロジック
-          if (fieldDef.type === "date") {
-            const dateFieldValue = fieldValue ? new Date(String(fieldValue)) : null;
-            const dateFilterValue = filterValue ? new Date(String(filterValue)) : null;
-
-            // 日付が不正な場合（NaN）は比較しない
-            if (
-              dateFieldValue === null ||
-              dateFilterValue === null ||
-              isNaN(dateFieldValue.getTime()) ||
-              isNaN(dateFilterValue.getTime())
-            ) {
-              return false; // または true, 要件によるがここでは false (比較できないので合致しない)
-            }
-            switch (condition.operator) {
-              case "eq":
-                return dateFieldValue.getTime() === dateFilterValue.getTime();
-              case "ne":
-                return dateFieldValue.getTime() !== dateFilterValue.getTime();
-              case "gt":
-                return dateFieldValue.getTime() > dateFilterValue.getTime();
-              case "lt":
-                return dateFieldValue.getTime() < dateFilterValue.getTime();
-              case "ge":
-                return dateFieldValue.getTime() >= dateFilterValue.getTime();
-              case "le":
-                return dateFieldValue.getTime() <= dateFilterValue.getTime();
-              default:
-                return true;
-            }
-          }
-          // 数値型の比較ロジック (Number に変換)
-          else if (fieldDef.type === "number") {
-            const numFieldValue = Number(fieldValue);
-            const numFilterValue = Number(filterValue);
-            if (isNaN(numFieldValue) || isNaN(numFilterValue)) return false; // 数値でない場合は比較しない
-            switch (condition.operator) {
-              case "eq":
-                return numFieldValue === numFilterValue;
-              case "ne":
-                return numFieldValue !== numFilterValue;
-              case "gt":
-                return numFieldValue > numFilterValue;
-              case "lt":
-                return numFieldValue < numFilterValue;
-              case "ge":
-                return numFieldValue >= numFilterValue;
-              case "le":
-                return numFieldValue <= numFilterValue;
-              default:
-                return true;
-            }
-          }
-          // チェックボックスの比較ロジック
-          else if (fieldDef.type === "checkbox") {
-            const boolFieldValue = Boolean(fieldValue); // 真偽値に変換
-            const boolFilterValue = Boolean(filterValue);
-            switch (condition.operator) {
-              case "eq":
-                return boolFieldValue === boolFilterValue;
-              case "ne":
-                return boolFieldValue !== boolFilterValue;
-              default:
-                return true;
-            }
-          }
-          // テキストベースの比較ロジック (文字列に変換して比較)
-          else {
-            const strFieldValue = String(fieldValue ?? "").toLowerCase();
-            const strFilterValue = String(filterValue ?? "").toLowerCase();
-            switch (condition.operator) {
-              case "eq":
-                return strFieldValue === strFilterValue;
-              case "ne":
-                return strFieldValue !== strFilterValue;
-              case "contains":
-                return strFieldValue.includes(strFilterValue);
-              case "not_contains":
-                return !strFieldValue.includes(strFilterValue);
-              case "starts_with":
-                return strFieldValue.startsWith(strFilterValue);
-              case "ends_with":
-                return strFieldValue.endsWith(strFilterValue);
-              default:
-                return true;
-            }
-          }
-        });
-
-        return passesSearchTerm && passesFilterConditions;
-      });
-    }
-    // 2. ソート
-    if (sortConditions.length > 0) {
-      currentRecords.sort((a, b) => {
-        for (const condition of sortConditions) {
-          const aValue = String(a[condition.field] ?? "").toLowerCase();
-          const bValue = String(b[condition.field] ?? "").toLowerCase();
-
-          if (aValue < bValue) {
-            return condition.direction === "asc" ? -1 : 1;
-          }
-          if (aValue > bValue) {
-            return condition.direction === "asc" ? 1 : -1;
-          }
-        }
-        return 0; // 全ての条件で同値の場合
-      });
-    }
-
-    return currentRecords;
-  }, [records, searchTerm, appSchema, sortConditions, filterConditions]);
-
-  // ソート変更ハンドラ(モーダルに渡す)
-  const handleSortConditionsChange = (newSortConditions: SortCondition<GenericRecord>[]) => {
-    setSortConditions(newSortConditions);
-  };
-  // フィルタリング条件変更ハンドラ (モーダルに渡す)
-  const handleFilterConditionsChange = (newFilterConditions: FilterCondition<GenericRecord>[]) => {
-    setFilterConditions(newFilterConditions);
-  };
-  // 表示列変更時のハンドラ (モーダルに渡す)
-  const handleDisplayFieldsChange = (newDisplayFields: (keyof GenericRecord)[]) => {
-    setSelectedDisplayFields(newDisplayFields);
-  };
-
   // レコード編集ハンドラ (フォームページへ遷移)
   const handleEditRecord = (recordId: string) => {
     navigate(`/generic-db/data/${appId}/${recordId}`); // 汎用フォームページへ遷移
@@ -324,23 +182,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       }
     }
   };
-
-  // DynamicList に渡す fields を変換するロジック
-  const fieldsForDynamicList = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
-    if (!appSchema) return [];
-
-    const fieldsToDisplay =
-      selectedDisplayFields.length > 0
-        ? appSchema.fields.filter((field) =>
-            selectedDisplayFields.includes(field.name as keyof GenericRecord)
-          )
-        : appSchema.fields;
-
-    return fieldsToDisplay.map((field) => ({
-      ...field,
-      component: getFieldComponentByType(field.type),
-    })) as FormFieldForDynamicList<GenericRecord>[];
-  }, [appSchema, selectedDisplayFields, customViews]);
 
   // 型合わせのため。。
   const appSchemaFieldsWithComponent = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
