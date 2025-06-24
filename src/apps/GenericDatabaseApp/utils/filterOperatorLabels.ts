@@ -1,4 +1,7 @@
-import { FilterOperator } from "../../../types/interfaces"; // FilterOperator をインポート
+import { SortDirection } from "@mui/material";
+import { FilterCondition, FilterOperator, FormField, SortCondition } from "../../../types/interfaces"; // FilterOperator をインポート
+import { fi } from "date-fns/locale";
+import { getFieldLabelByName } from "./fieldLabelConverter";
 
 /**
  * FilterOperator の値を、ユーザーに分かりやすい日本語のラベルに変換するヘルパー関数。
@@ -30,6 +33,21 @@ export const getFilterOperatorLabel = (operator: FilterOperator): string => {
     default:
       return String(operator); // 未知の演算子の場合はそのまま表示
   }
+};
+
+export const getFilterConditionsDisplay = <GenericRecord extends object>(
+  filterConditions: FilterCondition<GenericRecord>[],
+  fields: FormField<GenericRecord, any>[]
+): string => {
+  if (filterConditions.length === 0) {
+    return "未設定";
+  }
+  return filterConditions
+    .map((cond) => {
+      const fieldLabel = getFieldLabelByName(cond.field, fields);
+      return getFilterConditionValueDisplay(fieldLabel, cond.operator, cond.value);
+    })
+    .join(" / ");
 };
 
 /**
@@ -76,4 +94,59 @@ export const getFilterConditionValueDisplay = (
     default:
       return `「${fieldName}」が「${displayValue}」${operatorLabel}`;
   }
+};
+
+/**
+ * ソート条件の配列を文字列に変換するヘルパー関数。
+ * @param sortConditions SortCondition の配列
+ * @param fields アプリのフィールド定義 (ラベル取得用)
+ * @returns 例: 「氏名 (昇順), 日付 (降順)」
+ */
+export const getSortConditionsDisplay = <GenericRecord extends object>(
+  sortConditions: SortCondition<GenericRecord>[],
+  fields: FormField<GenericRecord, any>[]
+): string => {
+  if (sortConditions.length === 0) {
+    return "未設定";
+  }
+  return sortConditions
+    .map((cond, index) => {
+      const fieldLabel = getFieldLabelByName(cond.field, fields);
+      return getSortConditionValueDisplay(index, fieldLabel, cond.direction);
+    })
+    .join(" / ");
+};
+
+/**
+ *
+ * @param index
+ * @param fieldLabel
+ * @param direction
+ * @returns
+ */
+export const getSortConditionValueDisplay = (
+  index: number,
+  fieldLabel: string,
+  direction: Exclude<SortDirection, undefined>
+): string => {
+  return `${index + 1}. ${fieldLabel} (${direction === "asc" ? "昇順" : "降順"})`;
+};
+
+/**
+ * 表示フィールドの配列を文字列に変換するヘルパー関数。
+ * @param displayFields 表示フィールド名の配列
+ * @param allFields アプリの全フィールド定義 (ラベル取得用)
+ * @returns 例: 「氏名, 住所, 電話番号」
+ */
+export const getDisplayFieldsDisplay = <T extends object>(
+  displayFields: (keyof T)[],
+  allFields: FormField<T, any>[]
+): string => {
+  if (!displayFields || displayFields.length === 0) {
+    return "全て"; // 全てのフィールドが表示される場合
+  }
+  const labels = displayFields.map((fieldName) => {
+    return allFields.find((f) => f.name === fieldName)?.label || String(fieldName);
+  });
+  return labels.join(" / ");
 };

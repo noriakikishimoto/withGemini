@@ -29,6 +29,7 @@ import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrap
 import { FilterCondition, FilterOperator, FormField } from "../../../types/interfaces";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper"; // fieldComponentMapper も使用
 import { getFilterConditionValueDisplay } from "../utils/filterOperatorLabels.ts";
+import { getFieldLabelByName } from "../utils/fieldLabelConverter.ts";
 
 interface FilterSettingsModalProps<T extends object> {
   open: boolean;
@@ -281,7 +282,7 @@ function FilterSettingsModal<T extends object>({
             editingFilterConditions.map((condition, index) => (
               <ListItem key={index}>
                 <ListItemText
-                  primary={`${getFilterConditionValueDisplay(String(condition.field), condition.operator, condition.value)}`}
+                  primary={`${getFilterConditionValueDisplay(getFieldLabelByName(condition.field, fields), condition.operator, condition.value)}`}
                 />
                 <ListItemSecondaryAction>
                   <IconButton size="small" edge="end" onClick={() => handleRemoveFilterCondition(index)}>

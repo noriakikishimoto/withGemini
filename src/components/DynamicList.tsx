@@ -32,10 +32,11 @@ function DynamicList<T extends Identifiable & object>({
 
   return (
     <Box sx={{ flex: 1, paddingLeft: "20px" }}>
+      {/* 
       <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
         {listTitle} ({items.length} 件)
       </Typography>
-
+*/}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         {onEditSchema && (
           <IconButton onClick={onEditSchema} sx={{ ml: 2 }} aria-label="アプリ設定">

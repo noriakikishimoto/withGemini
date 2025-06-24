@@ -1,36 +1,30 @@
-import React, { FC, useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
 import {
   Add as AddIcon,
-  ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
+  ArrowUpward as ArrowUpwardIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-
 import {
-  AppSchema,
-  GenericRecord,
-  SortCondition,
-  SortDirection,
-  FormField,
-} from "../../../types/interfaces";
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  ListItemText,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
+
+import { FormField, SortCondition, SortDirection } from "../../../types/interfaces";
 
 interface SortSettingsModalProps<T extends object> {
   open: boolean; // モーダルの開閉状態
