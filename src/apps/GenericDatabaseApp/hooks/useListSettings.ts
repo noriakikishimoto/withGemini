@@ -17,6 +17,7 @@ interface UseListSettingsProps {
   records: GenericRecord[];
   customViews: CustomView<GenericRecord>[]; // 親から customViews を受け取る
   isLoading: boolean; // appSchema のロード完了を待つため
+  viewId?: string | undefined;
 }
 
 interface UseListSettingsResult {
@@ -45,12 +46,13 @@ export const useListSettings = ({
   records,
   customViews,
   isLoading,
+  viewId,
 }: UseListSettingsProps): UseListSettingsResult => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortConditions, setSortConditions] = useState<SortCondition<GenericRecord>[]>([]);
   const [filterConditions, setFilterConditions] = useState<FilterCondition<GenericRecord>[]>([]);
   const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
-  const [currentViewId, setCurrentViewId] = useState<string | "default">("default");
+  const [currentViewId, setCurrentViewId] = useState<string | "default">(viewId || "default");
 
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {

@@ -47,7 +47,8 @@ type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldCom
 interface GenericDataListPageProps {}
 
 const GenericDataListPage: FC<GenericDataListPageProps> = () => {
-  const { appId } = useParams<{ appId: string }>(); // URLからアプリIDを取得
+  //const { appId } = useParams<{ appId: string }>(); // URLからアプリIDを取得
+  const { appId, viewId } = useParams<{ appId: string; viewId?: string }>();
   const navigate = useNavigate();
 
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
@@ -128,6 +129,14 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       }
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
+
+  // 追加: URL の viewId が変更されたら currentViewId を更新する useEffect
+  useEffect(() => {
+    if (viewId !== currentViewId) {
+      // URL の viewId が現在のステートと異なる場合のみ更新
+      setCurrentViewId(viewId || "default");
+    }
+  }, [viewId]); // viewId が変更されたら実行
 
   // レコード編集ハンドラ (フォームページへ遷移)
   const handleEditRecord = (recordId: string) => {
@@ -278,7 +287,16 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           <Select
             value={currentViewId}
             label="ビュー"
-            onChange={(e) => setCurrentViewId(e.target.value as string)}
+            onChange={(e) => {
+              const newViewId = e.target.value as string;
+              setCurrentViewId(newViewId);
+              // URL を更新して、直リンクを可能にする
+              if (newViewId === "default") {
+                navigate(`/generic-db/data/${appId}/list`);
+              } else {
+                navigate(`/generic-db/data/${appId}/list/${newViewId}`);
+              }
+            }}
           >
             <MenuItem value="default">デフォルトビュー</MenuItem>
             {customViews.map((view) => (

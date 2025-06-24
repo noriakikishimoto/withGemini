@@ -25,7 +25,7 @@ const GenericDatabaseAppRouter: FC = () => {
       <Route path="app-schemas/list" element={<AppSchemaListPage />} />
       <Route path="app-schemas/:id" element={<AppSchemaFormPage />} /> {/* アプリスキーマ編集 */}
       {/* :appId をパスパラメータとして受け取り、GenericDataListPage/FormPage に渡す */}
-      <Route path="data/:appId/list" element={<GenericDataListPage />} />
+      <Route path="data/:appId/list/:viewId?" element={<GenericDataListPage />} />
       <Route path="data/:appId/new" element={<GenericDataFormPage />} />
       <Route path="data/:appId/:recordId" element={<GenericDataFormPage />} /> {/* 編集モード */}
       {/* /generic-db/ にアクセスした場合のデフォルトのリダイレクト (例: /generic-db/tasks/list) */}
