@@ -142,8 +142,13 @@ export const getDisplayFieldsDisplay = <T extends object>(
   displayFields: (keyof T)[],
   allFields: FormField<T, any>[]
 ): string => {
+  /*
   if (!displayFields || displayFields.length === 0) {
     return "全て"; // 全てのフィールドが表示される場合
+  }
+    */
+  if (displayFields && allFields && displayFields.length === allFields.length) {
+    return "全てのフィールド"; // 全てのフィールドが選択されていると判断
   }
   const labels = displayFields.map((fieldName) => {
     return allFields.find((f) => f.name === fieldName)?.label || String(fieldName);

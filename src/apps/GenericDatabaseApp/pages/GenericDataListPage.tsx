@@ -13,16 +13,9 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControl,
   IconButton,
   InputLabel,
-  List,
-  ListItem,
-  ListItemText,
   MenuItem,
   Select,
   TextField,
@@ -45,16 +38,9 @@ import {
 } from "../../../types/interfaces";
 import DisplayFieldsModal from "../components/DisplayFieldsModal.tsx";
 import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
+import SaveViewModal from "../components/SaveViewModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
-import {
-  getDisplayFieldsDisplay,
-  getFilterConditionsDisplay,
-  getFilterConditionValueDisplay,
-  getSortConditionsDisplay,
-  getSortConditionValueDisplay,
-} from "../utils/filterOperatorLabels.ts";
-import { getFieldLabelByName } from "../utils/fieldLabelConverter.ts";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -79,8 +65,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   //カスタムビュー関連
   const [customViews, setCustomViews] = useState<CustomView<GenericRecord>[]>([]);
   const [currentViewId, setCurrentViewId] = useState<string | "default">("default"); // 現在選択中のビューID
-  const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false); // ビュー保存モーダル
-  const [newViewName, setNewViewName] = useState(""); // 新しいビューの名前
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
@@ -97,6 +81,20 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [isDisplayFieldsModalOpen, setIsDisplayFieldsModalOpen] = useState(false);
   const handleOpenDisplayFieldsModal = () => setIsDisplayFieldsModalOpen(true);
   const handleCloseDisplayFieldsModal = () => setIsDisplayFieldsModalOpen(false);
+
+  // ビュー保存モーダル関連ハンドラ
+  const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false); // ビュー保存モーダル
+  const handleOpenSaveViewModal = (viewToEditId?: string) => {
+    setIsSaveViewModalOpen(true);
+    if (viewToEditId) {
+      setSaveViewMode("edit");
+      setEditingViewId(viewToEditId);
+    } else {
+      setSaveViewMode("create");
+      setEditingViewId(null);
+    }
+  };
+  const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
 
   // データをロードする関数
   const fetchData = async () => {
@@ -308,6 +306,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     setSelectedDisplayFields(newDisplayFields);
   };
 
+  // レコード編集ハンドラ (フォームページへ遷移)
+  const handleEditRecord = (recordId: string) => {
+    navigate(`/generic-db/data/${appId}/${recordId}`); // 汎用フォームページへ遷移
+  };
+
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
     if (window.confirm("このレコードを本当に削除しますか？")) {
@@ -328,19 +331,32 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   };
 
-  // レコード編集ハンドラ (フォームページへ遷移)
-  const handleEditRecord = (recordId: string) => {
-    navigate(`/generic-db/data/${appId}/${recordId}`); // 汎用フォームページへ遷移
-  };
-
   // 新規レコード作成ページへ遷移
   const handleCreateNewRecord = () => {
     navigate(`/generic-db/data/${appId}/new`);
   };
 
+  // ビュー編集ハンドラ
   const handleEditSchema = () => {
     if (appId) {
       navigate(`/generic-db/app-schemas/${appId}`); // アプリスキーマ編集画面へ遷移
+    }
+  };
+  // ビュー削除ハンドラ (リストアイテムから直接呼び出す)
+  const handleDeleteView = async (viewId: string) => {
+    if (window.confirm("このビューを本当に削除しますか？")) {
+      try {
+        await customViewRepository.delete(viewId, appId); // appId を渡して削除
+        alert("ビューが削除されました！");
+        fetchData(); // ビューリストを再ロード
+        if (currentViewId === viewId) {
+          // 削除されたビューが選択中ならデフォルトに戻す
+          setCurrentViewId("default");
+        }
+      } catch (err) {
+        console.error("Error deleting view:", err);
+        alert("ビューの削除に失敗しました。");
+      }
     }
   };
 
@@ -369,80 +385,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       component: getFieldComponentByType(field.type),
     })) as FormFieldForDynamicList<GenericRecord>[];
   }, [appSchema]);
-
-  // ビュー保存モーダル関連ハンドラ
-  const handleOpenSaveViewModal = (viewToEditId?: string) => {
-    setIsSaveViewModalOpen(true);
-    if (viewToEditId) {
-      setSaveViewMode("edit");
-      setEditingViewId(viewToEditId);
-      // 編集対象ビューの情報を newViewName にセット
-      const view = customViews.find((v) => v.id === viewToEditId);
-      if (view) {
-        setNewViewName(view.name);
-      }
-    } else {
-      setSaveViewMode("create");
-      setEditingViewId(null);
-      setNewViewName(""); // 新規作成時は名前をリセット
-    }
-  };
-
-  const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
-
-  const handleSaveView = async () => {
-    if (!newViewName.trim()) {
-      alert("ビュー名を入力してください。");
-      return;
-    }
-    if (!appId) {
-      alert("アプリIDが見つかりません。");
-      return;
-    }
-
-    const viewToSave: Omit<CustomView<GenericRecord>, "id"> = {
-      name: newViewName.trim(),
-      appId: appId,
-      filterConditions: filterConditions,
-      sortConditions: sortConditions,
-      displayFields: selectedDisplayFields,
-    };
-
-    try {
-      if (saveViewMode === "edit" && editingViewId) {
-        // ★修正: saveViewMode と editingViewId で判定
-        await customViewRepository.update(editingViewId, viewToSave, appId); // 上書き保存
-        alert(`ビュー「${newViewName.trim()}」が更新されました！`);
-      } else {
-        // 'create' モード
-        await customViewRepository.create(viewToSave, appId); // 新規作成
-        alert(`ビュー「${newViewName.trim()}」が保存されました！`);
-      }
-      fetchData(); // ビューリストを再ロード
-      setIsSaveViewModalOpen(false);
-    } catch (err) {
-      console.error("Error saving view:", err);
-      alert("ビューの保存に失敗しました。");
-    }
-  };
-
-  // ビュー削除ハンドラ (リストアイテムから直接呼び出す)
-  const handleDeleteView = async (viewId: string) => {
-    if (window.confirm("このビューを本当に削除しますか？")) {
-      try {
-        await customViewRepository.delete(viewId, appId); // appId を渡して削除
-        alert("ビューが削除されました！");
-        fetchData(); // ビューリストを再ロード
-        if (currentViewId === viewId) {
-          // 削除されたビューが選択中ならデフォルトに戻す
-          setCurrentViewId("default");
-        }
-      } catch (err) {
-        console.error("Error deleting view:", err);
-        alert("ビューの削除に失敗しました。");
-      }
-    }
-  };
 
   // ローディング中とエラー表示
   if (isLoading) {
@@ -543,7 +485,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         {currentViewId !== "default" && (
           <>
             <IconButton
-              //edge="end"
               aria-label={`現在のビューを編集`}
               onClick={() => {
                 handleOpenSaveViewModal(currentViewId);
@@ -555,7 +496,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             </IconButton>
             {/* ★追加: ビュー削除ボタン */}
             <IconButton
-              //edge="end"
               aria-label={`現在のビューを削除`}
               onClick={() => {
                 handleDeleteView(currentViewId);
@@ -567,6 +507,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           </>
         )}
       </Box>
+
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<GenericRecord> // GenericRecord 型を渡す
         items={filteredAndSortedRecords}
@@ -576,13 +517,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
         listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
         onEditSchema={handleEditSchema}
-        // ★追加: ソート関連のPropsを DynamicList に渡す
-        onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
-        currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
-        onFilterChange={handleFilterConditionsChange} // ★追加: onFilterChange を渡す
-        currentFilterConditions={filterConditions} // ★追加: currentFilterConditions を渡す
+        onSortChange={handleSortConditionsChange} // onSortChange を渡す
+        currentSortConditions={sortConditions} // currentSortConditions を渡す
+        onFilterChange={handleFilterConditionsChange} // onFilterChange を渡す
+        currentFilterConditions={filterConditions} // currentFilterConditions を渡す
       />
-      {/* ★修正: SortSettingsModal コンポーネントをレンダリング */}
+      {/* ソート設定用モーダル */}
       <SortSettingsModal<GenericRecord>
         open={isSortModalOpen}
         onClose={handleCloseSortModal}
@@ -590,7 +530,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         currentSortConditions={sortConditions}
         onSave={handleSortConditionsChange} // モーダルで保存されたソート条件を受け取る
       />
-      {/* ★修正: フィルタリング設定モーダルを SortSettingsModal と同様にレンダリング */}
+      {/* フィルタリング設定用モーダル */}
       <FilterSettingsModal<GenericRecord>
         open={isFilterModalOpen}
         onClose={handleCloseFilterModal}
@@ -598,8 +538,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         currentFilterConditions={filterConditions}
         onSave={handleFilterConditionsChange} // モーダルで保存されたフィルタ条件を受け取る
       />
-
-      {/* ★追加: 表示列設定モーダル */}
+      {/* 表示列設定モーダル */}
       <DisplayFieldsModal<GenericRecord>
         open={isDisplayFieldsModalOpen}
         onClose={handleCloseDisplayFieldsModal}
@@ -609,75 +548,19 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         onSave={handleDisplayFieldsChange} //  onSave を渡す
       />
 
-      {/* ビュー保存モーダル */}
-      <Dialog open={isSaveViewModalOpen} onClose={handleCloseSaveViewModal} fullWidth maxWidth="md">
-        <DialogTitle>
-          {saveViewMode === "create" ? "新規ビューを保存" : "ビューを編集・上書き"}
-        </DialogTitle>{" "}
-        <DialogContent>
-          {saveViewMode === "edit" &&
-            customViews.length > 0 && ( // 編集モードの場合のみ既存ビュー選択を表示
-              <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
-                <InputLabel>編集するビュー</InputLabel>
-                <Select
-                  value={editingViewId || ""} // editingViewId をセット
-                  label="編集するビュー"
-                  readOnly={true}
-                  /*
-                  onChange={(e) => {
-                    const selectedId = e.target.value as string;
-                    setEditingViewId(selectedId);
-                    const selectedView = customViews.find((v) => v.id === selectedId);
-
-                    if (selectedView) {
-                      setNewViewName(selectedView.name);
-                      setFilterConditions([
-                        ...selectedView.filterConditions,
-                      ] as FilterCondition<GenericRecord>[]);
-                      setSortConditions([
-                        ...selectedView.sortConditions,
-                      ] as SortCondition<GenericRecord>[]);
-                      setSelectedDisplayFields(
-                        selectedView.displayFields ||
-                          (appSchema ? appSchema.fields.map((f) => f.name as keyof GenericRecord) : [])
-                      );
-                    }
-                  }}
-                    */
-                >
-                  {customViews.map((view) => (
-                    <MenuItem value={view.id}>{view.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-          <TextField
-            autoFocus
-            margin="dense"
-            label="ビュー名"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={newViewName}
-            onChange={(e) => setNewViewName(e.target.value)}
-          />
-
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            ソート条件: {getSortConditionsDisplay(sortConditions, appSchemaFieldsWithComponent)}
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            フィルター条件:{getFilterConditionsDisplay(filterConditions, appSchemaFieldsWithComponent)}
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            表示列設定:{getDisplayFieldsDisplay(selectedDisplayFields, appSchemaFieldsWithComponent)}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSaveViewModal}>キャンセル</Button>
-          <Button onClick={handleSaveView}>{saveViewMode === "create" ? "保存" : "上書き保存"} </Button>
-        </DialogActions>
-      </Dialog>
+      <SaveViewModal
+        open={isSaveViewModalOpen}
+        onClose={handleCloseSaveViewModal}
+        appId={appId as string}
+        customViews={customViews}
+        filterConditions={filterConditions}
+        sortConditions={sortConditions}
+        selectedDisplayFields={selectedDisplayFields}
+        onSaveSuccess={fetchData}
+        mode={saveViewMode}
+        allFields={appSchemaFieldsWithComponent}
+        viewToEditId={editingViewId}
+      />
     </Box>
   );
 };

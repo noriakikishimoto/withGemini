@@ -28,7 +28,6 @@ function DisplayFieldsModal<T extends object>({
   onClose,
   fields,
   selectedDisplayFields,
-  //onToggleDisplayField,
   onSave,
 }: DisplayFieldsModalProps<T>) {
   // モーダル内で編集中の選択状態を保持 (親の selectedDisplayFields とは独立)
