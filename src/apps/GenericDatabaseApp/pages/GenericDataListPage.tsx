@@ -23,14 +23,11 @@ import {
 } from "@mui/material";
 
 // 共通の型定義をインポート
-import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 import { customViewRepository } from "../../../repositories/customViewRepository.ts";
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts";
 
 import {
-  AppSchema,
   CommonFormFieldComponent,
-  CustomView,
   FilterCondition,
   FormField,
   GenericRecord,
@@ -40,6 +37,7 @@ import DisplayFieldsModal from "../components/DisplayFieldsModal.tsx";
 import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
 import SaveViewModal from "../components/SaveViewModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
+import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
@@ -51,10 +49,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const { appId } = useParams<{ appId: string }>(); // URLからアプリIDを取得
   const navigate = useNavigate();
 
-  const [appSchema, setAppSchema] = useState<AppSchema | null>(null);
-  const [records, setRecords] = useState<GenericRecord[]>([]); // 実際のレコードデータ
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
+
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   //ソート条件、フィルター条件、表示列条件
@@ -63,7 +59,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
 
   //カスタムビュー関連
-  const [customViews, setCustomViews] = useState<CustomView<GenericRecord>[]>([]);
+  // const [customViews, setCustomViews] = useState<CustomView<GenericRecord>[]>([]);
+
   const [currentViewId, setCurrentViewId] = useState<string | "default">("default"); // 現在選択中のビューID
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
@@ -96,45 +93,13 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   };
   const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
 
-  // データをロードする関数
-  const fetchData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (!appId) {
-        throw new Error("アプリIDが指定されていません。");
-      }
-      // 1. アプリスキーマをロード
-      const schema = await appSchemaRepository.getById(appId);
-      if (!schema) {
-        throw new Error("指定されたアプリスキーマが見つかりません。");
-      }
-      setAppSchema(schema);
-      // 2. そのスキーマに紐づく実際のレコードデータをロード
-      const data = await genericDataRepository.getAll(appId); // appId を渡す
-      setRecords(data);
-      // 3.カスタムビューもロード
-      const views = await customViewRepository.getAll(appId); // appId でフィルタリング
-      setCustomViews(views);
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      setError("データの読み込みに失敗しました。");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [appId]); // appId が変更されたらデータを再フェッチ
-
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
     // appSchema がまだロードされていない場合は何もしない
     if (!appSchema) {
       // ただし、isLoading が false になった後も appSchema が null ならエラー表示
       if (!isLoading && !appSchema) {
-        setError("アプリスキーマが見つからないか、読み込みに失敗しました。");
+        //    setError("アプリスキーマが見つからないか、読み込みに失敗しました。");
       }
       return;
     }
@@ -314,8 +279,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
     if (window.confirm("このレコードを本当に削除しますか？")) {
-      setIsLoading(true);
-      setError(null);
+      //      setIsLoading(true);
+      //      setError(null);
       try {
         if (!appId) throw new Error("アプリIDが見つかりません。");
         await genericDataRepository.delete(appId, recordId); // appId と recordId を渡す
@@ -323,10 +288,10 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         fetchData(); // 削除後にリストを再フェッチ
       } catch (err) {
         console.error("Error deleting record:", err);
-        setError("レコードの削除に失敗しました。");
+        //       setError("レコードの削除に失敗しました。");
         alert("エラーが発生しました: " + (err as Error).message);
       } finally {
-        setIsLoading(false);
+        //       setIsLoading(false);
       }
     }
   };
