@@ -71,18 +71,11 @@ const menuItems: MenuItem[] = [
       { text: "新規アプリ作成", path: "/generic-db/app-schemas/new" },
     ],
   },
-  /*
   {
     text: "レポート",
-    path: "/reports",
     icon: <BarChartIcon />,
-    children: [
-      { text: "売上", path: "/reports/sales" },
-      { text: "トラフィック", path: "/reports/traffic" },
-    ],
+    children: [{ text: "ダッシュボード", path: "/generic-db/dashboards", icon: <DashboardIcon /> }],
   },
-  { text: "インテグレーション", path: "/integrations", icon: <LayersIcon /> },
-*/
 ];
 
 const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {

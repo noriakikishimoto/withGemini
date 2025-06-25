@@ -156,3 +156,37 @@ export interface CustomView<T extends object> extends Identifiable {
 }
 
 export type ChartType = "bar" | "pie" | "line";
+
+// ダッシュボードウィジェットの型定義
+export type WidgetType = "chart" | "list" | "text" | "image"; // ウィジェットの種類
+
+export type ChartAggregationUnit = "day" | "month" | "year" | undefined; // グラフの集計単位
+
+export interface DashboardWidget<T extends object> {
+  id: string; // ウィジェットの一意なID
+  type: WidgetType; // ウィジェットの種類
+  title: string; // ウィジェットのタイトル
+  appId?: string; // 関連するアプリのID (Chart, List ウィジェットの場合)
+  // フィルタリングとソートはウィジェットごとに独立して持つ
+  filterConditions?: FilterCondition<T>[];
+  sortConditions?: SortCondition<T>[];
+  displayFields?: (keyof T)[]; // List ウィジェットの場合の表示列
+  // Grid レイアウトプロパティ
+  xs?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  // Chart ウィジェット固有のプロパティ
+  chartField?: keyof T; // グラフ化するフィールド
+  chartType?: ChartType; // グラフの種類 (bar, pie, line)
+  chartAggregationUnit?: ChartAggregationUnit; // 日付グラフの場合の集計単位
+  // Text/Image ウィジェット固有のプロパティ (今回は簡易化)
+  content?: string; // テキストや画像URLなど
+}
+
+// ダッシュボードの型定義
+export interface Dashboard extends Identifiable {
+  name: string; // ダッシュボードの名前
+  widgets: DashboardWidget<GenericRecord>[]; // ダッシュボードに含まれるウィジェットの配列
+  // その他の設定 (レイアウトオプションなど) をここに追加可能
+}

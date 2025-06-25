@@ -12,6 +12,9 @@ import AppSchemaListPage from "./pages/AppSchemaListPage.tsx";
 import GenericDataListPage from "./pages/GenericDataListPage.tsx";
 import GenericDataFormPage from "./pages/GenericDataFormPage.tsx";
 
+import DashboardPage from "./pages/DashboardPage.tsx";
+import DashboardDisplayPage from "./pages/DashboardDisplayPage.tsx";
+
 const GenericDatabaseAppRouter: FC = () => {
   return (
     <Routes>
@@ -28,6 +31,9 @@ const GenericDatabaseAppRouter: FC = () => {
       <Route path="data/:appId/list/:viewId?" element={<GenericDataListPage />} />
       <Route path="data/:appId/new" element={<GenericDataFormPage />} />
       <Route path="data/:appId/:recordId" element={<GenericDataFormPage />} /> {/* 編集モード */}
+      {/* ★追加: ダッシュボードページのルート */}
+      <Route path="dashboards" element={<DashboardPage />} />
+      <Route path="dashboards/:dashboardId" element={<DashboardDisplayPage />} />{" "}
       {/* /generic-db/ にアクセスした場合のデフォルトのリダイレクト (例: /generic-db/tasks/list) */}
       <Route path="/" element={<Navigate to="tasks/list" replace />} />
     </Routes>
