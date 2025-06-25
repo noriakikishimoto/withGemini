@@ -27,6 +27,7 @@ import { genericDataRepository } from "../../../repositories/genericDataReposito
 // ★修正: DashboardChartWidget と DashboardListWidget をインポート
 import DashboardChartWidget from "../components/DashboardChartWidget.tsx";
 import DashboardListWidget from "../components/DashboardListWidget.tsx";
+import DashboardWidgetDisplay from "../components/DashboardWidgetDisplay.tsx";
 
 // DashboardDisplayPage コンポーネントの定義
 const DashboardDisplayPage: FC = () => {
@@ -36,7 +37,7 @@ const DashboardDisplayPage: FC = () => {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null); // ★修正: Dashboard<GenericRecord> 型を明確に
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]); // 全アプリスキーマ (子ウィジェットに渡す)
+  //const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]); // 全アプリスキーマ (子ウィジェットに渡す)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -53,10 +54,6 @@ const DashboardDisplayPage: FC = () => {
           return;
         }
         setDashboard(fetchedDashboard as Dashboard); // 型キャスト
-
-        // 全アプリスキーマもここでロード (ウィジェット設定用)
-        const schemas = await appSchemaRepository.getAll();
-        setAllAppSchemas(schemas);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("ダッシュボードの読み込みに失敗しました。");
@@ -109,7 +106,6 @@ const DashboardDisplayPage: FC = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        {" "}
         {/* ウィジェットをGridで表示 */}
         {dashboard.widgets.map((widget) => (
           <Grid key={widget.id} size={{ xs: widget.xs || 12, sm: widget.sm || 12, md: widget.md || 6 }}>
@@ -117,16 +113,7 @@ const DashboardDisplayPage: FC = () => {
               <Typography variant="h6" gutterBottom>
                 {widget.title}
               </Typography>
-              {/* ウィジェットタイプに応じたレンダリング */}
-              {widget.type === "chart" && widget.appId ? (
-                <DashboardChartWidget widget={widget} allAppSchemas={allAppSchemas} />
-              ) : widget.type === "list" && widget.appId ? (
-                <DashboardListWidget widget={widget} allAppSchemas={allAppSchemas} />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  不明なウィジェットタイプまたは設定不足です。
-                </Typography>
-              )}
+              <DashboardWidgetDisplay widget={widget} />
             </Paper>
           </Grid>
         ))}

@@ -13,15 +13,16 @@ import { getFieldComponentByType } from "../utils/fieldComponentMapper"; // ヘ�
 import { useWidgetData } from "../hooks/useWidgetData.ts"; // useWidgetData をインポート
 import { useAppData } from "../hooks/useAppData.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
+import ChartDisplay2 from "./ChartDisplay2.tsx";
 
-interface DashboardListWidgetProps {
+interface DashboardWidgetDisplayProps {
   widget: DashboardWidget<GenericRecord>;
 }
 
-const DashboardListWidget: FC<DashboardListWidgetProps> = ({ widget }) => {
+const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => {
   const appId = widget.appId;
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
-  // ★追加: useListSettings からリスト関連のステートとハンドラを取得
+
   const {
     searchTerm,
     setSearchTerm,
@@ -39,24 +40,6 @@ const DashboardListWidget: FC<DashboardListWidgetProps> = ({ widget }) => {
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
   } = useListSettings({ appId, appSchema, records, customViews, isLoading });
-
-  // DynamicList に渡す fields を変換 (表示列フィルタリングも適用)
-  /*
-  const fieldsForDynamicList = useMemo(() => {
-    if (!appSchema) return [];
-    const fieldsToDisplay =
-      widget.displayFields && widget.displayFields.length > 0
-        ? appSchema.fields.filter((field) =>
-            widget.displayFields!.includes(field.name as keyof GenericRecord)
-          )
-        : appSchema.fields;
-
-    return fieldsToDisplay.map((field) => ({
-      ...field,
-      component: getFieldComponentByType(field.type),
-    })) as FormField<GenericRecord, CommonFormFieldComponent<any>>[];
-  }, [appSchema, widget.displayFields]);
-*/
 
   if (isLoading) {
     return (
@@ -88,21 +71,31 @@ const DashboardListWidget: FC<DashboardListWidgetProps> = ({ widget }) => {
   }
 
   return (
-    <DynamicList<GenericRecord>
-      items={filteredAndSortedRecords}
-      fields={fieldsForDynamicList}
-      // List ウィジェットは読み取り専用なので、onEdit/onDelete はダミーまたは省略
-      onEdit={() => console.log("Edit from dashboard list")}
-      onDelete={() => console.log("Delete from dashboard list")}
-      itemBasePath={`/generic-db/data/${widget.appId}`} // 適切なパスを設定
-      listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
-      onSortChange={() => {}} // 読み取り専用なのでソート変更は受け付けない
-      currentSortConditions={widget.sortConditions}
-      onFilterChange={() => {}} // 読み取り専用なのでフィルタ変更は受け付けない
-      currentFilterConditions={widget.filterConditions}
-      currentViewType="table" // ダッシュボード内のリストは常にテーブルビュー
-    />
+    <>
+      {widget.type === "list" ? (
+        <DynamicList<GenericRecord>
+          items={filteredAndSortedRecords}
+          fields={fieldsForDynamicList}
+          // List ウィジェットは読み取り専用なので、onEdit/onDelete はダミーまたは省略
+          onEdit={() => console.log("Edit from dashboard list")}
+          onDelete={() => console.log("Delete from dashboard list")}
+          itemBasePath={`/generic-db/data/${widget.appId}`} // 適切なパスを設定
+          listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
+          onSortChange={() => {}} // 読み取り専用なのでソート変更は受け付けない
+          currentSortConditions={widget.sortConditions}
+          onFilterChange={() => {}} // 読み取り専用なのでフィルタ変更は受け付けない
+          currentFilterConditions={widget.filterConditions}
+          currentViewType="table" // ダッシュボード内のリストは常にテーブルビュー
+        />
+      ) : widget.type === "chart" ? (
+        <ChartDisplay2 appSchema={appSchema} filteredAndSortedRecords={filteredAndSortedRecords} />
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          不明なウィジェットタイプまたは設定不足です。
+        </Typography>
+      )}
+    </>
   );
 };
 
-export default DashboardListWidget;
+export default DashboardWidgetDisplay;

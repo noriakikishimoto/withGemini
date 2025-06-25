@@ -11,28 +11,34 @@ import {
 import ChartDisplay from "./ChartDisplay.tsx"; // ChartDisplay をインポート
 import { useWidgetData } from "../hooks/useWidgetData.ts"; // useWidgetData をインポート
 import ChartDisplay2 from "./ChartDisplay2.tsx";
+import { useListSettings } from "../hooks/useListSettings.ts";
+import { useAppData } from "../hooks/useAppData.ts";
 
 interface DashboardChartWidgetProps {
   widget: DashboardWidget<GenericRecord>;
-  allAppSchemas: AppSchema[]; // useWidgetData に渡すため
 }
 
-const DashboardChartWidget: FC<DashboardChartWidgetProps> = ({ widget, allAppSchemas }) => {
-  const { appSchema, filteredAndSortedRecords, isLoading, error } = useWidgetData({
-    widget,
-    allAppSchemas,
-  });
-
-  /*
-  // グラフ化するフィールドが存在しない場合の表示
-  if (!widget.chartField) {
-    return (
-      <Typography color="textSecondary" sx={{ textAlign: "center", mt: 2 }}>
-        グラフ対象フィールドが設定されていません。
-      </Typography>
-    );
-  }
-    */
+const DashboardChartWidget: FC<DashboardChartWidgetProps> = ({ widget }) => {
+  const appId = widget.appId;
+  const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
+  // ★追加: useListSettings からリスト関連のステートとハンドラを取得
+  const {
+    searchTerm,
+    setSearchTerm,
+    sortConditions,
+    setSortConditions, // setSortConditions も公開
+    handleSortConditionsChange,
+    filterConditions,
+    setFilterConditions, // setFilterConditions も公開
+    handleFilterConditionsChange,
+    selectedDisplayFields,
+    setSelectedDisplayFields, // setSelectedDisplayFields も公開
+    handleDisplayFieldsChange,
+    filteredAndSortedRecords,
+    fieldsForDynamicList,
+    currentViewId,
+    setCurrentViewId, // setCurrentViewId も公開
+  } = useListSettings({ appId, appSchema, records, customViews, isLoading });
 
   // ロード中/エラー表示
   if (isLoading) {
