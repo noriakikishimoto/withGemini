@@ -50,6 +50,7 @@ import ChartDisplay from "../components/ChartDisplay.tsx";
 import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
+import ChartDisplay2 from "../components/ChartDisplay2.tsx";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -380,7 +381,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       </Box>
       {/* ★修正: ViewType に応じたコンテンツのレンダリング */}
       {currentViewType === "chart" ? (
-        <ChartDisplay appSchema={appSchema} filteredAndSortedRecords={filteredAndSortedRecords} />
+        <ChartDisplay2 appSchema={appSchema} filteredAndSortedRecords={filteredAndSortedRecords} />
       ) : (
         <DynamicList<GenericRecord> // GenericRecord 型を渡す
           items={filteredAndSortedRecords}
