@@ -17,6 +17,11 @@ const ChartDisplay: FC<ChartDisplayProps> = ({ appSchema, filteredAndSortedRecor
     undefined
   );
 
+  const selectedFieldDef = useMemo(() => {
+    if (!selectedChartField || !appSchema) return null;
+    return appSchema.fields.find((f) => f.name === selectedChartField) || null;
+  }, [selectedChartField, appSchema]);
+
   // グラフ表示用データの集計ロジック
   const chartData = useMemo(() => {
     if (
@@ -27,29 +32,76 @@ const ChartDisplay: FC<ChartDisplayProps> = ({ appSchema, filteredAndSortedRecor
     )
       return [];
 
-    const fieldDef = appSchema.fields.find((f) => f.name === selectedChartField);
+    if (!selectedFieldDef) return [];
+
+    // ★修正: フィールドタイプに応じた集計ロジック
     if (
-      !fieldDef ||
-      (fieldDef.type !== "select" && fieldDef.type !== "radio" && fieldDef.type !== "checkbox")
+      selectedFieldDef.type === "select" ||
+      selectedFieldDef.type === "radio" ||
+      selectedFieldDef.type === "checkbox"
     ) {
-      // グラフ化に適さないフィールドタイプの場合は空を返す
-      return [];
+      // カテゴリデータの集計 (既存ロジック)
+      const counts: Record<string, number> = {};
+      filteredAndSortedRecords.forEach((record) => {
+        const value = String(record[selectedChartField] ?? "");
+        counts[value] = (counts[value] || 0) + 1;
+      });
+      return Object.entries(counts).map(([name, value]) => ({ name: name || "(未設定)", value }));
+    } else if (selectedFieldDef.type === "number") {
+      // ★追加: 数値データのヒストグラム集計
+      const numericValues = filteredAndSortedRecords
+        .map((record) => Number(record[selectedChartField]))
+        .filter((value) => !isNaN(value)); // 数値として有効なもののみ
+
+      if (numericValues.length === 0) return [];
+
+      const minValue = Math.min(...numericValues);
+      const maxValue = Math.max(...numericValues);
+
+      // 簡易ビニング: 10個の区間に分割
+      const numberOfBins = 10;
+      const binSize = (maxValue - minValue) / numberOfBins;
+
+      if (binSize === 0) {
+        // 全ての数値が同じ値の場合
+        return [{ name: String(minValue), value: numericValues.length }];
+      }
+
+      const bins: Record<string, number> = {};
+      for (let i = 0; i < numberOfBins; i++) {
+        const lowerBound = minValue + i * binSize;
+        const upperBound = minValue + (i + 1) * binSize;
+        const binName = `${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}`; // 小数点以下1桁で表示
+        bins[binName] = 0;
+      }
+
+      numericValues.forEach((value) => {
+        let binIndex = Math.floor((value - minValue) / binSize);
+        if (binIndex === numberOfBins) binIndex--; // 最大値が最後のビンに含まれるように調整
+
+        const lowerBound = minValue + binIndex * binSize;
+        const upperBound = minValue + (binIndex + 1) * binSize;
+        const binName = `${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}`;
+        bins[binName]++;
+      });
+
+      // ビンの順序をソートして返す
+      return Object.entries(bins)
+        .sort(([nameA], [nameB]) => {
+          const [minA] = nameA.split("-").map(Number);
+          const [minB] = nameB.split("-").map(Number);
+          return minA - minB;
+        })
+        .map(([name, value]) => ({ name, value }));
     }
-
-    const counts: Record<string, number> = {};
-    filteredAndSortedRecords.forEach((record) => {
-      const value = String(record[selectedChartField] ?? "");
-      counts[value] = (counts[value] || 0) + 1;
-    });
-
-    return Object.entries(counts).map(([name, value]) => ({ name: name || "(未設定)", value }));
+    return [];
   }, [filteredAndSortedRecords, appSchema, selectedChartField]);
 
   // グラフ化可能なフィールドのリスト (ドロップダウン用)
   const chartableFields = useMemo(() => {
     if (!appSchema) return [];
     return appSchema.fields.filter(
-      (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox"
+      (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox" || f.type === "number"
     );
   }, [appSchema]);
 
@@ -61,6 +113,21 @@ const ChartDisplay: FC<ChartDisplayProps> = ({ appSchema, filteredAndSortedRecor
       setSelectedChartField(undefined);
     }
   }, [appSchema, chartableFields, selectedChartField]);
+
+  const currentChartType = useMemo(() => {
+    if (!selectedFieldDef) return "pie"; // デフォルト
+
+    switch (selectedFieldDef.type) {
+      case "select":
+      case "radio":
+      case "checkbox":
+        return "pie"; // カテゴリデータは円グラフ
+      case "number":
+        return "bar"; // 数値データは棒グラフ (ヒストグラム)
+      default:
+        return "pie";
+    }
+  }, [selectedFieldDef]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
@@ -81,14 +148,14 @@ const ChartDisplay: FC<ChartDisplayProps> = ({ appSchema, filteredAndSortedRecor
         </FormControl>
       ) : (
         <Typography variant="body2" color="text.secondary">
-          グラフ化できる選択肢/ラジオボタン/チェックボックスタイプのフィールドがありません。
+          グラフ化できる選択肢/ラジオボタン/チェックボックス/数値タイプのフィールドがありません。
         </Typography>
       )}
       {selectedChartField ? (
         <GenericChart
           title={`「${appSchema?.fields.find((f) => f.name === selectedChartField)?.label || selectedChartField}」の分布`}
           data={chartData}
-          chartType="pie" // デフォルトは円グラフ
+          chartType={currentChartType}
         />
       ) : (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 4 }}>
