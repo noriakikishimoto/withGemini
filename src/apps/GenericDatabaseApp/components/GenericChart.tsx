@@ -12,7 +12,10 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  LineChart,
+  Line,
 } from "recharts";
+import { ChartType } from "../../../types/interfaces";
 
 // 共通の型定義をインポート
 
@@ -23,7 +26,7 @@ interface ChartDataEntry {
 }
 
 // グラフタイプ
-type ChartType = "bar" | "pie";
+//type ChartType = "bar" | "pie" | "line";
 
 interface GenericChartProps {
   title: string; // グラフのタイトル
@@ -77,7 +80,7 @@ const GenericChart: FC<GenericChartProps> = ({
             <Legend />
             <Bar dataKey={dataKey} fill={colors[0] || "#8884d8"} />
           </BarChart>
-        ) : (
+        ) : chartType === "pie" ? (
           <PieChart>
             <Pie
               data={data}
@@ -97,6 +100,28 @@ const GenericChart: FC<GenericChartProps> = ({
             <Tooltip />
             <Legend />
           </PieChart>
+        ) : (
+          <LineChart
+            data={data}
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey={nameKey} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke={colors[0] || "#8884d8"}
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
         )}
       </ResponsiveContainer>
     </Paper>

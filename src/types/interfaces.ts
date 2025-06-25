@@ -154,3 +154,5 @@ export interface CustomView<T extends object> extends Identifiable {
   sortConditions: SortCondition<T>[];
   displayFields?: (keyof T)[]; // ★追加: ビューで表示するフィールド名 (keyof T の配列)
 }
+
+export type ChartType = "bar" | "pie" | "line";
