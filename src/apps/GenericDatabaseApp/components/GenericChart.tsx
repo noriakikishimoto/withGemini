@@ -58,11 +58,11 @@ const GenericChart: FC<GenericChartProps> = ({
   }
 
   return (
-    <Paper sx={{ p: 2, height: 300 }}>
+    <Paper sx={{ p: 2, height: 300, mt: 10 }}>
       <Typography variant="h6" gutterBottom align="center">
         {title}
       </Typography>
-      <ResponsiveContainer width="100%" height="80%">
+      <ResponsiveContainer width="100%" height="90%">
         {chartType === "bar" ? (
           <BarChart
             data={data}
