@@ -9,7 +9,6 @@ import {
   CustomView,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper";
-import { customViewRepository } from "../../../repositories/customViewRepository"; // customViewRepository をインポート
 
 interface UseListSettingsProps {
   appId: string | undefined;
@@ -20,11 +19,6 @@ interface UseListSettingsProps {
   viewId?: string | undefined;
 }
 
-// グラフデータのエントリ型 (GenericChart.tsx と同じ)
-interface ChartDataEntry {
-  name: string;
-  value: number;
-}
 interface UseListSettingsResult {
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
@@ -41,10 +35,6 @@ interface UseListSettingsResult {
   fieldsForDynamicList: FormField<GenericRecord, CommonFormFieldComponent<any>>[];
   currentViewId: string | "default"; // 現在選択中のビューID
   setCurrentViewId: React.Dispatch<React.SetStateAction<string | "default">>;
-  // グラフ関連の公開情報
-  selectedChartField: keyof GenericRecord | undefined;
-  setSelectedChartField: React.Dispatch<React.SetStateAction<keyof GenericRecord | undefined>>;
-  chartData: ChartDataEntry[];
 }
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -62,9 +52,6 @@ export const useListSettings = ({
   const [filterConditions, setFilterConditions] = useState<FilterCondition<GenericRecord>[]>([]);
   const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
   const [currentViewId, setCurrentViewId] = useState<string | "default">(viewId || "default");
-  const [selectedChartField, setSelectedChartField] = useState<keyof GenericRecord | undefined>(
-    undefined
-  );
 
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
@@ -248,28 +235,6 @@ export const useListSettings = ({
     })) as FormFieldForDynamicList<GenericRecord>[];
   }, [appSchema, selectedDisplayFields, customViews]);
 
-  // ★追加: グラフ表示用データの集計ロジック
-  const chartData = useMemo(() => {
-    if (!appSchema || !selectedChartField) return [];
-
-    const fieldDef = appSchema.fields.find((f) => f.name === selectedChartField);
-    if (
-      !fieldDef ||
-      (fieldDef.type !== "select" && fieldDef.type !== "radio" && fieldDef.type !== "checkbox")
-    ) {
-      // グラフ化に適さないフィールドタイプの場合は空を返す
-      return [];
-    }
-
-    const counts: Record<string, number> = {};
-    filteredAndSortedRecords.forEach((record) => {
-      const value = String(record[selectedChartField] ?? "");
-      counts[value] = (counts[value] || 0) + 1;
-    });
-
-    return Object.entries(counts).map(([name, value]) => ({ name: name || "(未設定)", value }));
-  }, [filteredAndSortedRecords, appSchema, selectedChartField]);
-
   // ソート条件変更ハンドラ
   const handleSortConditionsChange = (newSortConditions: SortCondition<GenericRecord>[]) => {
     setSortConditions(newSortConditions);
@@ -304,8 +269,5 @@ export const useListSettings = ({
     fieldsForDynamicList,
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
-    selectedChartField,
-    setSelectedChartField,
-    chartData,
   };
 };

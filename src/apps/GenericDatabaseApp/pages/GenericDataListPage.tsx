@@ -44,7 +44,8 @@ import DisplayFieldsModal from "../components/DisplayFieldsModal.tsx";
 import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
 import SaveViewModal from "../components/SaveViewModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
-import GenericChart from "../components/GenericChart.tsx";
+//import GenericChart from "../components/GenericChart.tsx";
+import ChartDisplay from "../components/ChartDisplay.tsx";
 
 import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
@@ -78,9 +79,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     fieldsForDynamicList,
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
-    selectedChartField, // useListSettings から取得
-    setSelectedChartField, // useListSettings から取得
-    chartData, // useListSettings から取得
   } = useListSettings({ appId, appSchema, records, customViews, isLoading });
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
@@ -214,17 +212,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   ) => {
     if (newViewType !== null) {
       setCurrentViewType(newViewType);
-      // グラフビューに切り替わったら、デフォルトで最初の選択/ラジオフィールドを選択
-      if (newViewType === "chart" && appSchema && appSchema.fields) {
-        const firstCategoricalField = appSchema.fields.find(
-          (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox"
-        );
-        if (firstCategoricalField) {
-          setSelectedChartField(firstCategoricalField.name as keyof GenericRecord);
-        } else {
-          setSelectedChartField(undefined); // 該当するフィールドがなければリセット
-        }
-      }
     }
   };
 
@@ -393,44 +380,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       </Box>
       {/* ★修正: ViewType に応じたコンテンツのレンダリング */}
       {currentViewType === "chart" ? (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-          {appSchema &&
-          appSchema.fields.filter(
-            (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox"
-          ).length > 0 ? (
-            <FormControl sx={{ minWidth: 200 }} size="small">
-              <InputLabel>グラフ化するフィールド</InputLabel>
-              <Select
-                value={selectedChartField || ""}
-                label="グラフ化するフィールド"
-                onChange={(e) => setSelectedChartField(e.target.value as keyof GenericRecord)}
-              >
-                {appSchema.fields
-                  .filter((f) => f.type === "select" || f.type === "radio" || f.type === "checkbox")
-                  .map((field) => (
-                    <MenuItem key={field.name as string} value={field.name as string}>
-                      {field.label}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              グラフ化できる選択肢/ラジオボタン/チェックボックスタイプのフィールドがありません。
-            </Typography>
-          )}
-          {selectedChartField ? (
-            <GenericChart
-              title={`「${appSchema?.fields.find((f) => f.name === selectedChartField)?.label || selectedChartField}」の分布`}
-              data={chartData}
-              chartType="pie" // デフォルトは円グラフ
-            />
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 4 }}>
-              グラフ化するフィールドを選択してください。
-            </Typography>
-          )}
-        </Box>
+        <ChartDisplay appSchema={appSchema} filteredAndSortedRecords={filteredAndSortedRecords} />
       ) : (
         <DynamicList<GenericRecord> // GenericRecord 型を渡す
           items={filteredAndSortedRecords}
