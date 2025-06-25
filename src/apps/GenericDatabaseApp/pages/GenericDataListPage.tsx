@@ -8,6 +8,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import FilterListIcon from "@mui/icons-material/FilterList"; // フィルタアイコン
 import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
 import ViewColumnIcon from "@mui/icons-material/ViewColumn"; // 列選択アイコンを追加
+import SettingsIcon from "@mui/icons-material/Settings";
+
+import BarChartIcon from "@mui/icons-material/BarChart";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import TableViewIcon from "@mui/icons-material/TableView";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import {
   Box,
@@ -37,6 +44,8 @@ import DisplayFieldsModal from "../components/DisplayFieldsModal.tsx";
 import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
 import SaveViewModal from "../components/SaveViewModal.tsx";
 import SortSettingsModal from "../components/SortSettingsModal.tsx";
+import GenericChart from "../components/GenericChart.tsx";
+
 import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
@@ -69,6 +78,9 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     fieldsForDynamicList,
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
+    selectedChartField, // useListSettings から取得
+    setSelectedChartField, // useListSettings から取得
+    chartData, // useListSettings から取得
   } = useListSettings({ appId, appSchema, records, customViews, isLoading });
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
@@ -87,7 +99,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const handleOpenDisplayFieldsModal = () => setIsDisplayFieldsModalOpen(true);
   const handleCloseDisplayFieldsModal = () => setIsDisplayFieldsModalOpen(false);
 
-  // ビュー保存モーダル関連ハンドラ
+  // カスタムビュー保存モーダル関連ハンドラ
   const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false); // ビュー保存モーダル
   const handleOpenSaveViewModal = (viewToEditId?: string) => {
     setIsSaveViewModalOpen(true);
@@ -100,6 +112,9 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   };
   const handleCloseSaveViewModal = () => setIsSaveViewModalOpen(false);
+
+  // 現在のビュータイプを管理
+  const [currentViewType, setCurrentViewType] = useState<"table" | "cards" | "chart">("table");
 
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
@@ -188,6 +203,27 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       } catch (err) {
         console.error("Error deleting view:", err);
         alert("ビューの削除に失敗しました。");
+      }
+    }
+  };
+
+  // ★追加: ビュータイプ切り替えハンドラ
+  const handleViewTypeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newViewType: "table" | "cards" | "chart" | null
+  ) => {
+    if (newViewType !== null) {
+      setCurrentViewType(newViewType);
+      // グラフビューに切り替わったら、デフォルトで最初の選択/ラジオフィールドを選択
+      if (newViewType === "chart" && appSchema && appSchema.fields) {
+        const firstCategoricalField = appSchema.fields.find(
+          (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox"
+        );
+        if (firstCategoricalField) {
+          setSelectedChartField(firstCategoricalField.name as keyof GenericRecord);
+        } else {
+          setSelectedChartField(undefined); // 該当するフィールドがなければリセット
+        }
       }
     }
   };
@@ -332,20 +368,85 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         )}
       </Box>
 
-      {/* DynamicList コンポーネントを使用 */}
-      <DynamicList<GenericRecord> // GenericRecord 型を渡す
-        items={filteredAndSortedRecords}
-        fields={fieldsForDynamicList} // アプリスキーマから読み込んだフィールド定義を渡す
-        onEdit={handleEditRecord}
-        onDelete={handleDeleteRecord}
-        itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
-        listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
-        onEditSchema={handleEditSchema}
-        onSortChange={handleSortConditionsChange} // onSortChange を渡す
-        currentSortConditions={sortConditions} // currentSortConditions を渡す
-        onFilterChange={handleFilterConditionsChange} // onFilterChange を渡す
-        currentFilterConditions={filterConditions} // currentFilterConditions を渡す
-      />
+      {/* ★修正: ビュータイプ切り替え (table/cards/chart) */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <IconButton onClick={handleEditSchema} sx={{ mr: 2 }} aria-label="アプリ設定">
+          <SettingsIcon />
+        </IconButton>
+
+        <ToggleButtonGroup
+          value={currentViewType}
+          exclusive
+          onChange={handleViewTypeChange}
+          aria-label="list view type"
+        >
+          <ToggleButton value="table" aria-label="table view">
+            <TableViewIcon />
+          </ToggleButton>
+          <ToggleButton value="cards" aria-label="cards view">
+            <ViewModuleIcon />
+          </ToggleButton>
+          <ToggleButton value="chart" aria-label="chart view">
+            <BarChartIcon />
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+      {/* ★修正: ViewType に応じたコンテンツのレンダリング */}
+      {currentViewType === "chart" ? (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+          {appSchema &&
+          appSchema.fields.filter(
+            (f) => f.type === "select" || f.type === "radio" || f.type === "checkbox"
+          ).length > 0 ? (
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>グラフ化するフィールド</InputLabel>
+              <Select
+                value={selectedChartField || ""}
+                label="グラフ化するフィールド"
+                onChange={(e) => setSelectedChartField(e.target.value as keyof GenericRecord)}
+              >
+                {appSchema.fields
+                  .filter((f) => f.type === "select" || f.type === "radio" || f.type === "checkbox")
+                  .map((field) => (
+                    <MenuItem key={field.name as string} value={field.name as string}>
+                      {field.label}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              グラフ化できる選択肢/ラジオボタン/チェックボックスタイプのフィールドがありません。
+            </Typography>
+          )}
+          {selectedChartField ? (
+            <GenericChart
+              title={`「${appSchema?.fields.find((f) => f.name === selectedChartField)?.label || selectedChartField}」の分布`}
+              data={chartData}
+              chartType="pie" // デフォルトは円グラフ
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 4 }}>
+              グラフ化するフィールドを選択してください。
+            </Typography>
+          )}
+        </Box>
+      ) : (
+        <DynamicList<GenericRecord> // GenericRecord 型を渡す
+          items={filteredAndSortedRecords}
+          fields={fieldsForDynamicList} // アプリスキーマから読み込んだフィールド定義を渡す
+          onEdit={handleEditRecord}
+          onDelete={handleDeleteRecord}
+          itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める
+          listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
+          onSortChange={handleSortConditionsChange} // onSortChange を渡す
+          currentSortConditions={sortConditions} // currentSortConditions を渡す
+          onFilterChange={handleFilterConditionsChange} // onFilterChange を渡す
+          currentFilterConditions={filterConditions} // currentFilterConditions を渡す
+          currentViewType={currentViewType === "table" ? "table" : "cards"} // DynamicList に table/cards を渡す
+        />
+      )}
+
       {/* ソート設定用モーダル */}
       <SortSettingsModal<GenericRecord>
         open={isSortModalOpen}

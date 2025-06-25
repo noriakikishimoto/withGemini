@@ -116,22 +116,6 @@ export interface SortCondition<T extends object> {
   direction: Exclude<SortDirection, undefined>; // 'asc' または 'desc' のみ
 }
 
-export interface DynamicListProps<T extends Identifiable & object> {
-  items: T[];
-  fields: FormField<T, any>[];
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  itemBasePath: string;
-  listTitle: string;
-  onEditSchema?: () => void;
-  // ★修正: ソート関連のProps
-  onSortChange: (newSortConditions: SortCondition<T>[]) => void; // ソート条件全体を通知
-  currentSortConditions?: SortCondition<T>[]; // 現在のソート条件の配列
-  // ★追加: フィルタリング関連のProps
-  onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void; // フィルタリング条件全体を通知
-  currentFilterConditions?: FilterCondition<T>[]; // 現在のフィルタリング条件の配列
-}
-
 //　アプリケーションスキーマのデータモデル
 // これが「ユーザーが作成するアプリの定義」そのもの
 export interface AppSchema extends Identifiable {

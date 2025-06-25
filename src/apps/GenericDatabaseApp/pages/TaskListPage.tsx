@@ -1,16 +1,12 @@
-import SortIcon from "@mui/icons-material/Sort"; // ソートアイコン
+import TableViewIcon from "@mui/icons-material/TableView";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
@@ -33,7 +29,7 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   // ★修正: ソートの状態を SortCondition[] で管理
   const [sortConditions, setSortConditions] = useState<SortCondition<TaskData>[]>([]);
-
+  const [currentViewType, setCurrentViewType] = useState<"table" | "cards">("table");
   // タスクデータをロードする関数
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -139,6 +135,15 @@ const TaskListPage: FC<TaskListPageProps> = () => {
     // または直接編集フォームへ遷移するなら navigate(`/tasks/edit/${id}`); のようなパスも検討
   };
 
+  const handleViewTypeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newViewType: "table" | "cards" | null
+  ) => {
+    if (newViewType !== null) {
+      setCurrentViewType(newViewType);
+    }
+  };
+
   // ローディング中とエラー表示
   if (isLoading) {
     return (
@@ -183,6 +188,22 @@ const TaskListPage: FC<TaskListPageProps> = () => {
         sx={{ mb: 3 }}
       />
 
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <ToggleButtonGroup
+          value={currentViewType}
+          exclusive
+          onChange={handleViewTypeChange}
+          aria-label="list view type"
+        >
+          <ToggleButton value="table" aria-label="table view">
+            <TableViewIcon />
+          </ToggleButton>
+          <ToggleButton value="cards" aria-label="cards view">
+            <ViewModuleIcon />
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
       <DynamicList<TaskData>
         items={filteredAndSortedTasks}
         fields={taskFormFields}
@@ -192,6 +213,7 @@ const TaskListPage: FC<TaskListPageProps> = () => {
         listTitle="タスク"
         onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
         currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
+        currentViewType={currentViewType}
       />
     </Box>
   );
