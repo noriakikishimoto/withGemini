@@ -182,6 +182,7 @@ export interface DashboardWidget<T extends object> {
   chartAggregationUnit?: ChartAggregationUnit; // 日付グラフの場合の集計単位
   // Text/Image ウィジェット固有のプロパティ (今回は簡易化)
   content?: string; // テキストや画像URLなど
+  customViewId?: string; //  適用するカスタムビューのID
 }
 
 // ダッシュボードの型定義

@@ -1,16 +1,8 @@
-import React, { FC, useState, useEffect, useMemo } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { FC } from "react";
 
-import {
-  AppSchema,
-  GenericRecord,
-  FormField,
-  CommonFormFieldComponent,
-  DashboardWidget,
-} from "../../../types/interfaces";
 import DynamicList from "../../../components/DynamicList.tsx"; // DynamicList をインポート
-import { getFieldComponentByType } from "../utils/fieldComponentMapper"; // ヘルパー関数をインポート
-import { useWidgetData } from "../hooks/useWidgetData.ts"; // useWidgetData をインポート
+import { DashboardWidget, GenericRecord } from "../../../types/interfaces";
 import { useAppData } from "../hooks/useAppData.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
 import ChartDisplay2 from "./ChartDisplay2.tsx";

@@ -2,17 +2,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 
-import {
-  Box,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
+import { Box, Grid, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
 
 // 共通の型定義をインポート
@@ -53,101 +43,6 @@ const ChartDisplay2: FC<ChartDisplay2Props> = ({ appSchema, filteredAndSortedRec
     );
   }, [appSchema]);
 
-  // グラフ表示用データの集計ロジック
-  /*
-  const allChartsData = useMemo(() => {
-    if (!appSchema || !filteredAndSortedRecords || filteredAndSortedRecords.length === 0) return [];
-
-    return chartableFields.map((fieldDef) => {
-      const selectedChartField = fieldDef.name as keyof GenericRecord;
-      const fieldType = fieldDef.type;
-
-      let chartData: ChartDataEntry[] = [];
-      let currentChartType: ChartType = "bar"; // デフォルトは棒グラフ
-
-      if (fieldType === "select" || fieldType === "radio" || fieldType === "checkbox") {
-        // カテゴリデータの集計
-        const counts: Record<string, number> = {};
-        filteredAndSortedRecords.forEach((record) => {
-          const value = String(record[selectedChartField] ?? "");
-          counts[value] = (counts[value] || 0) + 1;
-        });
-        chartData = Object.entries(counts).map(([name, value]) => ({ name: name || "(未設定)", value }));
-        currentChartType = "pie"; // カテゴリは円グラフ
-      } else if (fieldType === "number") {
-        // 数値データのヒストグラム集計
-        const numericValues = filteredAndSortedRecords
-          .map((record) => Number(record[selectedChartField]))
-          .filter((value) => !isNaN(value));
-
-        if (numericValues.length > 0) {
-          const minValue = Math.min(...numericValues);
-          const maxValue = Math.max(...numericValues);
-          const numberOfBins = 10;
-          const binSize = (maxValue - minValue) / numberOfBins;
-
-          if (binSize === 0) {
-            chartData = [{ name: String(minValue), value: numericValues.length }];
-          } else {
-            const bins: Record<string, number> = {};
-            for (let i = 0; i < numberOfBins; i++) {
-              const lowerBound = minValue + i * binSize;
-              const upperBound = minValue + (i + 1) * binSize;
-              const binName = `${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}`;
-              bins[binName] = 0;
-            }
-
-            numericValues.forEach((value) => {
-              let binIndex = Math.floor((value - minValue) / binSize);
-              if (binIndex === numberOfBins && value === maxValue) {
-                binIndex--;
-              } else if (binIndex > numberOfBins) {
-                binIndex = numberOfBins - 1;
-              }
-              const lowerBound = minValue + binIndex * binSize;
-              const upperBound = minValue + (binIndex + 1) * binSize;
-              const binName = `${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}`;
-              bins[binName]++;
-            });
-
-            chartData = Object.entries(bins)
-              .sort(([nameA], [nameB]) => {
-                const [minA] = nameA.split("-").map(Number);
-                const [minB] = nameB.split("-").map(Number);
-                return minA - minB;
-              })
-              .map(([name, value]) => ({ name, value }));
-          }
-        }
-        currentChartType = "bar"; // 数値は棒グラフ
-      } else if (fieldType === "date") {
-        // 日付データの集計 (月別件数 - デフォルト)
-        const dateValues = filteredAndSortedRecords
-          .map((record) => dayjs(String(record[selectedChartField])))
-          .filter((date) => date.isValid());
-
-        if (dateValues.length > 0) {
-          const countsByMonth: Record<string, number> = {};
-          dateValues.forEach((date) => {
-            const monthKey = date.format("YYYY-MM"); // デフォルトは月別
-            countsByMonth[monthKey] = (countsByMonth[monthKey] || 0) + 1;
-          });
-
-          chartData = Object.entries(countsByMonth)
-            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-            .map(([name, value]) => ({ name, value }));
-        }
-        currentChartType = "line"; // 日付は折れ線グラフ
-      }
-
-      return {
-        field: fieldDef,
-        data: chartData,
-        chartType: currentChartType,
-      };
-    });
-  }, [filteredAndSortedRecords, appSchema, chartableFields]);
-*/
   const allChartsData = useMemo(() => {
     if (!appSchema || !filteredAndSortedRecords || filteredAndSortedRecords.length === 0) return [];
 
@@ -249,17 +144,6 @@ const ChartDisplay2: FC<ChartDisplay2Props> = ({ appSchema, filteredAndSortedRec
     });
   }, [appSchema, filteredAndSortedRecords, chartableFields, chartSettings]); // ★依存配列に chartSettings を追加
 
-  // selectedChartField の初期化ロジック
-  /*
-  useEffect(() => {
-    if (appSchema && chartableFields.length > 0 && selectedChartField === undefined) {
-      setSelectedChartField(chartableFields[0].name as keyof GenericRecord);
-    } else if (appSchema && chartableFields.length === 0 && selectedChartField !== undefined) {
-      setSelectedChartField(undefined);
-    }
-  }, [appSchema, chartableFields, selectedChartField]);
-  */
-
   useEffect(() => {
     if (appSchema && chartableFields.length > 0) {
       const initialSettings: Record<string, IndividualChartSettings> = {};
@@ -293,26 +177,6 @@ const ChartDisplay2: FC<ChartDisplay2Props> = ({ appSchema, filteredAndSortedRec
     }
   }, [appSchema, chartableFields]);
 
-  /*
-  const currentChartType = useMemo(() => {
-    if (userSelectedChartType) return userSelectedChartType; // ユーザー選択があればそれを優先
-
-    if (!selectedFieldDef) return "bar"; // デフォルト
-
-    switch (selectedFieldDef.type) {
-      case "select":
-      case "radio":
-      case "checkbox":
-        return "pie"; // カテゴリデータは円グラフ
-      case "number":
-        return "bar"; // 数値データは棒グラフ (ヒストグラム)
-      case "date": // ★修正: 日付型も棒グラフ (時系列なら折れ線も)
-        return "bar"; // デフォルトは棒グラフ (ヒストグラム/期間別件数)
-      default:
-        return "pie";
-    }
-  }, [selectedFieldDef, userSelectedChartType]);
-*/
   // ★追加: 個々のグラフ設定を変更するハンドラ
   const handleChartSettingChange = (
     fieldName: keyof GenericRecord,

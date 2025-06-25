@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  Grid,
   IconButton,
   InputLabel,
   List,
@@ -21,27 +22,22 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
 // 共通の型定義をインポート
+import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマ取得用
+import { customViewRepository } from "../../../repositories/customViewRepository.ts";
+import { dashboardRepository } from "../../../repositories/dashboardRepository.ts";
 import {
   AppSchema,
-  CommonFormFieldComponent,
+  CustomView,
   Dashboard,
   DashboardWidget,
   FilterCondition,
-  FormField,
   GenericRecord,
   SortCondition,
   WidgetType,
 } from "../../../types/interfaces";
-import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts"; // アプリスキーマ取得用
-import { dashboardRepository } from "../../../repositories/dashboardRepository.ts";
-import { genericDataRepository } from "../../../repositories/genericDataRepository.ts";
-import ChartDisplay2 from "../components/ChartDisplay2.tsx";
-import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
-import DynamicList from "../../../components/DynamicList.tsx";
 
 // DashboardPageProps インターフェース
 interface DashboardPageProps {}
@@ -69,6 +65,7 @@ const DashboardPage: FC<DashboardPageProps> = () => {
 
   // ロード済みの全アプリスキーマ (ウィジェット設定用)
   const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]);
+  const [allCustomViews, setAllCustomViews] = useState<CustomView<GenericRecord>[]>([]);
 
   // ダッシュボードデータをロードする関数
   const fetchDashboards = async () => {
@@ -80,6 +77,9 @@ const DashboardPage: FC<DashboardPageProps> = () => {
       // 全アプリスキーマもここでロード (ウィジェット設定用)
       const schemas = await appSchemaRepository.getAll();
       setAllAppSchemas(schemas);
+
+      const views = await customViewRepository.getAll();
+      setAllCustomViews(views);
     } catch (err) {
       console.error("Error fetching dashboards:", err);
       setError("ダッシュボードの読み込みに失敗しました。");
@@ -160,7 +160,23 @@ const DashboardPage: FC<DashboardPageProps> = () => {
   const handleAddWidget = () => {
     setWidgetMode("create");
     setEditingWidgetIndex(null);
-    setCurrentWidget(null); // 新規ウィジェットの初期化
+    //setCurrentWidget(null);
+
+    setCurrentWidget({
+      id: String(Date.now()), // 暫定ID
+      type: "chart", // デフォルトはグラフ
+      title: "ウィジェット",
+      appId: allAppSchemas.length > 0 ? allAppSchemas[0].id : undefined, // 最初のアプリをデフォルト
+      chartField: undefined,
+      chartType: "pie",
+      chartAggregationUnit: "month",
+      customViewId: undefined, // ★追加: customViewId も初期化
+      xs: 12,
+      sm: 12,
+      md: 12,
+      lg: 12, // デフォルトのGridサイズ
+    });
+
     setIsWidgetModalOpen(true);
   };
 
@@ -194,6 +210,36 @@ const DashboardPage: FC<DashboardPageProps> = () => {
   const handleCloseWidgetModal = () => {
     setIsWidgetModalOpen(false);
     setCurrentWidget(null);
+  };
+
+  // ★追加: ウィジェットモーダル内のカスタムビュー選択ハンドラ
+  const handleWidgetCustomViewChange = (viewId: string) => {
+    if (!currentWidget) return;
+
+    const selectedView = allCustomViews.find((view) => view.id === viewId);
+    if (selectedView) {
+      // 選択されたカスタムビューの条件をウィジェットにコピー
+      setCurrentWidget((prev) => ({
+        ...prev!,
+        customViewId: viewId,
+        appId: selectedView.appId, // アプリIDもビューから設定
+        filterConditions: [...selectedView.filterConditions] as FilterCondition<GenericRecord>[],
+        sortConditions: [...selectedView.sortConditions] as SortCondition<GenericRecord>[],
+        displayFields: selectedView.displayFields ? [...selectedView.displayFields] : undefined,
+      }));
+    } else {
+      // デフォルト（ビューなし）を選択した場合
+      setCurrentWidget((prev) => ({
+        ...prev!,
+        customViewId: undefined,
+        // アプリID、フィルタ、ソート、表示フィールドをクリアまたは初期値にリセット
+        // ここではクリアする (必要に応じて初期値に設定)
+        appId: undefined,
+        filterConditions: [],
+        sortConditions: [],
+        displayFields: undefined,
+      }));
+    }
   };
 
   // ローディング中とエラー表示
@@ -366,6 +412,7 @@ const DashboardPage: FC<DashboardPageProps> = () => {
               )
             }
           />
+
           <FormControl fullWidth margin="normal">
             <InputLabel>ウィジェットタイプ</InputLabel>
             <Select
@@ -381,60 +428,109 @@ const DashboardPage: FC<DashboardPageProps> = () => {
             >
               <MenuItem value="chart">グラフ</MenuItem>
               <MenuItem value="list">リスト</MenuItem>
-              {/* <MenuItem value="text">テキスト</MenuItem> */}
-              {/* <MenuItem value="image">画像</MenuItem> */}
             </Select>
           </FormControl>
 
-          {/* ウィジェットタイプに応じた設定 (例: chart の場合) */}
-          {currentWidget?.type === "chart" && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1">グラフ設定</Typography>
-              <FormControl fullWidth margin="normal">
-                <InputLabel>対象アプリ</InputLabel>
-                <Select
-                  value={currentWidget.appId || ""}
-                  label="対象アプリ"
-                  onChange={(e) =>
-                    setCurrentWidget((prev) => ({ ...prev!, appId: e.target.value as string }))
-                  }
-                >
-                  {allAppSchemas.map((schema) => (
-                    <MenuItem key={schema.id} value={schema.id}>
-                      {schema.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {/* ここにグラフ化するフィールド選択、フィルタ、ソートなどのUIを追加 */}
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                （グラフ化するフィールド、フィルタ、ソートなどの設定は今後追加）
-              </Typography>
-            </Box>
-          )}
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1">設定</Typography>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>対象アプリ</InputLabel>
+              <Select
+                value={currentWidget?.appId || ""}
+                label="対象アプリ"
+                onChange={(e) =>
+                  setCurrentWidget((prev) => ({ ...prev!, appId: e.target.value as string }))
+                }
+              >
+                {allAppSchemas.map((schema) => (
+                  <MenuItem key={schema.id} value={schema.id}>
+                    {schema.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-          {currentWidget?.type === "list" && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1">リスト設定</Typography>
-              <FormControl fullWidth margin="normal">
-                <InputLabel>対象アプリ</InputLabel>
-                <Select
-                  value={currentWidget.appId || ""}
-                  label="対象アプリ"
-                  onChange={(e) =>
-                    setCurrentWidget((prev) => ({ ...prev!, appId: e.target.value as string }))
-                  }
-                >
-                  {allAppSchemas.map((schema) => (
-                    <MenuItem key={schema.id} value={schema.id}>
-                      {schema.name}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>カスタムビューを適用</InputLabel>
+            <Select
+              value={currentWidget?.customViewId || ""}
+              label="カスタムビューを適用"
+              onChange={(e) => handleWidgetCustomViewChange(e.target.value as string)}
+            >
+              <MenuItem value="">なし</MenuItem>
+              {allCustomViews
+                .filter((view) => view.appId === currentWidget?.appId)
+                .map(
+                  (
+                    view // 選択中のアプリのビューのみ表示
+                  ) => (
+                    <MenuItem key={view.id} value={view.id}>
+                      {view.name}
                     </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {/* ここにリストのフィルタ、ソート、表示列などのUIを追加 */}
-            </Box>
-          )}
+                  )
+                )}
+            </Select>
+          </FormControl>
+
+          {/* ★追加: ウィジェットサイズ設定 */}
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            ウィジェットサイズ (Grid 列幅)
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Extra Small (xs)"
+                value={currentWidget?.xs || ""}
+                onChange={(e) =>
+                  setCurrentWidget((prev) => ({ ...prev!, xs: Number(e.target.value) || undefined }))
+                }
+                inputProps={{ min: 1, max: 12 }}
+                margin="dense"
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Small (sm)"
+                value={currentWidget?.sm || ""}
+                onChange={(e) =>
+                  setCurrentWidget((prev) => ({ ...prev!, sm: Number(e.target.value) || undefined }))
+                }
+                inputProps={{ min: 1, max: 12 }}
+                margin="dense"
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Medium (md)"
+                value={currentWidget?.md || ""}
+                onChange={(e) =>
+                  setCurrentWidget((prev) => ({ ...prev!, md: Number(e.target.value) || undefined }))
+                }
+                inputProps={{ min: 1, max: 12 }}
+                margin="dense"
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Large (lg)"
+                value={currentWidget?.lg || ""}
+                onChange={(e) =>
+                  setCurrentWidget((prev) => ({ ...prev!, lg: Number(e.target.value) || undefined }))
+                }
+                inputProps={{ min: 1, max: 12 }}
+                margin="dense"
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseWidgetModal} color="secondary">

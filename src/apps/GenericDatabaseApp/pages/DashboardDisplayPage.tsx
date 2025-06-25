@@ -1,32 +1,16 @@
-import React, { FC, useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Box, Typography, Button, CircularProgress, Paper, Grid } from "@mui/material";
+import { Box, Button, CircularProgress, Grid, Paper, Typography } from "@mui/material";
+import { FC, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 // 共通の型定義をインポート
-import {
-  Dashboard,
-  GenericRecord,
-  AppSchema,
-  FormField,
-  CommonFormFieldComponent,
-  SortCondition,
-  FilterCondition,
-  FilterOperator,
-  ChartType,
-  DashboardWidget,
-  WidgetType,
-} from "../../../types/interfaces";
 import { dashboardRepository } from "../../../repositories/dashboardRepository.ts";
-import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
-import { genericDataRepository } from "../../../repositories/genericDataRepository.ts";
+import { Dashboard } from "../../../types/interfaces";
 
 // カスタムHookとヘルパー関数 (このファイルでは直接使わないものはインポートを削除)
 // import { getFieldComponentByType } from '../utils/fieldComponentMapper'; // DashboardChartWidget, DashboardListWidget で使用
 // import { getFilterConditionsDisplay, getSortConditionsDisplay, getDisplayFieldsDisplay } from '../utils/filterOperatorLabels'; // ダッシュボード表示では直接使わない
 
 // ★修正: DashboardChartWidget と DashboardListWidget をインポート
-import DashboardChartWidget from "../components/DashboardChartWidget.tsx";
-import DashboardListWidget from "../components/DashboardListWidget.tsx";
 import DashboardWidgetDisplay from "../components/DashboardWidgetDisplay.tsx";
 
 // DashboardDisplayPage コンポーネントの定義
