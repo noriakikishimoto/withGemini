@@ -403,6 +403,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           onFilterChange={handleFilterConditionsChange} // onFilterChange を渡す
           currentFilterConditions={filterConditions} // currentFilterConditions を渡す
           currentViewType={currentViewType === "table" ? "table" : "cards"} // DynamicList に table/cards を渡す
+          isStickyHeader={true}
         />
       )}
 

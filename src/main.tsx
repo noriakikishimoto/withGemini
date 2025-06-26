@@ -41,7 +41,7 @@ const theme = createTheme({
   // ★重要: タイポグラフィ（文字サイズ）の調整
   typography: {
     // 全体の基本フォントサイズを小さくする
-    fontSize: 10, // デフォルト16px。これを小さくすると全体的に文字が小さくなる
+    fontSize: 11, // デフォルト16px。これを小さくすると全体的に文字が小さくなる
     htmlFontSize: 12, // 1rem が 12px になるように (デフォルト16px)
     fontFamily: ["Roboto", "Noto Sans JP", "Helvetica", "Arial", "sans-serif"].join(","),
 

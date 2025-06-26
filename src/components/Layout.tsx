@@ -5,6 +5,8 @@ import TopHeader from "./TopHeader.tsx";
 
 import { AppBar, Box, Drawer, Slide, useScrollTrigger } from "@mui/material";
 
+import { DrawerContext } from "../contexts/DrawerContext";
+
 const drawerWidth = 200;
 
 interface LayoutProps {
@@ -81,22 +83,24 @@ const Layout: FC<LayoutProps> = ({ children }) => {
       </Drawer>
 
       {/* メインコンテンツエリア */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 0,
-          mt: 8,
-          ml: open ? 0 : `-${drawerWidth}px`,
-          transition: "margin-left 0.3s ease-out",
-          //height: "100vh",
-          //  mt: 10,
-          height: "calc(100vh - 80px)", // ★修正: ビューポートの残りの高さを確保
-          //  overflowY: "auto", // ★追加: メインコンテンツ領域をスクロール可能にする
-        }}
-      >
-        {children}
-      </Box>
+      <DrawerContext.Provider value={{ drawerOpen: open }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 0,
+            mt: 8,
+            ml: open ? 0 : `-${drawerWidth}px`,
+            transition: "margin-left 0.3s ease-out",
+            //height: "100vh",
+            //  mt: 10,
+            height: "calc(100vh - 80px)", // ★修正: ビューポートの残りの高さを確保
+            //  overflowY: "auto", // ★追加: メインコンテンツ領域をスクロール可能にする
+          }}
+        >
+          {children}
+        </Box>
+      </DrawerContext.Provider>
     </Box>
   );
 };

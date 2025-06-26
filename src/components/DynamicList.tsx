@@ -4,6 +4,7 @@ import DynamicTable from "./DynamicListViews/DynamicTable.tsx";
 import { Box, Typography } from "@mui/material";
 
 import { FilterCondition, FormField, Identifiable, SortCondition } from "../types/interfaces.ts";
+import DynamicTable2 from "./DynamicListViews/DynamicTable2.tsx";
 //import { DynamicListProps, Identifiable } from "../types/interfaces";
 interface DynamicListProps<T extends Identifiable & object> {
   items: T[];
@@ -20,6 +21,7 @@ interface DynamicListProps<T extends Identifiable & object> {
   onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void; // フィルタリング条件全体を通知
   currentFilterConditions?: FilterCondition<T>[]; // 現在のフィルタリング条件の配列
   currentViewType: "table" | "cards"; // DynamicList は table または cards のみ扱う
+  isStickyHeader?: boolean;
 }
 
 function DynamicList<T extends Identifiable & object>({
@@ -34,9 +36,10 @@ function DynamicList<T extends Identifiable & object>({
   onFilterChange, // ★追加: Propsとして受け取る
   currentFilterConditions, // ★追加: Propsとして受け取る
   currentViewType,
+  isStickyHeader = false,
 }: DynamicListProps<T>) {
   return (
-    <Box sx={{ flex: 1, paddingLeft: "20px" }}>
+    <Box sx={{ flex: 1 }}>
       {items.length === 0 ? (
         <Typography variant="body1" sx={{ textAlign: "center" }}>
           まだ {listTitle.replace("既存の", "").replace("リスト", "")} がありません。
@@ -55,8 +58,21 @@ function DynamicList<T extends Identifiable & object>({
           onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
           currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
         />
-      ) : (
+      ) : currentViewType === "table" && isStickyHeader ? (
         // デフォルトは 'table'
+        <DynamicTable2
+          items={items}
+          fields={fields}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          itemBasePath={itemBasePath}
+          // ソート関連のPropsは DynamicCards では利用しない
+          onSortChange={onSortChange}
+          currentSortConditions={currentSortConditions}
+          onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
+          currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
+        />
+      ) : currentViewType === "table" && !isStickyHeader ? (
         <DynamicTable
           items={items}
           fields={fields}
@@ -69,7 +85,7 @@ function DynamicList<T extends Identifiable & object>({
           onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
           currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
         />
-      )}
+      ) : null}
     </Box>
   );
 }

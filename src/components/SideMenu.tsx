@@ -140,13 +140,6 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
 
   return (
     <Box>
-      <Toolbar sx={{ justifyContent: "flex-end" }}>
-        <IconButton onClick={onDrawerClose}>
-          <ChevronLeftIcon />
-        </IconButton>
-      </Toolbar>
-      <Divider />
-
       <List>
         {menuItems.map((item) => (
           <React.Fragment key={item.text}>
