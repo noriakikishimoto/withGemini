@@ -58,7 +58,7 @@ const GenericChart: FC<GenericChartProps> = ({
   }
 
   return (
-    <Paper sx={{ p: 2, height: 300, mt: 10 }}>
+    <Paper sx={{ p: 2, height: 300, mt: 2 }}>
       <Typography variant="h6" gutterBottom align="center">
         {title}
       </Typography>

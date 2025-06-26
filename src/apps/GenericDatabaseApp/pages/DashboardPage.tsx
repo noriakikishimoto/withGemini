@@ -311,7 +311,7 @@ const DashboardPage: FC<DashboardPageProps> = () => {
               <Button
                 onClick={() => navigate(`/generic-db/dashboards/${dashboard.id}`)}
                 startIcon={<DashboardIcon />}
-                sx={{ ml: 2 }}
+                sx={{ ml: 2, mr: 5 }}
               >
                 ダッシュボードを開く
               </Button>

@@ -113,7 +113,7 @@ function DynamicForm<T extends object>({
           <Paper key={group.name} sx={{ mt: 2, p: 2 }}>
             {" "}
             {/* 各グループをPaperで囲む */}
-            <Typography variant="h6" component="h3" gutterBottom>
+            <Typography variant="h6" component="h3" gutterBottom align="left">
               {group.name}
             </Typography>
             <Grid container spacing={2}>

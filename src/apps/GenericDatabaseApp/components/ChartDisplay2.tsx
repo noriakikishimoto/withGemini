@@ -2,7 +2,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 
-import { Box, Grid, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
 
 // 共通の型定義をインポート
@@ -202,7 +202,7 @@ const ChartDisplay2: FC<ChartDisplay2Props> = ({ appSchema, filteredAndSortedRec
           {/* 複数のグラフを並べるためのGridコンテナ */}
           {allChartsData.map((chartItem, index) => (
             <Grid key={chartItem.field.name as string} size={{ xs: 12, sm: 6, md: 4 }}>
-              <Box sx={{ p: 1, border: "1px solid #eee", borderRadius: "4px" }}>
+              <Paper sx={{ p: 1, border: "1px solid #eee", borderRadius: "4px" }}>
                 {" "}
                 {/* 各グラフをBoxで囲んで区別 */}
                 <Typography variant="subtitle1" gutterBottom align="center">
@@ -262,7 +262,7 @@ const ChartDisplay2: FC<ChartDisplay2Props> = ({ appSchema, filteredAndSortedRec
                   </ToggleButtonGroup>
                 </Box>
                 <GenericChart title="" data={chartItem.data} chartType={chartItem.chartType} />
-              </Box>
+              </Paper>
             </Grid>
           ))}
         </Grid>

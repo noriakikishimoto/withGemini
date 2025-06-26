@@ -1,7 +1,7 @@
 .layoutContainer {
   /* display: flex; */
   /* flex-direction: column; */
-  min-height: 100vh; /* 最低限の高さ確保 */
+  /* min-height: 100vh; 最低限の高さ確保 */
   /* background-color: #f8f8f8; */
   /* color: #333; */
 }

@@ -5,15 +5,23 @@ import MenuIcon from "@mui/icons-material/Menu"; // メニューアイコン
 
 interface TopHeaderProps {
   onMenuOpen: () => void; // Drawerを開くためのコールバック
+  onMenuClose: () => void; // Drawerを閉じるためのコールバック
+  open: boolean;
+  drawerWidth: number;
 }
 
-const TopHeader: FC<TopHeaderProps> = ({ onMenuOpen }) => {
+const TopHeader: FC<TopHeaderProps> = ({ onMenuOpen, onMenuClose, open, drawerWidth }) => {
   return (
-    <Toolbar>
+    <Toolbar
+      sx={{
+        ml: open ? `${drawerWidth}px` : 0,
+        transition: "margin-left 0.3s ease-out",
+      }}
+    >
       <IconButton
         color="inherit"
         aria-label="open drawer"
-        onClick={onMenuOpen} // ★Drawerを開くハンドラをPropsとして受け取る
+        onClick={open ? onMenuClose : onMenuOpen} // ★Drawerを開くハンドラをPropsとして受け取る
         edge="start"
         // sx={{ mr: 2, ...(open && { display: 'none' }) }} // open状態はLayout側で管理するため削除
       >

@@ -195,6 +195,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
         listTitle="アプリ" // DynamicList 内部で「作成済みアプリ」の文字列を生成
         onSortChange={handleSortConditionsChange} // ★修正: onSortChange を渡す
         currentSortConditions={sortConditions} // ★修正: currentSortConditions を渡す
+        currentViewType={"table"}
       />
 
       {/* ★追加: 各アプリのデータ一覧へのリンクボタンも追加 (リスト表示の下) */}

@@ -144,6 +144,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
 
+  // ★追加: appId が変更されたら currentViewType をデフォルトに戻す
+  useEffect(() => {
+    setCurrentViewType("table"); // アプリが切り替わったらデフォルトのテーブルビューに
+  }, [appId]);
+
   // 追加: URL の viewId が変更されたら currentViewId を更新する useEffect
   useEffect(() => {
     if (viewId !== currentViewId) {
@@ -164,7 +169,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       //      setError(null);
       try {
         if (!appId) throw new Error("アプリIDが見つかりません。");
-        await genericDataRepository.delete(appId, recordId); // appId と recordId を渡す
+        await genericDataRepository.delete(recordId, appId); // appId と recordId を渡す
         alert("レコードが削除されました！");
         fetchData(); // 削除後にリストを再フェッチ
       } catch (err) {
@@ -279,81 +284,84 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           新規レコードを作成
         </Button>
       </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <Button
-          variant={sortConditions.length > 0 ? "contained" : "outlined"}
-          startIcon={<SortIcon />}
-          onClick={handleOpenSortModal}
-        >
-          ソート設定
-        </Button>
-        <Button
-          variant={filterConditions.length > 0 ? "contained" : "outlined"}
-          startIcon={<FilterListIcon />}
-          onClick={handleOpenFilterModal}
-        >
-          絞り込み設定
-        </Button>
-        <Button
-          variant={selectedDisplayFields.length !== appSchema.fields.length ? "contained" : "outlined"}
-          startIcon={<ViewColumnIcon />}
-          onClick={handleOpenDisplayFieldsModal}
-        >
-          表示列設定
-        </Button>
-        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSaveViewModal()}>
-          ビューを保存
-        </Button>
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }} size="small">
-          <InputLabel>ビュー</InputLabel>
-          <Select
-            value={currentViewId}
-            label="ビュー"
-            onChange={(e) => {
-              const newViewId = e.target.value as string;
-              setCurrentViewId(newViewId);
-              // URL を更新して、直リンクを可能にする
-              if (newViewId === "default") {
-                navigate(`/generic-db/data/${appId}/list`);
-              } else {
-                navigate(`/generic-db/data/${appId}/list/${newViewId}`);
-              }
-            }}
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Box>
+          <FormControl sx={{ minWidth: 300 }} size="small">
+            <InputLabel>ビュー選択</InputLabel>{" "}
+            <Select
+              value={currentViewId}
+              label="ビュー選択"
+              onChange={(e) => {
+                const newViewId = e.target.value as string;
+                setCurrentViewId(newViewId);
+                // URL を更新して、直リンクを可能にする
+                if (newViewId === "default") {
+                  navigate(`/generic-db/data/${appId}/list`);
+                } else {
+                  navigate(`/generic-db/data/${appId}/list/${newViewId}`);
+                }
+              }}
+            >
+              <MenuItem value="default">デフォルトビュー</MenuItem>
+              {customViews.map((view) => (
+                <MenuItem key={view.id} value={view.id}>
+                  <Typography variant="inherit">{view.name}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {currentViewId !== "default" && (
+            <>
+              <IconButton
+                aria-label={`現在のビューを編集`}
+                onClick={() => {
+                  handleOpenSaveViewModal(currentViewId);
+                }}
+                size="small"
+                sx={{ ml: 2 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              {/* ★追加: ビュー削除ボタン */}
+              <IconButton
+                aria-label={`現在のビューを削除`}
+                onClick={() => {
+                  handleDeleteView(currentViewId);
+                }}
+                size="small"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+        </Box>
+        <Box>
+          <Button
+            variant={sortConditions.length > 0 ? "contained" : "outlined"}
+            startIcon={<SortIcon />}
+            onClick={handleOpenSortModal}
           >
-            <MenuItem value="default">デフォルトビュー</MenuItem>
-            {customViews.map((view) => (
-              <MenuItem key={view.id} value={view.id}>
-                <Typography variant="inherit">{view.name}</Typography>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {currentViewId !== "default" && (
-          <>
-            <IconButton
-              aria-label={`現在のビューを編集`}
-              onClick={() => {
-                handleOpenSaveViewModal(currentViewId);
-              }}
-              size="small"
-              sx={{ ml: 2 }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            {/* ★追加: ビュー削除ボタン */}
-            <IconButton
-              aria-label={`現在のビューを削除`}
-              onClick={() => {
-                handleDeleteView(currentViewId);
-              }}
-              size="small"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </>
-        )}
+            ソート設定
+          </Button>
+          <Button
+            variant={filterConditions.length > 0 ? "contained" : "outlined"}
+            startIcon={<FilterListIcon />}
+            onClick={handleOpenFilterModal}
+          >
+            絞り込み設定
+          </Button>
+          <Button
+            variant={selectedDisplayFields.length !== appSchema.fields.length ? "contained" : "outlined"}
+            startIcon={<ViewColumnIcon />}
+            onClick={handleOpenDisplayFieldsModal}
+          >
+            表示列設定
+          </Button>
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSaveViewModal()}>
+            ビューを保存
+          </Button>
+        </Box>
       </Box>
 
       {/* ★修正: ビュータイプ切り替え (table/cards/chart) */}
@@ -423,7 +431,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
         // onToggleDisplayField={/* このpropsは不要になったため削除 */}
         onSave={handleDisplayFieldsChange} //  onSave を渡す
       />
-
+      {/* カスタムビュー保存（編集）モーダル */}
       <SaveViewModal
         open={isSaveViewModalOpen}
         onClose={handleCloseSaveViewModal}

@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Typography,
   Button,
+  SvgIconProps,
 } from "@mui/material"; // MUIコンポーネント
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"; // 左矢印アイコン
 // アイコン
@@ -42,7 +43,7 @@ interface MenuItem {
 
 // メニュー項目を配列で定義 (Layout.tsxから移動)
 const menuItems: MenuItem[] = [
-  // { text: "ホーム", path: "/", icon: <DashboardIcon /> },
+  { text: "ダッシュボード", path: "/generic-db/dashboards", icon: <DashboardIcon /> },
   {
     text: "申請管理",
     path: "/applications",
@@ -70,11 +71,6 @@ const menuItems: MenuItem[] = [
       { text: "アプリ一覧", path: "/generic-db/app-schemas/list" },
       { text: "新規アプリ作成", path: "/generic-db/app-schemas/new" },
     ],
-  },
-  {
-    text: "レポート",
-    icon: <BarChartIcon />,
-    children: [{ text: "ダッシュボード", path: "/generic-db/dashboards", icon: <DashboardIcon /> }],
   },
 ];
 
@@ -144,12 +140,13 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
 
   return (
     <Box>
-      <Toolbar sx={{ justifyContent: "flex-end", minHeight: "64px" }}>
+      <Toolbar sx={{ justifyContent: "flex-end" }}>
         <IconButton onClick={onDrawerClose}>
           <ChevronLeftIcon />
         </IconButton>
       </Toolbar>
-      <Divider />{" "}
+      <Divider />
+
       <List>
         {menuItems.map((item) => (
           <React.Fragment key={item.text}>
@@ -159,7 +156,14 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                   onClick={() => handleSubMenuClick(item.path || item.text)}
                   selected={location.pathname.startsWith(item.path || "")}
                 >
-                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                  {item.icon && (
+                    <ListItemIcon sx={{ minWidth: 34 }}>
+                      {/* ★修正: サブメニュー親アイコンのサイズ調整 */}
+                      {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
+                        fontSize: "small",
+                      })}
+                    </ListItemIcon>
+                  )}
                   <ListItemText primary={item.text} />
                   {openSubMenus[item.path || item.text] ? <ExpandLess /> : <ExpandMore />}
                 </ListItemButton>
@@ -172,9 +176,15 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                         to={child.path || ""}
                         selected={location.pathname === child.path}
                         sx={{ pl: 4 }}
-                        onClick={onDrawerClose} // サブメニュー項目クリックでドロワーを閉じる
+                        //onClick={onDrawerClose} // サブメニュー項目クリックでドロワーを閉じる
                       >
-                        {child.icon && <ListItemIcon>{child.icon}</ListItemIcon>}
+                        {child.icon && (
+                          <ListItemIcon sx={{ minWidth: 34 }}>
+                            {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
+                              fontSize: "small",
+                            })}
+                          </ListItemIcon>
+                        )}
                         <ListItemText primary={child.text} />
                       </ListItemButton>
                     ))}
@@ -186,9 +196,15 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                 component={Link}
                 to={item.path || ""}
                 selected={location.pathname === item.path}
-                onClick={onDrawerClose} // ルートメニュー項目クリックでドロワーを閉じる
+                //onClick={onDrawerClose} // ルートメニュー項目クリックでドロワーを閉じる
               >
-                {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                {item.icon && (
+                  <ListItemIcon sx={{ minWidth: 34 }}>
+                    {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
+                      fontSize: "small",
+                    })}
+                  </ListItemIcon>
+                )}
                 <ListItemText primary={item.text} />
               </ListItemButton>
             )}
@@ -202,7 +218,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
               onClick={() => handleSubMenuClick("/generic-db/data")} // 適当なキー
               selected={location.pathname.startsWith("/generic-db/data")}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 34 }}>
                 <AppsIcon />
               </ListItemIcon>
               <ListItemText primary="マイアプリ" />
@@ -217,7 +233,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                     to={`/generic-db/data/${app.id}/list`} // 各アプリのデータ一覧へのリンク
                     selected={location.pathname.startsWith(`/generic-db/data/${app.id}`)}
                     sx={{ pl: 4 }}
-                    onClick={onDrawerClose}
+                    //  onClick={onDrawerClose}
                   >
                     <ListItemText primary={app.name} />
                   </ListItemButton>

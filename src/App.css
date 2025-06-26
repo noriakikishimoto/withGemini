@@ -1,11 +1,12 @@
+/*
 html,
 body,
 #root {
   margin: 0;
   padding: 0;
-  width: 100%; /* 幅を100%に */
-  min-height: 100vh; /* 高さもビューポートの100%に */
-  box-sizing: border-box; /* paddingやborderが幅や高さに含まれるように */
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 body {
@@ -17,25 +18,21 @@ body {
 }
 
 #root {
-  /* ここは、app-container が収まるように調整。全体の背景色はこちらでなくbodyやhtmlに指定した方が良い */
-  /* max-width: 1920px; この行は削除かコメントアウトしてください */
-  /* margin: 0 auto; この行は削除かコメントアウトしてください */
-  padding: 2rem; /* app-container の外側にパディングを設ける場合 */
+  padding: 2rem;
   text-align: center;
 }
 
-/* アプリケーション全体のコンテナ */
 .app-container {
   padding: 20px;
   border: 1px solid #d3cdcd;
   border-radius: 8px;
-  max-width: 80%; /* 親（#root）の100%を使う */
-  margin: 20px auto; /* 親が全体幅を取っていれば、これによって中央寄せされる */
+  max-width: 80%;
+  margin: 20px auto;
   display: flex;
   gap: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-/* 共通ボタンの基本スタイル */
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -49,7 +46,6 @@ body {
   opacity: 0.9;
 }
 
-/* 各ボタンの色 */
 .btn-primary {
   background-color: #007bff;
   color: white;
@@ -70,14 +66,12 @@ body {
   color: white;
 }
 
-/* フォームとリストのセクション共通スタイル */
 .section {
   flex: 1;
   padding: 20px;
-  box-sizing: border-box; /* paddingが幅に含まれるように */
+  box-sizing: border-box;
 }
 
-/* フォームとリストの間の区切り線 */
 .section.form-section {
   border-right: 1px solid #eee;
   padding-right: 20px;
@@ -87,7 +81,6 @@ body {
   padding-left: 20px;
 }
 
-/* ナビゲーションリンクのスタイル */
 nav {
   margin-bottom: 20px;
   display: flex;
@@ -96,7 +89,7 @@ nav {
 }
 
 nav .btn {
-  /* nav 内のボタンは少しスタイルを調整 */
-  text-decoration: none; /* 下線をなくす */
-  display: inline-block; /* パディングのために必要 */
+  text-decoration: none;
+  display: inline-block;
 }
+*/

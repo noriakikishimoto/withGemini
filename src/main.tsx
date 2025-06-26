@@ -11,19 +11,30 @@ import CssBaseline from "@mui/material/CssBaseline";
 // ★追加: カスタムテーマの定義 (デフォルトテーマでも可)
 //const theme = createTheme();
 const theme = createTheme({
-  // パレットの色を微調整することも可能
-  // palette: {
-  //   primary: {
-  //     main: '#1976d2', // デフォルトの青色
-  //   },
-  //   secondary: {
-  //     main: '#dc004e', // デフォルトのピンク
-  //   },
-  // },
+  /*
+  shape: {
+    borderRadius: 8, // デフォルトは 4px。値を大きくするとより丸くなる (単位はpx)
+  },
+  */
+  palette: {
+    background: {
+      // メインコンテンツの背景色をここで設定
+      default: "#f0f2f5", // 例: 薄いグレー
+      paper: "#ffffff", // Paper コンポーネントなどの背景色
+    },
+
+    primary: {
+      main: "#7d84af", // デフォルトの青色は#1976d2
+    },
+
+    //   secondary: {
+    //     main: '#dc004e', // デフォルトのピンク
+    //   },
+  },
 
   // ★重要: スペーシングの調整
   // デフォルト 8px。これを小さくすると全体のマージン/パディングが小さくなる
-  spacing: 4, // デフォルト8pxを4px単位にする (4px, 8px, 12px, ...)
+  spacing: 8, // デフォルト8pxを4px単位にする (4px, 8px, 12px, ...)
   // もし Mui がデフォルトで 8px 単位で p={1} などと使っている場合、
   // p={1} は 4px になり、全体的に詰まる。
 
@@ -32,18 +43,19 @@ const theme = createTheme({
     // 全体の基本フォントサイズを小さくする
     fontSize: 10, // デフォルト16px。これを小さくすると全体的に文字が小さくなる
     htmlFontSize: 12, // 1rem が 12px になるように (デフォルト16px)
+    fontFamily: ["Roboto", "Noto Sans JP", "Helvetica", "Arial", "sans-serif"].join(","),
 
     // 各 variant の文字サイズを調整
     h1: { fontSize: "2.5rem" }, // デフォルトより少し小さめ
     h2: { fontSize: "2rem" },
     h3: { fontSize: "1.75rem" },
-    h4: { fontSize: "1.5rem" },
-    h5: { fontSize: "1.25rem" }, // ListTitle (既存のタスク) など
+    h4: { fontSize: "1.4rem" },
+    h5: { fontSize: "1.1rem" }, // ListTitle (既存のタスク) など
     h6: { fontSize: "1rem" }, // CardTitle (新しいタスク) など
     subtitle1: { fontSize: "0.9rem" },
     subtitle2: { fontSize: "0.8rem" },
-    body1: { fontSize: "0.85rem" }, // デフォルトの本文
-    body2: { fontSize: "0.75rem" }, // 小さいテキスト
+    body1: { fontSize: "0.75rem" }, // デフォルトの本文
+    body2: { fontSize: "0.65rem" }, // 小さいテキスト
     button: { fontSize: "0.6rem" }, // ボタンの文字
     caption: { fontSize: "0.65rem" },
     overline: { fontSize: "0.6rem" },
@@ -58,7 +70,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          padding: "4px 8px", // デフォルトのpaddingをさらに小さく
+          padding: "4px 4px", // デフォルトのpaddingをさらに小さく
         },
       },
     },
@@ -72,11 +84,18 @@ const theme = createTheme({
           marginTop: "8px", // マージンを小さく (normal は 16px)
           marginBottom: "8px",
         },
-        input: {
-          padding: "8.5px 14px", // input の内側のパディングを調整して高さを抑える
+      },
+    },
+    /*
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          position: "sticky",
+          top: 0,
         },
       },
     },
+    */
     // テーブルのセルを詰める
     MuiTableCell: {
       styleOverrides: {
@@ -102,7 +121,7 @@ const theme = createTheme({
     MuiCardContent: {
       styleOverrides: {
         root: {
-          padding: "12px", // デフォルトの 16px から小さく
+          padding: "16px", // デフォルトの 16px から小さく
           "&:last-child": {
             // MUI CardContent の最後の要素の特殊なpaddingを調整
             paddingBottom: "12px",
@@ -129,6 +148,23 @@ const theme = createTheme({
           // regular variant の Toolbar の高さ (default)
           minHeight: 56, // デフォルト 64px から少し小さく
         },
+      },
+    },
+    MuiPaper: {
+      // Paper コンポーネントのデフォルトスタイルを上書き
+      styleOverrides: {
+        root: {
+          borderRadius: 4, // 例: 16px の丸み
+          // boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)', // 例: デフォルトの影をカスタマイズ
+        },
+        // variant: {
+        //   outlined: { // 'outlined' variant の Paper だけカスタマイズする場合
+        //     borderColor: 'red',
+        //   },
+        // },
+      },
+      defaultProps: {
+        elevation: 0, // デフォルトの影の強さを設定 (デフォルトは1)
       },
     },
   },

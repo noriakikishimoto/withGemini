@@ -1,37 +1,38 @@
 import React, { FC, ReactNode, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
-import TopHeader from "./TopHeader.tsx";
+import { useLocation } from "react-router-dom";
 import SideMenu from "./SideMenu.tsx";
+import TopHeader from "./TopHeader.tsx";
 
-import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemText,
-  Box,
-  Divider,
-  Button,
-  Collapse,
-  ListItemIcon,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu"; // メニューアイコン
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"; // 左矢印アイコン (Drawerを閉じる用)
-import DescriptionIcon from "@mui/icons-material/Description";
-import TableViewIcon from "@mui/icons-material/TableView";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import LayersIcon from "@mui/icons-material/Layers";
+import { AppBar, Box, Drawer, Slide, useScrollTrigger } from "@mui/material";
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 interface LayoutProps {
   children: ReactNode;
+}
+interface Props {
+  /**
+   * Injected by the documentation to work in an iframe.
+   * You won't need it on your project.
+   */
+  window?: () => Window;
+  children?: React.ReactElement<unknown>;
+}
+
+function HideOnScroll(props: Props) {
+  const { children, window } = props;
+  // Note that you normally won't need to set the window ref as useScrollTrigger
+  // will default to window.
+  // This is only being set here because the demo is in an iframe.
+  const trigger = useScrollTrigger({
+    target: window ? window() : undefined,
+  });
+
+  return (
+    <Slide appear={false} direction="down" in={!trigger}>
+      {children ?? <div />}
+    </Slide>
+  );
 }
 
 const Layout: FC<LayoutProps> = ({ children }) => {
@@ -49,10 +50,18 @@ const Layout: FC<LayoutProps> = ({ children }) => {
   return (
     <Box sx={{ display: "flex" }}>
       {/* AppBar (ヘッダーバー) */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <TopHeader onMenuOpen={handleDrawerOpen} />
-      </AppBar>
+      <HideOnScroll>
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer - 1 }}>
+          <TopHeader
+            onMenuOpen={handleDrawerOpen}
+            open={open}
+            drawerWidth={drawerWidth}
+            onMenuClose={handleDrawerClose}
+          />
+        </AppBar>
+      </HideOnScroll>
       {/* Drawer (サイドバー) */}
+
       <Drawer
         variant="persistent"
         anchor="left"
@@ -63,23 +72,27 @@ const Layout: FC<LayoutProps> = ({ children }) => {
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             boxSizing: "border-box",
-            backgroundColor: "#e0e0e0",
-            pt: (theme) => `${theme.mixins.toolbar.minHeight}px`,
+            backgroundColor: "#ffffff",
+            //  pt: (theme) => `${theme.mixins.toolbar.minHeight}px`,
           },
         }}
       >
         <SideMenu onDrawerClose={handleDrawerClose} />
       </Drawer>
+
       {/* メインコンテンツエリア */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 0,
           mt: 8,
           ml: open ? 0 : `-${drawerWidth}px`,
-          //ml: 0,
           transition: "margin-left 0.3s ease-out",
+          //height: "100vh",
+          //  mt: 10,
+          height: "calc(100vh - 80px)", // ★修正: ビューポートの残りの高さを確保
+          //  overflowY: "auto", // ★追加: メインコンテンツ領域をスクロール可能にする
         }}
       >
         {children}
