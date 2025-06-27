@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Paper, Typography } from "@mui/material"; // MUIコンポーネントをインポート
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { CommonFormFieldComponent, FormField } from "../types/interfaces";
+import { CommonFormFieldComponent, FormField, User } from "../types/interfaces";
 import FormFieldRenderer from "./FormFields/FormFieldRenderer.tsx";
 
 interface DynamicFormProps<T extends object> {
@@ -14,6 +14,7 @@ interface DynamicFormProps<T extends object> {
   formTitle?: string;
   // ★追加: フィールドの値が変更されたときに親に通知するコールバック
   onFieldChange?: (fieldName: keyof T, value: any) => void;
+  allUsers?: User[];
 }
 
 // DynamicForm コンポーネントの定義
@@ -27,6 +28,7 @@ function DynamicForm<T extends object>({
   cancelButtonText = "キャンセル",
   formTitle = "フォーム",
   onFieldChange,
+  allUsers,
 }: DynamicFormProps<T>) {
   // フォームデータを管理するステート
   // initialDataがない場合は、フィールド定義から初期値を生成
@@ -128,7 +130,12 @@ function DynamicForm<T extends object>({
                     md: field.md || field.sm || field.xs || 12,
                   }}
                 >
-                  <FormFieldRenderer<T> field={field} formData={formData} handleChange={handleChange} />
+                  <FormFieldRenderer<T>
+                    field={field}
+                    formData={formData}
+                    handleChange={handleChange}
+                    allUsers={allUsers}
+                  />
                 </Grid>
               ))}
             </Grid>

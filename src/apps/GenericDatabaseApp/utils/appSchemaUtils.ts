@@ -3,6 +3,7 @@ import {
   CommonFormFieldComponent,
   FormField,
   GenericRecord,
+  User,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "./fieldComponentMapper"; // fieldComponentMapper をインポート
 
@@ -36,7 +37,8 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("text"),
-      // valueFormatter: (userId: string) => allUsers.find(u => u.id === userId)?.displayName || userId, // 表示名解決 (DynamicListで利用)
+      valueFormatter: (userId: string, allUsers?: User[]) =>
+        allUsers?.find((u) => u.id === userId)?.displayName || userId,
     },
     {
       name: "createdAt",
@@ -45,7 +47,7 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("date"),
-      // valueFormatter: (isoDate: string) => isoDate ? new Date(isoDate).toLocaleString() : '',
+      valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
     },
     {
       name: "updatedBy",
@@ -54,7 +56,8 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("text"),
-      // valueFormatter: (userId: string) => allUsers.find(u => u.id === userId)?.displayName || userId,
+      valueFormatter: (userId: string, allUsers?: User[]) =>
+        allUsers?.find((u) => u.id === userId)?.displayName || userId,
     },
     {
       name: "updatedAt",
@@ -63,7 +66,7 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("date"),
-      // valueFormatter: (isoDate: string) => isoDate ? new Date(isoDate).toLocaleString() : '',
+      valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
     },
   ];
 

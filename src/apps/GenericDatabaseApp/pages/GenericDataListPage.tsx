@@ -64,27 +64,28 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   //const { appId } = useParams<{ appId: string }>(); // URLからアプリIDを取得
   const { appId, viewId } = useParams<{ appId: string; viewId?: string }>();
   const navigate = useNavigate();
+
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
   // ★追加: useListSettings からリスト関連のステートとハンドラを取得
   const {
     searchTerm,
     setSearchTerm,
     sortConditions,
-    setSortConditions, // setSortConditions も公開
+    //setSortConditions, // setSortConditions も公開
     handleSortConditionsChange,
     filterConditions,
-    setFilterConditions, // setFilterConditions も公開
+    //setFilterConditions, // setFilterConditions も公開
     handleFilterConditionsChange,
     selectedDisplayFields,
-    setSelectedDisplayFields, // setSelectedDisplayFields も公開
+    //setSelectedDisplayFields, // setSelectedDisplayFields も公開
     handleDisplayFieldsChange,
     filteredAndSortedRecords,
     fieldsForDynamicList,
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
-  } = useListSettings({ appId, appSchema, records, customViews, isLoading });
-
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  } = useListSettings({ appId, appSchema, records, customViews, isLoading, allUsers });
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
@@ -119,6 +120,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   // 現在のビュータイプを管理
   const [currentViewType, setCurrentViewType] = useState<"table" | "cards" | "chart">("table");
 
+  /*
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
     // appSchema がまだロードされていない場合は何もしない
@@ -147,7 +149,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       }
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
-
+*/
   // ★追加: appId が変更されたら currentViewType をデフォルトに戻す
   useEffect(() => {
     setCurrentViewType("table"); // アプリが切り替わったらデフォルトのテーブルビューに

@@ -69,8 +69,8 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         setAppSchema(schema);
 
         // 全ユーザー情報もロード
-        //const users = await userRepository.getAll();
-        //setAllUsers(users);
+        const users = await userRepository.getAll();
+        setAllUsers(users);
 
         // 2. レコードIDがあれば、実際のレコードデータをロード (編集モード)
         if (recordId) {
@@ -232,6 +232,7 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
             recordId ? `${appSchema.name} レコードを編集` : `新しい ${appSchema.name} レコードを作成`
           }
           submitButtonText={recordId ? "変更を保存" : "レコードを作成"}
+          allUsers={allUsers}
         />
       </Paper>
     </Box>

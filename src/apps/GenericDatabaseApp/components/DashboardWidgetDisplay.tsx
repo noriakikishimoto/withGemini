@@ -1,11 +1,12 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 
 import DynamicList from "../../../components/DynamicList.tsx"; // DynamicList をインポート
-import { DashboardWidget, GenericRecord } from "../../../types/interfaces";
+import { DashboardWidget, GenericRecord, User } from "../../../types/interfaces";
 import { useAppData } from "../hooks/useAppData.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
 import ChartDisplay2 from "./ChartDisplay2.tsx";
+import { userRepository } from "../../../repositories/userRepository.ts";
 
 interface DashboardWidgetDisplayProps {
   widget: DashboardWidget<GenericRecord>;
@@ -13,6 +14,7 @@ interface DashboardWidgetDisplayProps {
 
 const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => {
   const appId = widget.appId;
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
 
   const {
@@ -31,7 +33,20 @@ const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => 
     fieldsForDynamicList,
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
-  } = useListSettings({ appId, appSchema, records, customViews, isLoading });
+  } = useListSettings({ appId, appSchema, records, customViews, isLoading, allUsers });
+
+  // ★追加: 全ユーザー情報をロードする useEffect
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await userRepository.getAll();
+        setAllUsers(users);
+      } catch (err) {
+        console.error("Error loading users for display:", err);
+      }
+    };
+    loadUsers();
+  }, []);
 
   if (isLoading) {
     return (

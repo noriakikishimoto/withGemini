@@ -31,11 +31,13 @@ function DisplayFieldsModal<T extends object>({
   onSave,
 }: DisplayFieldsModalProps<T>) {
   // モーダル内で編集中の選択状態を保持 (親の selectedDisplayFields とは独立)
-  const [editingDisplayFields, setEditingDisplayFields] = useState<(keyof T)[]>(selectedDisplayFields);
+  const [editingDisplayFields, setEditingDisplayFields] = useState<(keyof T)[]>([]);
 
   // モーダルが開かれたとき、または親の selectedDisplayFields が変更されたときに、編集用ステートを更新
   useEffect(() => {
-    setEditingDisplayFields(selectedDisplayFields);
+    if (open) {
+      setEditingDisplayFields(selectedDisplayFields);
+    }
   }, [open, selectedDisplayFields]);
 
   // モーダル内のチェックボックスのトグルハンドラ

@@ -7,7 +7,7 @@ import MuiDatePickerWrapper from "./MuiDatePickerWrapper.tsx";
 import MuiSelectFieldWrapper from "./MuiSelectFieldWrapper.tsx";
 
 // 共通の型定義をインポート
-import { FormField, CommonFormFieldComponent, GenericRecord } from "../../types/interfaces";
+import { FormField, CommonFormFieldComponent, GenericRecord, User } from "../../types/interfaces";
 import MuiRadioGroupWrapper from "./MuiRadioGroupWrapper.tsx";
 import MuiLookupFieldWrapper from "./MuiLookupFieldWrapper.tsx";
 import MuiTableFieldWrapper from "./MuiTableFieldWrapper.tsx";
@@ -18,6 +18,7 @@ interface FormFieldRendererProps<T extends object> {
   field: FormField<T, CommonFormFieldComponent<any>>;
   formData: Record<string, any>;
   handleChange: (name: keyof T, value: any) => void;
+  allUsers?: User[];
 }
 
 // FormFieldRenderer コンポーネントの定義
@@ -26,9 +27,16 @@ function FormFieldRenderer<T extends object>({
   field,
   formData,
   handleChange,
+  allUsers,
 }: FormFieldRendererProps<T>) {
   // field.name は keyof T だが、formData アクセスと handleChange の引数には string が必要
   const fieldNameAsString = field.name as string;
+  const currentValue = formData[fieldNameAsString];
+
+  // field.valueFormatter があればそれを使用して値を整形
+  const displayValue = field.valueFormatter
+    ? field.valueFormatter(currentValue, allUsers) // allUsers も渡す
+    : String(currentValue ?? ""); // デフォルトの表示
 
   // field.options が string の場合に FormFieldSelectOption[] に変換するロジック
   // これは MuiSelectFieldWrapper に渡すため
@@ -58,11 +66,7 @@ function FormFieldRenderer<T extends object>({
         <MuiTextFieldWrapper
           label={field.label}
           name={fieldNameAsString}
-          value={
-            formData[fieldNameAsString]
-              ? (formData[fieldNameAsString] as string | number).toString()
-              : field.initialValue
-          }
+          value={displayValue ? (displayValue as string | number).toString() : field.initialValue}
           onChange={(val) => handleChange(field.name, field.type === "number" ? Number(val) : val)}
           multiline={field.multiline || field.type === "textarea"}
           rows={field.rows}

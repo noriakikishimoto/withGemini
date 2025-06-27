@@ -109,6 +109,9 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   // tableFields?: FormField<any, any>[];
 
   readOnly?: boolean; //読み取り専用（システム設定値など）
+
+  // ★追加: 値を整形して表示するためのFormatter関数
+  valueFormatter?: (value: any, allUsers?: User[]) => string;
 }
 
 export type SortDirection = "asc" | "desc" | undefined;

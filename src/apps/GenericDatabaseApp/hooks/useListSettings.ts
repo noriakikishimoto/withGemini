@@ -7,6 +7,7 @@ import {
   FormField,
   CommonFormFieldComponent,
   CustomView,
+  User,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper";
 import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
@@ -18,6 +19,7 @@ interface UseListSettingsProps {
   customViews: CustomView<GenericRecord>[]; // 親から customViews を受け取る
   isLoading: boolean; // appSchema のロード完了を待つため
   viewId?: string | undefined;
+  allUsers?: User[];
 }
 
 interface UseListSettingsResult {
@@ -38,7 +40,7 @@ interface UseListSettingsResult {
   setCurrentViewId: React.Dispatch<React.SetStateAction<string | "default">>;
 }
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
-type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
+//type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
 
 export const useListSettings = ({
   appId,
@@ -47,12 +49,15 @@ export const useListSettings = ({
   customViews,
   isLoading,
   viewId,
+  allUsers,
 }: UseListSettingsProps): UseListSettingsResult => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortConditions, setSortConditions] = useState<SortCondition<GenericRecord>[]>([]);
   const [filterConditions, setFilterConditions] = useState<FilterCondition<GenericRecord>[]>([]);
   const [selectedDisplayFields, setSelectedDisplayFields] = useState<(keyof GenericRecord)[]>([]);
   const [currentViewId, setCurrentViewId] = useState<string | "default">(viewId || "default");
+
+  const appSchemaWithSystemFields = appSchema ? addSystemFieldsToSchema(appSchema) : [];
 
   // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
   useEffect(() => {
@@ -68,7 +73,11 @@ export const useListSettings = ({
     if (currentViewId === "default") {
       setFilterConditions([]);
       setSortConditions([]);
-      setSelectedDisplayFields(appSchema.fields.map((f) => f.name as keyof GenericRecord));
+      setSelectedDisplayFields(
+        appSchemaWithSystemFields
+          ? appSchemaWithSystemFields.map((f) => f.name as keyof GenericRecord)
+          : []
+      );
     } else {
       const selectedView = customViews.find((view) => view.id === currentViewId);
       if (selectedView) {
@@ -83,8 +92,34 @@ export const useListSettings = ({
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
 
+  const converter = (records: GenericRecord[]): GenericRecord[] => {
+    if (appSchemaWithSystemFields.length === 0) {
+      return [...records];
+    }
+
+    let formattedRecords = records.map((record) => {
+      const newRecord: GenericRecord = { ...record };
+
+      appSchemaWithSystemFields.forEach((fieldDef) => {
+        const fieldWithFormatter = appSchemaWithSystemFields.find(
+          (f) => f.name === fieldDef.name && f.valueFormatter
+        );
+        if (fieldWithFormatter && fieldWithFormatter.valueFormatter) {
+          const originalValue = record[fieldDef.name as keyof GenericRecord];
+          newRecord[fieldDef.name as keyof GenericRecord] = fieldWithFormatter.valueFormatter(
+            originalValue,
+            allUsers
+          );
+        }
+      });
+      return newRecord;
+    });
+    return formattedRecords;
+  };
+
   const filteredAndSortedRecords = useMemo(() => {
-    let currentRecords = [...records];
+    // let currentRecords = [...records];
+    let currentRecords = converter(records);
 
     if (appSchema) {
       currentRecords = currentRecords.filter((record) => {
@@ -220,14 +255,14 @@ export const useListSettings = ({
   }, [records, searchTerm, appSchema, sortConditions, filterConditions]);
 
   // DynamicList に渡す fields を変換するロジック
-  const fieldsForDynamicList = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
+  const fieldsForDynamicList = useMemo((): FormField<GenericRecord, CommonFormFieldComponent<any>>[] => {
     if (!appSchema) return [];
 
-    const appSchemaWithSystemFields = addSystemFieldsToSchema(appSchema);
+    //const appSchemaWithSystemFields = addSystemFieldsToSchema(appSchema);
 
     const fieldsToDisplay =
       selectedDisplayFields.length > 0
-        ? appSchemaWithSystemFields.filter((field) =>
+        ? appSchemaWithSystemFields?.filter((field) =>
             selectedDisplayFields.includes(field.name as keyof GenericRecord)
           )
         : appSchemaWithSystemFields;
