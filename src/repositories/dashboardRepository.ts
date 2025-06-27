@@ -1,4 +1,4 @@
-import { Dashboard, BaseRepository, Identifiable } from "../types/interfaces"; // Dashboard と BaseRepository をインポート
+import { BaseRepositoryNotForApp, Dashboard } from "../types/interfaces"; // Dashboard と BaseRepository をインポート
 
 // Dashboard に appId は含まれないため、getAll, getById, delete, update の AppIdType は void に変更
 // Dashboard 自体が Identifiable を継承しているので、id は自動的に含まれる
@@ -8,11 +8,10 @@ const LOCAL_STORAGE_KEY = "dashboards"; // LocalStorage に保存するキー
 // ----------------------------------------------------
 // 実装 1: ローカルストレージ版の Dashboard リポジトリ
 // ----------------------------------------------------
-const localStorageDashboardRepository: BaseRepository<
+const localStorageDashboardRepository: BaseRepositoryNotForApp<
   Dashboard,
   Omit<Dashboard, "id">,
-  Partial<Omit<Dashboard, "id">>,
-  void
+  Partial<Omit<Dashboard, "id">>
 > = {
   async getAll(): Promise<Dashboard[]> {
     console.log("Repository (LocalStorage Dashboard): データを読み込み中...");
@@ -91,9 +90,8 @@ const localStorageDashboardRepository: BaseRepository<
 // ----------------------------------------------------
 // 使用する Dashboard リポジトリの選択
 // ----------------------------------------------------
-export const dashboardRepository: BaseRepository<
+export const dashboardRepository: BaseRepositoryNotForApp<
   Dashboard,
   Omit<Dashboard, "id">,
-  Partial<Omit<Dashboard, "id">>,
-  void
+  Partial<Omit<Dashboard, "id">>
 > = localStorageDashboardRepository;

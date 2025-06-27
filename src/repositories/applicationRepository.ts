@@ -1,10 +1,10 @@
-import { ApplicationData, BaseRepository } from "../types/interfaces";
 import { httpClient } from "../lib/httpClient";
+import { ApplicationData, BaseRepositoryNotForApp } from "../types/interfaces";
 
 // ----------------------------------------------------
 // 実装 1: ローカルストレージ版のリポジトリ
 // ----------------------------------------------------
-const localStorageRepository: BaseRepository<
+const localStorageRepository: BaseRepositoryNotForApp<
   ApplicationData,
   Omit<ApplicationData, "id">,
   Partial<Omit<ApplicationData, "id">>
@@ -60,7 +60,7 @@ const localStorageRepository: BaseRepository<
 // ----------------------------------------------------
 // 実装 2: API（FastAPI）版のリポジトリ (httpClient を使用)
 // ----------------------------------------------------
-const apiRepository: BaseRepository<
+const apiRepository: BaseRepositoryNotForApp<
   ApplicationData,
   Omit<ApplicationData, "id">,
   Partial<Omit<ApplicationData, "id">>

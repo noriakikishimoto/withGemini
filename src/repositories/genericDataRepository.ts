@@ -1,7 +1,6 @@
 // src/repositories/genericDataRepository.ts
 
-import { GenericRecord, BaseRepository } from "../types/interfaces"; // GenericRecord と BaseRepository をインポート
-import { httpClient } from "../lib/httpClient"; // httpClient をインポート
+import { BaseRepository, GenericRecord } from "../types/interfaces"; // GenericRecord と BaseRepository をインポート
 
 // ----------------------------------------------------
 // 実装 1: ローカルストレージ版の汎用データリポジトリ
@@ -40,7 +39,6 @@ const localStorageGenericDataRepository: BaseRepository<
     appId: string,
     currentUserId?: string
   ): Promise<GenericRecord> {
-    // ★appId を追加
     const records = await this.getAll(appId);
     const now = new Date().toISOString(); // 現在日時
     const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
@@ -64,7 +62,6 @@ const localStorageGenericDataRepository: BaseRepository<
     appId: string,
     currentUserId?: string
   ): Promise<GenericRecord> {
-    // ★appId, recordId を追加
     const records = await this.getAll(appId);
     const now = new Date().toISOString(); // 現在日時
     const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')

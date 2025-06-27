@@ -1,10 +1,9 @@
-import { AppSchema, BaseRepository } from "../types/interfaces"; // AppSchema と BaseRepository をインポート
-import { httpClient } from "../lib/httpClient"; // httpClient をインポート
+import { AppSchema, BaseRepositoryNotForApp } from "../types/interfaces"; // AppSchema と BaseRepository をインポート
 
 // ----------------------------------------------------
 // 実装 1: ローカルストレージ版の AppSchema リポジトリ
 // ----------------------------------------------------
-const localStorageAppSchemaRepository: BaseRepository<
+const localStorageAppSchemaRepository: BaseRepositoryNotForApp<
   AppSchema,
   Omit<AppSchema, "id">,
   Partial<Omit<AppSchema, "id">>
@@ -32,21 +31,38 @@ const localStorageAppSchemaRepository: BaseRepository<
     return schemas.find((schema) => schema.id === id) || null;
   },
 
-  async create(data: Omit<AppSchema, "id">): Promise<AppSchema> {
+  async create(data: Omit<AppSchema, "id">, currentUserId?: string): Promise<AppSchema> {
     const schemas = await this.getAll();
-    const newSchema: AppSchema = { ...data, id: String(Date.now()) }; // IDはここで生成
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
+    const newSchema: AppSchema = {
+      ...data,
+      id: String(Date.now()),
+      createdAt: now,
+      createdBy: userId,
+      updatedAt: now,
+      updatedBy: userId,
+    }; // IDはここで生成
     const updatedSchemas = [...schemas, newSchema];
     localStorage.setItem("appSchemas", JSON.stringify(updatedSchemas));
     return newSchema;
   },
 
-  async update(id: string, data: Partial<Omit<AppSchema, "id">>): Promise<AppSchema> {
+  async update(
+    id: string,
+    data: Partial<Omit<AppSchema, "id">>,
+    currentUserId?: string
+  ): Promise<AppSchema> {
     const schemas = await this.getAll();
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
     let updatedSchema: AppSchema | undefined;
     const updatedSchemas = schemas
       .map((schema) => {
         if (schema.id === id) {
-          updatedSchema = { ...schema, ...data };
+          updatedSchema = { ...schema, ...data, updatedAt: now, updatedBy: userId };
           return updatedSchema;
         }
         return schema;
@@ -69,7 +85,7 @@ const localStorageAppSchemaRepository: BaseRepository<
 // 実装 2: API（FastAPI）版の AppSchema リポジトリ (まだ仮実装)
 // ----------------------------------------------------
 // これらは httpClient を使って実装されるが、今はローカルストレージ版を使う
-const apiAppSchemaRepository: BaseRepository<
+const apiAppSchemaRepository: BaseRepositoryNotForApp<
   AppSchema,
   Omit<AppSchema, "id">,
   Partial<Omit<AppSchema, "id">>
@@ -104,7 +120,7 @@ const apiAppSchemaRepository: BaseRepository<
 // ----------------------------------------------------
 // 使用する AppSchema リポジトリの選択
 // ----------------------------------------------------
-export const appSchemaRepository: BaseRepository<
+export const appSchemaRepository: BaseRepositoryNotForApp<
   AppSchema,
   Omit<AppSchema, "id">,
   Partial<Omit<AppSchema, "id">>

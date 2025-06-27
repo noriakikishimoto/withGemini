@@ -1,12 +1,11 @@
-import { User, BaseRepository, Identifiable } from "../types/interfaces";
+import { BaseRepositoryNotForApp, User } from "../types/interfaces";
 
 const LOCAL_STORAGE_KEY = "users";
 
-const localStorageUserRepository: BaseRepository<
+const localStorageUserRepository: BaseRepositoryNotForApp<
   User,
   Omit<User, "id">,
-  Partial<Omit<User, "id">>,
-  void
+  Partial<Omit<User, "id">>
 > = {
   async getAll(): Promise<User[]> {
     console.log("Repository (LocalStorage User): データを読み込み中...");
@@ -82,9 +81,8 @@ const localStorageUserRepository: BaseRepository<
   },
 };
 
-export const userRepository: BaseRepository<
+export const userRepository: BaseRepositoryNotForApp<
   User,
   Omit<User, "id">,
-  Partial<Omit<User, "id">>,
-  void
+  Partial<Omit<User, "id">>
 > = localStorageUserRepository;

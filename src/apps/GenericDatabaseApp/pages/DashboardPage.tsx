@@ -38,6 +38,7 @@ import {
   SortCondition,
   WidgetType,
 } from "../../../types/interfaces";
+import { useUserContext } from "../../../contexts/UserContext.tsx";
 
 // DashboardPageProps インターフェース
 interface DashboardPageProps {}
@@ -66,6 +67,7 @@ const DashboardPage: FC<DashboardPageProps> = () => {
   // ロード済みの全アプリスキーマ (ウィジェット設定用)
   const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]);
   const [allCustomViews, setAllCustomViews] = useState<CustomView<GenericRecord>[]>([]);
+  const { currentUser } = useUserContext();
 
   // ダッシュボードデータをロードする関数
   const fetchDashboards = async () => {
@@ -129,10 +131,10 @@ const DashboardPage: FC<DashboardPageProps> = () => {
     };
     try {
       if (dashboardMode === "edit" && editingDashboardId) {
-        await dashboardRepository.update(editingDashboardId, dashboardToSave);
+        await dashboardRepository.update(editingDashboardId, dashboardToSave, currentUser?.id);
         alert(`ダッシュボード「${newDashboardName.trim()}」が更新されました！`);
       } else {
-        await dashboardRepository.create(dashboardToSave);
+        await dashboardRepository.create(dashboardToSave, currentUser?.id);
         alert(`ダッシュボード「${newDashboardName.trim()}」が作成されました！`);
       }
       fetchDashboards(); // ダッシュボードリストを再ロード

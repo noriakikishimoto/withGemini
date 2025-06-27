@@ -10,7 +10,7 @@ const localStorageCustomViewRepository: BaseRepository<
   string
 > = {
   // AppIdType を string に
-  async getAll(appId?: string): Promise<CustomView<any>[]> {
+  async getAll(appId: string): Promise<CustomView<any>[]> {
     console.log("Repository (LocalStorage CustomView): データを読み込み中...");
     const storedViews = localStorage.getItem("customViews"); // 全てのビューを1つのキーで管理
 
@@ -30,7 +30,7 @@ const localStorageCustomViewRepository: BaseRepository<
     return [];
   },
 
-  async getById(id: string, appId?: string): Promise<CustomView<any> | null> {
+  async getById(id: string, appId: string): Promise<CustomView<any> | null> {
     const views = await this.getAll(appId);
     return views.find((view) => view.id === id) || null;
   },

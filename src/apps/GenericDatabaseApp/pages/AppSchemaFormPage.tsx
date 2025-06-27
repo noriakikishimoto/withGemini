@@ -8,6 +8,7 @@ import { AppSchema, CommonFormFieldComponent, FormField } from "../../../types/i
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 import AppSchemaFieldsEditor from "../components/AppSchemaFieldsEditor.tsx";
+import { useUserContext } from "../../../contexts/UserContext.tsx";
 
 const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
   {
@@ -39,6 +40,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
   const [appSchema, setAppSchema] = useState<AppSchema | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!id);
   const [error, setError] = useState<string | null>(null);
+  const { currentUser } = useUserContext();
 
   // 編集モードの場合、アプリスキーマデータをロード
   useEffect(() => {
@@ -83,11 +85,11 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
 
       if (id) {
         // 編集モード
-        await appSchemaRepository.update(id, appSchemaToSave);
+        await appSchemaRepository.update(id, appSchemaToSave, currentUser?.id);
         alert("アプリスキーマが更新されました！");
       } else {
         // 新規作成モード
-        await appSchemaRepository.create(appSchemaToSave);
+        await appSchemaRepository.create(appSchemaToSave, currentUser?.id);
         alert("アプリスキーマが作成されました！");
       }
       navigate("/generic-db/app-schemas/list"); // 保存後はリストページに遷移

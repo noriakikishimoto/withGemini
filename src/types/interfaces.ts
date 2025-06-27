@@ -16,13 +16,21 @@ export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto> {
   delete(id: string): Promise<void>;
 }
   */
-export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto, AppIdType = void> {
+export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto, AppIdType> {
   // ★AppIdType を追加
   getAll(appId?: AppIdType): Promise<T[]>;
   getById(id: string, appId?: AppIdType): Promise<T | null>;
-  create(data: CreateDto, appId?: AppIdType, currentUserId?: string): Promise<T>;
-  update(id: string, data: UpdateDto, appId?: AppIdType, currentUserId?: string): Promise<T>;
+  create(data: CreateDto, appId: AppIdType, currentUserId?: string): Promise<T>;
+  update(id: string, data: UpdateDto, appId: AppIdType, currentUserId?: string): Promise<T>;
   delete(id: string, appId?: AppIdType): Promise<void>;
+}
+export interface BaseRepositoryNotForApp<T extends Identifiable, CreateDto, UpdateDto> {
+  // ★AppIdType を追加
+  getAll(): Promise<T[]>;
+  getById(id: string): Promise<T | null>;
+  create(data: CreateDto, currentUserId?: string): Promise<T>;
+  update(id: string, data: UpdateDto, currentUserId?: string): Promise<T>;
+  delete(id: string): Promise<void>;
 }
 
 // 既存の ApplicationData はそのまま使う
@@ -123,14 +131,20 @@ export interface SortCondition<T extends object> {
 
 //　アプリケーションスキーマのデータモデル
 // これが「ユーザーが作成するアプリの定義」そのもの
-export interface AppSchema extends Identifiable {
+export interface AppSchema extends Identifiable, SyetemInfo {
   name: string; // アプリケーションの名前（例: 顧客管理、商品管理）
   description?: string; // アプリケーションの説明（オプション）
   fields: Omit<FormField<any, any>, "component">[];
 }
 
-export interface GenericRecord extends Identifiable {
+export interface GenericRecord extends Identifiable, SyetemInfo {
   [key: string]: any; // フィールド名 (string) に対応する値 (any)
+  // createdBy?: string; // 作成者のユーザーID
+  // updatedBy?: string; // 最終更新者のユーザーID
+  // createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
+  // updatedAt?: string; // 最終更新日時 (ISO 8601 形式の文字列)
+}
+export interface SyetemInfo {
   createdBy?: string; // 作成者のユーザーID
   updatedBy?: string; // 最終更新者のユーザーID
   createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
@@ -156,16 +170,16 @@ export interface FilterCondition<T extends object> {
   value: any; // 比較対象の値
 }
 
-export interface CustomView<T extends object> extends Identifiable {
+export interface CustomView<T extends object> extends Identifiable, SyetemInfo {
   name: string;
   appId: string; // このビューが紐づくアプリのID
   filterConditions: FilterCondition<T>[];
   sortConditions: SortCondition<T>[];
   displayFields?: (keyof T)[]; // ★追加: ビューで表示するフィールド名 (keyof T の配列)
-  createdBy?: string; // 作成者のユーザーID
-  updatedBy?: string; // 最終更新者のユーザーID
-  createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
-  updatedAt?: string; // 最終更新日時 (ISO 8601 形式の文字列)
+  //createdBy?: string; // 作成者のユーザーID
+  //updatedBy?: string; // 最終更新者のユーザーID
+  //createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
+  //updatedAt?: string; // 最終更新日時 (ISO 8601 形式の文字列)
 }
 
 export type ChartType = "bar" | "pie" | "line";
