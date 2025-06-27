@@ -39,6 +39,7 @@ import {
   FormField,
   GenericRecord,
   SortCondition,
+  User,
 } from "../../../types/interfaces";
 import DisplayFieldsModal from "../components/DisplayFieldsModal.tsx";
 import FilterSettingsModal from "../components/FilterSettingsModal.tsx";
@@ -51,6 +52,8 @@ import { useAppData } from "../hooks/useAppData.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
 import ChartDisplay2 from "../components/ChartDisplay2.tsx";
+import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
+import { userRepository } from "../../../repositories/userRepository.ts";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -61,7 +64,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   //const { appId } = useParams<{ appId: string }>(); // URLからアプリIDを取得
   const { appId, viewId } = useParams<{ appId: string; viewId?: string }>();
   const navigate = useNavigate();
-
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
   // ★追加: useListSettings からリスト関連のステートとハンドラを取得
   const {
@@ -81,6 +83,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
   } = useListSettings({ appId, appSchema, records, customViews, isLoading });
+
+  const [allUsers, setAllUsers] = useState<User[]>([]);
 
   const [saveViewMode, setSaveViewMode] = useState<"create" | "edit">("create");
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
@@ -157,6 +161,19 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   }, [viewId]); // viewId が変更されたら実行
 
+  // ★追加: 全ユーザー情報をロードする useEffect
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await userRepository.getAll();
+        setAllUsers(users);
+      } catch (err) {
+        console.error("Error loading users for display:", err);
+      }
+    };
+    loadUsers();
+  }, []); // 初回のみロード (ユーザー管理ページで更新されるため)
+
   // レコード編集ハンドラ (フォームページへ遷移)
   const handleEditRecord = (recordId: string) => {
     navigate(`/generic-db/data/${appId}/${recordId}`); // 汎用フォームページへ遷移
@@ -222,6 +239,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   };
 
   // 型合わせのため。。
+  /*
   const appSchemaFieldsWithComponent = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
     if (!appSchema) return [];
     return appSchema.fields.map((field) => ({
@@ -229,6 +247,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       component: getFieldComponentByType(field.type),
     })) as FormFieldForDynamicList<GenericRecord>[];
   }, [appSchema]);
+*/
+
+  const appSchemaFieldsWithComponent = useMemo(() => {
+    if (!appSchema) return [];
+    return addSystemFieldsToSchema(appSchema);
+  }, [appSchema, allUsers]); // allUsers を依存配列に追加
 
   // ローディング中とエラー表示
   if (isLoading) {
@@ -352,7 +376,11 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             絞り込み設定
           </Button>
           <Button
-            variant={selectedDisplayFields.length !== appSchema.fields.length ? "contained" : "outlined"}
+            variant={
+              selectedDisplayFields.length !== appSchemaFieldsWithComponent.length
+                ? "contained"
+                : "outlined"
+            }
             startIcon={<ViewColumnIcon />}
             onClick={handleOpenDisplayFieldsModal}
           >
@@ -393,7 +421,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       ) : (
         <DynamicList<GenericRecord> // GenericRecord 型を渡す
           items={filteredAndSortedRecords}
-          fields={fieldsForDynamicList} // アプリスキーマから読み込んだフィールド定義を渡す
+          fields={fieldsForDynamicList} // 表示対象の列のみが絞り込まれたフィールド一覧
           onEdit={handleEditRecord}
           onDelete={handleDeleteRecord}
           itemBasePath={`/generic-db/data/${appId}`} // ベースパスに appId を含める

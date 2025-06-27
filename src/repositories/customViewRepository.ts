@@ -35,9 +35,24 @@ const localStorageCustomViewRepository: BaseRepository<
     return views.find((view) => view.id === id) || null;
   },
 
-  async create(data: Omit<CustomView<any>, "id">, appId?: string): Promise<CustomView<any>> {
+  async create(
+    data: Omit<CustomView<any>, "id">,
+    appId: string,
+    currentUserId?: string
+  ): Promise<CustomView<any>> {
     const views = await this.getAll();
-    const newView: CustomView<any> = { ...data, id: String(Date.now()), appId: appId || "" }; // appId を付与
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
+    const newView: CustomView<any> = {
+      ...data,
+      id: String(Date.now()),
+      appId: appId,
+      createdAt: now,
+      createdBy: userId,
+      updatedAt: now,
+      updatedBy: userId,
+    }; // appId を付与
     const updatedViews = [...views, newView];
     localStorage.setItem("customViews", JSON.stringify(updatedViews));
     return newView;
@@ -46,14 +61,18 @@ const localStorageCustomViewRepository: BaseRepository<
   async update(
     id: string,
     data: Partial<Omit<CustomView<any>, "id">>,
-    appId?: string
+    appId: string,
+    currentUserId?: string
   ): Promise<CustomView<any>> {
     const views = await this.getAll();
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
     let updatedView: CustomView<any> | undefined;
     const updatedViews = views
       .map((view) => {
         if (view.id === id) {
-          updatedView = { ...view, ...data };
+          updatedView = { ...view, ...data, updatedAt: now, updatedBy: userId };
           return updatedView;
         }
         return view;

@@ -2,6 +2,9 @@ import React, { FC } from "react";
 import { Link } from "react-router-dom";
 import { Box, Typography, Button, IconButton, Toolbar } from "@mui/material"; // MUIコンポーネントをインポート
 import MenuIcon from "@mui/icons-material/Menu"; // メニューアイコン
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+
+import { useUserContext } from "../contexts/UserContext";
 
 interface TopHeaderProps {
   onMenuOpen: () => void; // Drawerを開くためのコールバック
@@ -11,6 +14,7 @@ interface TopHeaderProps {
 }
 
 const TopHeader: FC<TopHeaderProps> = ({ onMenuOpen, onMenuClose, open, drawerWidth }) => {
+  const { currentUser, logout } = useUserContext();
   return (
     <Toolbar
       sx={{
@@ -31,16 +35,26 @@ const TopHeader: FC<TopHeaderProps> = ({ onMenuOpen, onMenuClose, open, drawerWi
         My Application (POC)
       </Typography>
       {/* グローバルメニュー (右寄せ) */}
-      <Box sx={{ display: { xs: "none", sm: "block" } }}>
-        <Button component={Link} to="/" sx={{ color: "white", mr: 1 }}>
-          ホーム
-        </Button>
-        <Button component={Link} to="/applications/list" sx={{ color: "white", mr: 1 }}>
-          申請管理
-        </Button>
-        <Button component={Link} to="/generic-db/tasks/list" sx={{ color: "white" }}>
-          タスク管理
-        </Button>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        {currentUser ? (
+          <>
+            <Typography variant="body2" color="inherit" sx={{ mr: 1 }}>
+              {currentUser.displayName || currentUser.username}
+            </Typography>
+            <IconButton color="inherit" onClick={logout} size="small">
+              <AccountCircleIcon /> {/* ユーザーアイコン */}
+            </IconButton>
+          </>
+        ) : (
+          <>
+            <Typography variant="body2" color="inherit" sx={{ mr: 1 }}>
+              ゲスト
+            </Typography>
+            <Button color="inherit" component={Link} to="/generic-db/users" size="small">
+              ログイン
+            </Button>
+          </>
+        )}
       </Box>
     </Toolbar>
   );

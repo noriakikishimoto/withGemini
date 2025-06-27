@@ -7,6 +7,7 @@ import "./index.css"; // グローバルなCSS
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 // ★追加: MUIのCSSリセット (ブラウザのデフォルトスタイルをリセット)
 import CssBaseline from "@mui/material/CssBaseline";
+import { UserProvider } from "./contexts/UserContext.tsx";
 
 // ★追加: カスタムテーマの定義 (デフォルトテーマでも可)
 //const theme = createTheme();
@@ -181,7 +182,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeProvider theme={theme}>
         {/* ★追加: CssBaseline でブラウザのデフォルトスタイルをリセット */}
         <CssBaseline />
-        <App />
+        <UserProvider>
+          <App />
+        </UserProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>

@@ -9,6 +9,7 @@ import {
   CustomView,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper";
+import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
 
 interface UseListSettingsProps {
   appId: string | undefined;
@@ -222,17 +223,21 @@ export const useListSettings = ({
   const fieldsForDynamicList = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
     if (!appSchema) return [];
 
+    const appSchemaWithSystemFields = addSystemFieldsToSchema(appSchema);
+
     const fieldsToDisplay =
       selectedDisplayFields.length > 0
-        ? appSchema.fields.filter((field) =>
+        ? appSchemaWithSystemFields.filter((field) =>
             selectedDisplayFields.includes(field.name as keyof GenericRecord)
           )
-        : appSchema.fields;
-
+        : appSchemaWithSystemFields;
+    /*
     return fieldsToDisplay.map((field) => ({
       ...field,
       component: getFieldComponentByType(field.type),
     })) as FormFieldForDynamicList<GenericRecord>[];
+  */
+    return fieldsToDisplay;
   }, [appSchema, selectedDisplayFields, customViews]);
 
   // ソート条件変更ハンドラ

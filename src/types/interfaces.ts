@@ -18,11 +18,11 @@ export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto> {
   */
 export interface BaseRepository<T extends Identifiable, CreateDto, UpdateDto, AppIdType = void> {
   // ★AppIdType を追加
-  getAll(appId?: AppIdType): Promise<T[]>; // ★appId をオプションで受け取るように
-  getById(id: string, appId?: AppIdType): Promise<T | null>; // ★appId をオプションで受け取るように
-  create(data: CreateDto, appId?: AppIdType): Promise<T>; // ★appId をオプションで受け取るように
-  update(id: string, data: UpdateDto, appId?: AppIdType): Promise<T>; // ★appId をオプションで受け取るように
-  delete(id: string, appId?: AppIdType): Promise<void>; // ★appId をオプションで受け取るように
+  getAll(appId?: AppIdType): Promise<T[]>;
+  getById(id: string, appId?: AppIdType): Promise<T | null>;
+  create(data: CreateDto, appId?: AppIdType, currentUserId?: string): Promise<T>;
+  update(id: string, data: UpdateDto, appId?: AppIdType, currentUserId?: string): Promise<T>;
+  delete(id: string, appId?: AppIdType): Promise<void>;
 }
 
 // 既存の ApplicationData はそのまま使う
@@ -107,6 +107,8 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
   tableFilterValue?: string; // 抽出条件値 (テーブル表示データ用)
   tableFields?: string;
   // tableFields?: FormField<any, any>[];
+
+  readOnly?: boolean; //読み取り専用（システム設定値など）
 }
 
 export type SortDirection = "asc" | "desc" | undefined;
@@ -126,6 +128,10 @@ export interface AppSchema extends Identifiable {
 
 export interface GenericRecord extends Identifiable {
   [key: string]: any; // フィールド名 (string) に対応する値 (any)
+  createdBy?: string; // 作成者のユーザーID
+  updatedBy?: string; // 最終更新者のユーザーID
+  createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
+  updatedAt?: string; // 最終更新日時 (ISO 8601 形式の文字列)
 }
 // ★追加: フィルタリングの比較演算子
 export type FilterOperator =
@@ -153,6 +159,10 @@ export interface CustomView<T extends object> extends Identifiable {
   filterConditions: FilterCondition<T>[];
   sortConditions: SortCondition<T>[];
   displayFields?: (keyof T)[]; // ★追加: ビューで表示するフィールド名 (keyof T の配列)
+  createdBy?: string; // 作成者のユーザーID
+  updatedBy?: string; // 最終更新者のユーザーID
+  createdAt?: string; // 作成日時 (ISO 8601 形式の文字列)
+  updatedAt?: string; // 最終更新日時 (ISO 8601 形式の文字列)
 }
 
 export type ChartType = "bar" | "pie" | "line";
@@ -191,3 +201,14 @@ export interface Dashboard extends Identifiable {
   widgets: DashboardWidget<GenericRecord>[]; // ダッシュボードに含まれるウィジェットの配列
   // その他の設定 (レイアウトオプションなど) をここに追加可能
 }
+
+export interface User extends Identifiable {
+  username: string; // ログインに使用するユーザー名 (必須、一意)
+  displayName: string; // ★追加: システム内でのユーザー表示名
+  email: string; // ★追加: メールアドレス (一意性を考慮)
+  password?: string; // パスワード (ハッシュ化を考慮し、オプションに)
+  role?: userRole; // ロール (管理者、一般ユーザーなど)
+  [key: string]: any; // その他の動的なプロパティを許容
+}
+
+export type userRole = "admin" | "user";

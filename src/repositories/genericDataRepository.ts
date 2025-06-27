@@ -35,10 +35,24 @@ const localStorageGenericDataRepository: BaseRepository<
     return records.find((record) => record.id === recordId) || null;
   },
 
-  async create(data: Omit<GenericRecord, "id">, appId: string): Promise<GenericRecord> {
+  async create(
+    data: Omit<GenericRecord, "id">,
+    appId: string,
+    currentUserId?: string
+  ): Promise<GenericRecord> {
     // ★appId を追加
     const records = await this.getAll(appId);
-    const newRecord: GenericRecord = { ...data, id: String(Date.now()) }; // IDはここで生成
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
+    const newRecord: GenericRecord = {
+      ...data,
+      id: String(Date.now()),
+      createdAt: now,
+      createdBy: userId,
+      updatedAt: now,
+      updatedBy: userId,
+    };
     const updatedRecords = [...records, newRecord];
     localStorage.setItem(`appData_${appId}`, JSON.stringify(updatedRecords));
     return newRecord;
@@ -47,15 +61,19 @@ const localStorageGenericDataRepository: BaseRepository<
   async update(
     recordId: string,
     data: Partial<Omit<GenericRecord, "id">>,
-    appId: string
+    appId: string,
+    currentUserId?: string
   ): Promise<GenericRecord> {
     // ★appId, recordId を追加
     const records = await this.getAll(appId);
+    const now = new Date().toISOString(); // 現在日時
+    const userId = currentUserId || "guest"; // ユーザーID (ゲストの場合は 'guest')
+
     let updatedRecord: GenericRecord | undefined;
     const updatedRecords = records
       .map((record) => {
         if (record.id === recordId) {
-          updatedRecord = { ...record, ...data };
+          updatedRecord = { ...record, ...data, updatedAt: now, updatedBy: userId };
           return updatedRecord;
         }
         return record;

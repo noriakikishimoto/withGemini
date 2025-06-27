@@ -6,6 +6,7 @@ import TopHeader from "./TopHeader.tsx";
 import { AppBar, Box, Drawer, Slide, useScrollTrigger } from "@mui/material";
 
 import { DrawerContext } from "../contexts/DrawerContext";
+import { useUserContext } from "../contexts/UserContext.tsx";
 
 const drawerWidth = 200;
 
@@ -40,7 +41,7 @@ function HideOnScroll(props: Props) {
 const Layout: FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const [open, setOpen] = useState(false); // Drawer (サイドバー) の開閉状態
-
+  //const { currentUser } = useUserContext();
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -83,6 +84,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
       </Drawer>
 
       {/* メインコンテンツエリア */}
+
       <DrawerContext.Provider value={{ drawerOpen: open }}>
         <Box
           component="main"

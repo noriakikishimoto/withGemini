@@ -25,6 +25,7 @@ import LayersIcon from "@mui/icons-material/Layers";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import AppsIcon from "@mui/icons-material/Apps";
+import PeopleIcon from "@mui/icons-material/People";
 
 import { AppSchema } from "../types/interfaces";
 import { appSchemaRepository } from "../repositories/appSchemaRepository";
@@ -44,6 +45,7 @@ interface MenuItem {
 // メニュー項目を配列で定義 (Layout.tsxから移動)
 const menuItems: MenuItem[] = [
   { text: "ダッシュボード", path: "/generic-db/dashboards", icon: <DashboardIcon /> },
+  { text: "ユーザー管理", path: "/generic-db/users", icon: <PeopleIcon /> },
   {
     text: "申請管理",
     path: "/applications",

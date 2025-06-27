@@ -1,6 +1,6 @@
 // src/apps/GenericDatabaseApp/pages/GenericDataFormPage.tsx
 
-import React, { FC, useState, useEffect } from "react";
+import React, { FC, useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DynamicForm from "../../../components/DynamicForm.tsx"; // 汎用フォーム
 import {
@@ -28,6 +28,7 @@ import {
   GenericRecord,
   CommonFormFieldComponent,
   Identifiable,
+  User,
 } from "../../../types/interfaces";
 
 // アプリスキーマのリポジトリ
@@ -35,6 +36,11 @@ import { appSchemaRepository } from "../../../repositories/appSchemaRepository.t
 // 汎用データのリポジトリ
 import { genericDataRepository } from "../../../repositories/genericDataRepository.ts";
 import { getFieldComponentByType } from "../utils/fieldComponentMapper";
+import { useUserContext } from "../../../contexts/UserContext.tsx";
+
+import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
+
+import { userRepository } from "../../../repositories/userRepository.ts";
 
 interface GenericDataFormPageProps {}
 
@@ -46,6 +52,9 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
   const [initialRecordData, setInitialRecordData] = useState<GenericRecord | null>(null); // 実際のレコードデータ
   const [isLoading, setIsLoading] = useState<boolean>(true); // 初期ロードは常にtrueから開始
   const [error, setError] = useState<string | null>(null);
+  const { currentUser } = useUserContext();
+  // 全ユーザー情報 (createdBy/updatedBy の表示名解決用)
+  const [allUsers, setAllUsers] = useState<User[]>([]);
 
   // アプリスキーマとレコードデータをロード
   useEffect(() => {
@@ -58,6 +67,10 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         const schema = await appSchemaRepository.getById(appId);
         if (!schema) throw new Error("指定されたアプリスキーマが見つかりません。");
         setAppSchema(schema);
+
+        // 全ユーザー情報もロード
+        //const users = await userRepository.getAll();
+        //setAllUsers(users);
 
         // 2. レコードIDがあれば、実際のレコードデータをロード (編集モード)
         if (recordId) {
@@ -94,19 +107,27 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
     fetchData();
   }, [appId, recordId]); // appId または recordId が変更されたら再実行
 
+  // DynamicForm に渡す fields は、component プロパティを持つ FormField である必要があるため、変換を行う
+  const fieldsForDynamicForm: FormField<GenericRecord, CommonFormFieldComponent<any>>[] = useMemo(() => {
+    if (!appSchema) return [];
+    return addSystemFieldsToSchema(appSchema);
+  }, [appSchema, allUsers]); // allUsers も依存配列に追加 (ユーザー表示名解決のため)
+
   // DynamicForm の onSubmit ハンドラ
   const handleRecordSubmit = async (data: GenericRecord) => {
     setIsLoading(true);
     setError(null);
     try {
       if (!appId) throw new Error("アプリIDが見つかりません。");
+      const currentUserId = currentUser?.id || "guest"; // 現在のユーザーID (ゲストの場合は 'guest')
+
       if (recordId) {
         // 編集モード
-        await genericDataRepository.update(recordId, data, appId);
+        await genericDataRepository.update(recordId, data, appId, currentUserId);
         alert("レコードが更新されました！");
       } else {
         // 新規作成モード
-        await genericDataRepository.create(data, appId);
+        await genericDataRepository.create(data, appId, currentUserId);
         alert("レコードが作成されました！");
       }
       navigate(`/generic-db/data/${appId}/list`); // 保存後はリストページに遷移
@@ -158,6 +179,7 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
     );
   }
 
+  /*
   const fieldsForDynamicForm: FormField<GenericRecord, CommonFormFieldComponent<any>>[] =
     appSchema.fields.map((field) => {
       // フィールドの初期値を設定するロジックもここで定義
@@ -196,6 +218,7 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         tableFields: field.tableFields,
       };
     });
+    */
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
