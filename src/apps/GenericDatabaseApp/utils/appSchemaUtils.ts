@@ -37,6 +37,9 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("text"),
+      xs: 12,
+      sm: 6,
+      md: 3,
       valueFormatter: (userId: string, allUsers?: User[]) =>
         allUsers?.find((u) => u.id === userId)?.displayName || userId,
     },
@@ -47,6 +50,9 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("date"),
+      xs: 12,
+      sm: 6,
+      md: 3,
       valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
     },
     {
@@ -56,6 +62,9 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("text"),
+      xs: 12,
+      sm: 6,
+      md: 3,
       valueFormatter: (userId: string, allUsers?: User[]) =>
         allUsers?.find((u) => u.id === userId)?.displayName || userId,
     },
@@ -66,6 +75,9 @@ export const addSystemFieldsToSchema = (
       readOnly: true,
       group: "システム情報",
       component: getFieldComponentByType("date"),
+      xs: 12,
+      sm: 6,
+      md: 3,
       valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
     },
   ];

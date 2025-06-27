@@ -12,6 +12,7 @@ interface MuiRadioGroupWrapperProps {
   onChange: (value: string) => void;
   options: FormFieldSelectOption[]; // 選択肢の配列
   required?: boolean;
+  readOnly?: boolean;
 }
 
 // MuiRadioGroupWrapper コンポーネントの定義
@@ -23,6 +24,7 @@ const MuiRadioGroupWrapper: CommonFormFieldComponent<MuiRadioGroupWrapperProps> 
   onChange,
   options,
   required = false,
+  readOnly = false,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value);

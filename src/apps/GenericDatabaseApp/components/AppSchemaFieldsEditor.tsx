@@ -337,6 +337,9 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       type: "number",
       component: MuiTextFieldWrapper,
       initialValue: 12,
+      xs: 12,
+      sm: 6,
+      md: 3,
     });
     fields.push({
       name: "sm",
@@ -344,6 +347,9 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       type: "number",
       component: MuiTextFieldWrapper,
       initialValue: 12,
+      xs: 12,
+      sm: 6,
+      md: 3,
     });
     fields.push({
       name: "md",
@@ -351,6 +357,9 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       type: "number",
       component: MuiTextFieldWrapper,
       initialValue: 6,
+      xs: 12,
+      sm: 6,
+      md: 3,
     }); // デフォルトを6に
 
     return fields;

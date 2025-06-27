@@ -56,6 +56,19 @@ function FormFieldRenderer<T extends object>({
     return []; // select 以外、または options がない場合は空配列
   }, [field.options, field.type, fieldNameAsString]); // 依存配列
 
+  if (field.readOnly) {
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" color="text.secondary">
+          {field.label}
+        </Typography>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          {displayValue}
+        </Typography>
+      </Box>
+    );
+  }
+
   // 各フィールドタイプに応じたコンポーネントを動的にレンダリング
   switch (field.type) {
     case "text":
@@ -72,6 +85,7 @@ function FormFieldRenderer<T extends object>({
           rows={field.rows}
           required={field.required}
           type={field.type}
+          readOnly={field.readOnly}
         />
       );
     case "checkbox":
@@ -83,6 +97,7 @@ function FormFieldRenderer<T extends object>({
             formData[fieldNameAsString] ? (formData[fieldNameAsString] as boolean) : field.initialValue
           }
           onChange={(val) => handleChange(field.name, val)}
+          readOnly={field.readOnly}
         />
       );
     case "date":
@@ -97,6 +112,7 @@ function FormFieldRenderer<T extends object>({
           }
           onChange={(val) => handleChange(field.name, val)}
           required={field.required}
+          readOnly={field.readOnly}
         />
       );
     case "select":
@@ -135,6 +151,7 @@ function FormFieldRenderer<T extends object>({
                 : [] // 配列の場合、またはなければ空配列
           }
           required={field.required}
+          readOnly={field.readOnly}
         />
       );
     case "lookup":

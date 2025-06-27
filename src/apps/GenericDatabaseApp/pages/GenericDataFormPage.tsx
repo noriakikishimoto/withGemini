@@ -179,47 +179,6 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
     );
   }
 
-  /*
-  const fieldsForDynamicForm: FormField<GenericRecord, CommonFormFieldComponent<any>>[] =
-    appSchema.fields.map((field) => {
-      // フィールドの初期値を設定するロジックもここで定義
-      let initialFieldValue: any;
-      if (field.initialValue !== undefined) {
-        // FormField.initialValue があればそれを優先
-        initialFieldValue = field.initialValue;
-      } else {
-        // なければ component の getInitialValue() を呼び出す
-        initialFieldValue = getFieldComponentByType(field.type).getInitialValue();
-      }
-
-      return {
-        name: field.name as keyof GenericRecord,
-        label: field.label,
-        type: field.type,
-        required: field.required,
-        multiline: field.multiline,
-        rows: field.rows,
-        options: field.options,
-        // component プロパティを付与
-        component: getFieldComponentByType(field.type),
-        initialValue: initialFieldValue, // 変換後のフィールド定義にも initialValue をセット
-
-        lookupAppId: field.lookupAppId, // 参照元アプリのID
-        lookupKeyField: field.lookupKeyField, // 参照元アプリのキーとなるフィールド名
-        lookupDisplayFields: field.lookupDisplayFields, // 参照元アプリから表示/コピーするフィールド名リスト
-        lookupCopyToFields: field.lookupCopyToFields,
-        group: field.group,
-        xs: field.xs,
-        sm: field.sm,
-        md: field.md,
-        tableSourceAppId: field.tableSourceAppId,
-        tableFilterField: field.tableFilterField,
-        tableFilterValue: field.tableFilterValue,
-        tableFields: field.tableFields,
-      };
-    });
-    */
-
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Paper sx={{ p: 3, mb: 4 }}>

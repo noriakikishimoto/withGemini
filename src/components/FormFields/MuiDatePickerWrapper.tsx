@@ -13,6 +13,7 @@ interface MuiDatePickerWrapperProps {
   value: string | null; // YYYY-MM-DD 形式の文字列、または null
   onChange: (value: string | null) => void; // YYYY-MM-DD 形式の文字列、または null を返す
   required?: boolean;
+  readOnly?: boolean;
 }
 
 const MuiDatePickerWrapper: CommonFormFieldComponent<MuiDatePickerWrapperProps> = ({
@@ -21,6 +22,7 @@ const MuiDatePickerWrapper: CommonFormFieldComponent<MuiDatePickerWrapperProps> 
   value,
   onChange,
   required = false,
+  readOnly = false,
 }) => {
   // ISO形式の文字列 (YYYY-MM-DD) を Date オブジェクトに変換
   const dateValue = value ? new Date(value) : null;
@@ -54,7 +56,7 @@ const MuiDatePickerWrapper: CommonFormFieldComponent<MuiDatePickerWrapperProps> 
             name: name,
             required: required,
             variant: "outlined",
-            // readOnly: true, // ユーザーが直接入力できないようにする場合
+            readOnly: readOnly,
           },
         }}
       />
