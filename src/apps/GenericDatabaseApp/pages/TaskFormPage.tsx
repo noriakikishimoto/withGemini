@@ -13,6 +13,7 @@ import { taskRepository } from "../../../repositories/taskRepository.ts"; // タ
 
 import { Box, Typography, Button, Paper, CircularProgress } from "@mui/material"; // Paperはdivのようなもの、CircularProgressはローディング表示
 import MuiUserSelectFieldWrapper from "../../../components/FormFields/MuiUserSelectFieldWrapper.tsx";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // 担当者の選択肢 (ここでは一旦ページ内で定義)
 const assigneeOptions = [
@@ -84,6 +85,7 @@ const TaskFormPage: FC<TaskFormPageProps> = () => {
   const [initialTaskData, setInitialTaskData] = useState<TaskData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!id); // IDがあれば初期ロード
   const [error, setError] = useState<string | null>(null);
+  const { allUsers } = useGlobalDataContext();
 
   // 編集モードの場合、タスクデータをロード
   useEffect(() => {
@@ -177,6 +179,7 @@ const TaskFormPage: FC<TaskFormPageProps> = () => {
       onCancel={handleCancel}
       formTitle={id ? "タスクを編集" : "新規タスク作成"}
       submitButtonText={id ? "変更を保存" : "タスクを作成"}
+      allUsers={allUsers}
     />
   );
 };

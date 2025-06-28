@@ -12,16 +12,17 @@ import { Dashboard } from "../../../types/interfaces";
 
 // ★修正: DashboardChartWidget と DashboardListWidget をインポート
 import DashboardWidgetDisplay from "../components/DashboardWidgetDisplay.tsx";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // DashboardDisplayPage コンポーネントの定義
 const DashboardDisplayPage: FC = () => {
   const { dashboardId } = useParams<{ dashboardId?: string }>();
   const navigate = useNavigate();
 
-  const [dashboard, setDashboard] = useState<Dashboard | null>(null); // ★修正: Dashboard<GenericRecord> 型を明確に
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  //const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]); // 全アプリスキーマ (子ウィジェットに渡す)
+  const { allUsers } = useGlobalDataContext();
 
   useEffect(() => {
     const fetchDashboardData = async () => {

@@ -121,6 +121,13 @@ export interface FormField<T extends object, C extends CommonFormFieldComponent<
 
   // ★追加: 値を整形して表示するためのFormatter関数
   valueFormatter?: (value: any, allUsers?: User[]) => string;
+
+  // ★追加: 列幅制御用プロパティ
+  width?: string | number;
+  minWidth?: string | number;
+  maxWidth?: string | number;
+
+  placeHolder?: string;
 }
 
 export type SortDirection = "asc" | "desc" | undefined;

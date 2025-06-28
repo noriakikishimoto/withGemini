@@ -347,6 +347,7 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       xs: 12,
       sm: 6,
       md: 3,
+      group: "レイアウト",
     });
     fields.push({
       name: "sm",
@@ -357,6 +358,7 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       xs: 12,
       sm: 6,
       md: 3,
+      group: "レイアウト",
     });
     fields.push({
       name: "md",
@@ -367,8 +369,46 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
       xs: 12,
       sm: 6,
       md: 3,
+      group: "レイアウト",
     }); // デフォルトを6に
 
+    fields.push({
+      name: "width",
+      label: "幅 (width)",
+      type: "text",
+      component: MuiTextFieldWrapper,
+      initialValue: "",
+      xs: 4,
+      sm: 4,
+      md: 4,
+      group: "テーブル列幅調整",
+      placeHolder: "例: 150px または 20%",
+    });
+
+    fields.push({
+      name: "minWidth",
+      label: "最小幅 (minWidth)",
+      type: "text",
+      component: MuiTextFieldWrapper,
+      initialValue: "",
+      xs: 4,
+      sm: 4,
+      md: 4,
+      group: "テーブル列幅調整",
+      placeHolder: "例: 100px",
+    });
+    fields.push({
+      name: "maxWidth",
+      label: "最大幅 (maxWidth)",
+      type: "text",
+      component: MuiTextFieldWrapper,
+      initialValue: "",
+      xs: 4,
+      sm: 4,
+      md: 4,
+      group: "テーブル列幅調整",
+      placeHolder: "例: 300px",
+    });
     return fields;
   }, [currentFieldTypeInModal]);
 

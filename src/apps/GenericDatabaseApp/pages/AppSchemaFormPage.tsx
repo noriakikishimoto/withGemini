@@ -10,7 +10,8 @@ import { appSchemaRepository } from "../../../repositories/appSchemaRepository.t
 import AppSchemaFieldsEditor from "../components/AppSchemaFieldsEditor.tsx";
 import { useUserContext } from "../../../contexts/UserContext.tsx";
 import { getFormattedDateString, getFormattedUserName } from "../utils/fieldLabelConverter";
-import { userRepository } from "../../../repositories/userRepository.ts";
+
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
   {
@@ -87,8 +88,10 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(!!id);
   const [error, setError] = useState<string | null>(null);
   const { currentUser } = useUserContext();
-  const [allUsers, setAllUsers] = useState<User[] | []>([]);
+  const { allUsers, refetchGlobalData } = useGlobalDataContext();
+  //const [allUsers, setAllUsers] = useState<User[] | []>([]);
 
+  /*
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -100,7 +103,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
     };
     loadUsers();
   }, []);
-
+*/
   // 編集モードの場合、アプリスキーマデータをロード
   useEffect(() => {
     if (id) {
@@ -162,6 +165,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
         await appSchemaRepository.create(appSchemaToSave, currentUser?.id);
         alert("アプリスキーマが作成されました！");
       }
+      refetchGlobalData();
       navigate("/generic-db/app-schemas/list"); // 保存後はリストページに遷移
     } catch (err) {
       console.error("Error saving app schema:", err);

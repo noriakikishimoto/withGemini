@@ -17,6 +17,7 @@ import { SortCondition, TaskData } from "../../../types/interfaces.ts";
 
 import DynamicList from "../../../components/DynamicList.tsx";
 import { taskFormFields } from "./TaskFormPage.tsx"; // TaskFormPage で定義したものを共有
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 interface TaskListPageProps {}
 
@@ -30,6 +31,8 @@ const TaskListPage: FC<TaskListPageProps> = () => {
   // ★修正: ソートの状態を SortCondition[] で管理
   const [sortConditions, setSortConditions] = useState<SortCondition<TaskData>[]>([]);
   const [currentViewType, setCurrentViewType] = useState<"table" | "cards">("table");
+  const { allUsers } = useGlobalDataContext();
+
   // タスクデータをロードする関数
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -77,7 +80,7 @@ const TaskListPage: FC<TaskListPageProps> = () => {
         (task) =>
           task.title.toLowerCase().includes(lowercasedSearchTerm) ||
           task.description.toLowerCase().includes(lowercasedSearchTerm) ||
-          task.assignee.toLowerCase().includes(lowercasedSearchTerm)
+          task.assignee.join("").toLowerCase().includes(lowercasedSearchTerm)
       );
     }
 

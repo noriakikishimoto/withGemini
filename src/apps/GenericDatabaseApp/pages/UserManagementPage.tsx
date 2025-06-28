@@ -39,6 +39,7 @@ import { getFieldComponentByType } from "../utils/fieldComponentMapper";
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx";
 import { useUserContext } from "../../../contexts/UserContext.tsx";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // UserManagementPageProps インターフェース
 interface UserManagementPageProps {}
@@ -58,6 +59,7 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
   const [editingUserData, setEditingUserData] = useState<User | null>(null);
 
   const { login } = useUserContext();
+  const { refetchGlobalData } = useGlobalDataContext();
 
   // ユーザー情報をロードする関数
   const fetchUsers = async () => {
@@ -115,6 +117,7 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
         alert(`ユーザー「${data.displayName || data.username}」が作成されました！`); // displayName を優先
       }
       fetchUsers();
+      refetchGlobalData();
       handleCloseUserModal();
     } catch (err) {
       console.error("Error saving user:", err);
@@ -128,6 +131,7 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
         await userRepository.delete(userId);
         alert("ユーザーが削除されました！");
         fetchUsers();
+        refetchGlobalData();
       } catch (err) {
         console.error("Error deleting user:", err);
         alert("ユーザーの削除に失敗しました: " + (err as Error).message);

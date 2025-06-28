@@ -102,6 +102,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           padding: "4px 8px", // デフォルトのpaddingを小さく
+          //fontSize: "0.9rem",
+        },
+        head: {
+          //fontSize: "0.9rem",
+        },
+        body: {
+          //fontSize: "0.9rem",
         },
         sizeSmall: {
           // size="small" の場合のpaddingも調整
@@ -173,6 +180,7 @@ const theme = createTheme({
 
 // ★追加: react-router-dom から BrowserRouter をインポート
 import { BrowserRouter } from "react-router-dom";
+import { GlobalDataProvider } from "./contexts/GlobalDataContext.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -182,9 +190,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeProvider theme={theme}>
         {/* ★追加: CssBaseline でブラウザのデフォルトスタイルをリセット */}
         <CssBaseline />
-        <UserProvider>
-          <App />
-        </UserProvider>
+        <GlobalDataProvider>
+          <UserProvider>
+            <App />
+          </UserProvider>
+        </GlobalDataProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>

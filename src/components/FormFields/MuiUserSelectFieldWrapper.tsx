@@ -23,6 +23,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 // 共通の型定義をインポート
 import { User, CommonFormFieldComponent } from "../../types/interfaces";
 import { userRepository } from "../../repositories/userRepository.ts";
+import { useGlobalDataContext } from "../../contexts/GlobalDataContext.tsx";
 
 // Props の型定義
 interface MuiUserSelectFieldWrapperProps {
@@ -43,18 +44,7 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
   required = false,
   disabled = false,
 }) => {
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const users = await userRepository.getAll();
-        setAllUsers(users);
-      } catch (err) {
-        console.error("Error loading users for display:", err);
-      }
-    };
-    loadUsers();
-  }, []);
+  const { allUsers } = useGlobalDataContext();
 
   // モーダル表示/非表示のステート
   const [isModalOpen, setIsModalOpen] = useState(false);

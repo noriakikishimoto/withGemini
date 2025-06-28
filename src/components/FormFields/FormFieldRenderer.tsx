@@ -87,6 +87,7 @@ function FormFieldRenderer<T extends object>({
           required={field.required}
           type={field.type}
           readOnly={field.readOnly}
+          placeHolder={field.placeHolder}
         />
       );
     case "checkbox":

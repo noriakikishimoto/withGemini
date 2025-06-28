@@ -1,5 +1,4 @@
 import DynamicCards from "./DynamicListViews/DynamicCards.tsx";
-import DynamicTable from "./DynamicListViews/DynamicTable.tsx";
 
 import { Box, Typography } from "@mui/material";
 
@@ -58,7 +57,7 @@ function DynamicList<T extends Identifiable & object>({
           onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
           currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
         />
-      ) : currentViewType === "table" && isStickyHeader ? (
+      ) : currentViewType === "table" ? (
         // デフォルトは 'table'
         <DynamicTable2
           items={items}
@@ -71,19 +70,7 @@ function DynamicList<T extends Identifiable & object>({
           currentSortConditions={currentSortConditions}
           onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
           currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
-        />
-      ) : currentViewType === "table" && !isStickyHeader ? (
-        <DynamicTable
-          items={items}
-          fields={fields}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          itemBasePath={itemBasePath}
-          // ソート関連のPropsは DynamicCards では利用しない
-          onSortChange={onSortChange}
-          currentSortConditions={currentSortConditions}
-          onFilterChange={onFilterChange} // ★追加: onFilterChange を渡す
-          currentFilterConditions={currentFilterConditions} // ★追加: currentFilterConditions を渡す
+          isStickyHeader={isStickyHeader}
         />
       ) : null}
     </Box>

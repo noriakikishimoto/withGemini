@@ -7,6 +7,7 @@ import { useAppData } from "../hooks/useAppData.ts";
 import { useListSettings } from "../hooks/useListSettings.ts";
 import ChartDisplay2 from "./ChartDisplay2.tsx";
 import { userRepository } from "../../../repositories/userRepository.ts";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 interface DashboardWidgetDisplayProps {
   widget: DashboardWidget<GenericRecord>;
@@ -14,7 +15,7 @@ interface DashboardWidgetDisplayProps {
 
 const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => {
   const appId = widget.appId;
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const { allUsers } = useGlobalDataContext();
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
 
   const {
@@ -34,19 +35,6 @@ const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => 
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
   } = useListSettings({ appId, appSchema, records, customViews, isLoading, allUsers });
-
-  // ★追加: 全ユーザー情報をロードする useEffect
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const users = await userRepository.getAll();
-        setAllUsers(users);
-      } catch (err) {
-        console.error("Error loading users for display:", err);
-      }
-    };
-    loadUsers();
-  }, []);
 
   if (isLoading) {
     return (

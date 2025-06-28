@@ -30,6 +30,7 @@ import { appSchemaRepository } from "../../../repositories/appSchemaRepository.t
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
 import { getFormattedDateString, getFormattedUserName } from "../utils/fieldLabelConverter.ts";
 import { userRepository } from "../../../repositories/userRepository.ts";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // AppSchema のリスト表示用のフィールド定義
 // DynamicList に渡すため、AppSchema のプロパティに対応する
@@ -96,6 +97,8 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortConditions, setSortConditions] = useState<SortCondition<AppSchema>[]>([]);
+  const { allUsers } = useGlobalDataContext();
+  const { refetchGlobalData } = useGlobalDataContext();
 
   // アプリスキーマデータをロードする関数
   const fetchAppSchemas = async () => {
@@ -111,20 +114,10 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
       setIsLoading(false);
     }
   };
-  const [allUsers, setAllUsers] = useState<User[] | []>([]);
 
   // コンポーネントマウント時にアプリスキーマをロード
   useEffect(() => {
     fetchAppSchemas();
-    const loadUsers = async () => {
-      try {
-        const users = await userRepository.getAll();
-        setAllUsers(users);
-      } catch (err) {
-        console.error("Error loading users for display:", err);
-      }
-    };
-    loadUsers();
   }, []);
 
   const converter = (records: GenericRecord[]): GenericRecord[] => {
@@ -205,6 +198,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
         alert("アプリスキーマが削除されました！");
         // 削除後にリストを再フェッチ
         fetchAppSchemas();
+        refetchGlobalData();
       } catch (err) {
         console.error("Error deleting app schema:", err);
         setError("アプリスキーマの削除に失敗しました。");

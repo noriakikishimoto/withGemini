@@ -41,6 +41,7 @@ import { useUserContext } from "../../../contexts/UserContext.tsx";
 import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
 
 import { userRepository } from "../../../repositories/userRepository.ts";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 interface GenericDataFormPageProps {}
 
@@ -54,7 +55,7 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
   const [error, setError] = useState<string | null>(null);
   const { currentUser } = useUserContext();
   // 全ユーザー情報 (createdBy/updatedBy の表示名解決用)
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const { allUsers } = useGlobalDataContext();
 
   // アプリスキーマとレコードデータをロード
   useEffect(() => {
@@ -67,10 +68,6 @@ const GenericDataFormPage: FC<GenericDataFormPageProps> = () => {
         const schema = await appSchemaRepository.getById(appId);
         if (!schema) throw new Error("指定されたアプリスキーマが見つかりません。");
         setAppSchema(schema);
-
-        // 全ユーザー情報もロード
-        const users = await userRepository.getAll();
-        setAllUsers(users);
 
         // 2. レコードIDがあれば、実際のレコードデータをロード (編集モード)
         if (recordId) {

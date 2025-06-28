@@ -39,6 +39,7 @@ import {
   WidgetType,
 } from "../../../types/interfaces";
 import { useUserContext } from "../../../contexts/UserContext.tsx";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // DashboardPageProps インターフェース
 interface DashboardPageProps {}
@@ -68,6 +69,7 @@ const DashboardPage: FC<DashboardPageProps> = () => {
   const [allAppSchemas, setAllAppSchemas] = useState<AppSchema[]>([]);
   const [allCustomViews, setAllCustomViews] = useState<CustomView<GenericRecord>[]>([]);
   const { currentUser } = useUserContext();
+  const { allUsers } = useGlobalDataContext();
 
   // ダッシュボードデータをロードする関数
   const fetchDashboards = async () => {

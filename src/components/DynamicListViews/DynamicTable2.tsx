@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +34,7 @@ interface DynamicTable2Props<T extends Identifiable & object> {
   // ★追加: フィルタリング関連のProps
   onFilterChange?: (newFilterConditions: FilterCondition<T>[]) => void;
   currentFilterConditions?: FilterCondition<T>[];
+  isStickyHeader?: boolean;
 }
 
 // DynamicTable コンポーネントの定義
@@ -46,6 +48,7 @@ function DynamicTable2<T extends Identifiable & object>({
   currentSortConditions,
   onFilterChange, // Propsとして受け取る
   currentFilterConditions, // Propsとして受け取る
+  isStickyHeader,
 }: DynamicTable2Props<T>) {
   // ★追加: ヘッダ要素の参照用 useRef
   const headerRef = useRef<HTMLTableSectionElement>(null);
@@ -111,13 +114,14 @@ function DynamicTable2<T extends Identifiable & object>({
   const renderFieldValue = (item: T, field: FormField<T, any>): React.ReactNode => {
     const value = item[field.name as keyof T]; // 型は any なので、as keyof T でアクセスを安全にする
 
-    // ★修正: table タイプの場合の表示ロジック
+    const displayValue = String(value ?? "");
     if (field.type === "table") {
-      if (Array.isArray(value)) {
-        return `明細 ${value.length} 件`; // 例: 「明細 3 件」
-      }
-      return "明細なし"; // テーブルデータがなければ
+      return "(詳細画面で表示)";
     }
+
+    const maxLength = 50; // 切り詰める最大長
+    const isTruncated = displayValue.length > maxLength;
+    const truncatedValue = isTruncated ? `${displayValue.substring(0, maxLength)}...` : displayValue;
 
     // completed フィールドの表示ロジック (以前のものを再利用)
     if (field.name === "completed") {
@@ -128,42 +132,78 @@ function DynamicTable2<T extends Identifiable & object>({
       );
     }
 
-    // その他のフィールドは単純に文字列として表示
-    return String(value ?? ""); // nullish coalescing を使用して undefined の場合も安全に
+    // 切り詰めとツールチップを適用
+    return isTruncated ? (
+      <Tooltip title={displayValue} placement="top">
+        <Typography
+          variant="body2"
+          sx={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: field.maxWidth || "none", // maxWidth があれば適用
+          }}
+        >
+          {truncatedValue}
+        </Typography>
+      </Tooltip>
+    ) : (
+      <Typography
+        variant="body2"
+        sx={{
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: field.maxWidth || "none", // maxWidth があれば適用
+        }}
+      >
+        {displayValue}
+      </Typography>
+    );
   };
 
   return (
     <TableContainer component={Paper} sx={{ mt: 2 }}>
       {/* ★追加: ゴーストヘッダ (sticky になるヘッダ) */}
-      <Table
-        sx={{
-          position: "fixed",
-          top: "0px", // AppBar の高さ（要調整）
-          left: drawerOpen ? "224px" : "24px", // ドロワーの幅（要調整）
-          zIndex: 100, // 高い z-index で他のコンテンツの上に
-          width: "auto", // 幅は JavaScript で調整される
-          backgroundColor: "background.paper", // 背景色を設定
-          visibility: isHeaderSticky ? "visible" : "hidden", // 表示/非表示を制御
-          boxShadow: isHeaderSticky ? "0px 2px 4px rgba(0,0,0,0.1)" : "none", // 影
-        }}
-      >
-        <TableHead ref={ghostHeaderRef}>
-          <TableRow>
-            {fields.map((field) => (
-              <TableCell key={`ghost-${field.name as string}`} sx={{ fontWeight: "bold" }}>
-                <TableSortLabel active={false} direction={undefined}>
-                  {" "}
-                  {/* ゴーストヘッダではソートボタンは非アクティブ */}
-                  {field.label}
-                </TableSortLabel>
+      {isStickyHeader && (
+        <Table
+          sx={{
+            position: "fixed",
+            top: "0px", // AppBar の高さ（要調整）
+            left: drawerOpen ? "224px" : "24px", // ドロワーの幅（要調整）
+            zIndex: 100, // 高い z-index で他のコンテンツの上に
+            width: "auto", // 幅は JavaScript で調整される
+            backgroundColor: "background.paper", // 背景色を設定
+            visibility: isHeaderSticky ? "visible" : "hidden", // 表示/非表示を制御
+            boxShadow: isHeaderSticky ? "0px 2px 4px rgba(0,0,0,0.1)" : "none", // 影
+          }}
+        >
+          <TableHead ref={ghostHeaderRef}>
+            <TableRow>
+              {fields.map((field) => (
+                <TableCell
+                  key={`ghost-${field.name as string}`}
+                  sx={{
+                    fontWeight: "bold",
+                    width: field.width || "auto", // ★追加: width
+                    minWidth: field.minWidth || "auto", // ★追加: minWidth
+                    maxWidth: field.maxWidth || "auto", // ★追加: maxWidth
+                  }}
+                >
+                  <TableSortLabel active={false} direction={undefined}>
+                    {" "}
+                    {/* ゴーストヘッダではソートボタンは非アクティブ */}
+                    {field.label}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
+              <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">
+                アクション
               </TableCell>
-            ))}
-            <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">
-              アクション
-            </TableCell>
-          </TableRow>
-        </TableHead>
-      </Table>
+            </TableRow>
+          </TableHead>
+        </Table>
+      )}
 
       <Table sx={{ minWidth: 650 }} aria-label="dynamic list table">
         <TableHead ref={headerRef}>
@@ -197,7 +237,15 @@ function DynamicTable2<T extends Identifiable & object>({
               };
 
               return (
-                <TableCell key={field.name as string} sx={{ fontWeight: "bold" }}>
+                <TableCell
+                  key={field.name as string}
+                  sx={{
+                    fontWeight: "bold",
+                    width: field.width || "auto", // ★追加: width
+                    minWidth: field.minWidth || "auto", // ★追加: minWidth
+                    maxWidth: field.maxWidth || "auto", // ★追加: maxWidth
+                  }}
+                >
                   <TableSortLabel
                     active={isActive} // active はソートが適用されていて、かつソート解除状態ではない
                     direction={currentSortCondition?.direction} // ソート方向
@@ -229,7 +277,14 @@ function DynamicTable2<T extends Identifiable & object>({
             items.map((item) => (
               <TableRow key={item.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                 {fields.map((field) => (
-                  <TableCell key={field.name as string}>
+                  <TableCell
+                    key={field.name as string}
+                    sx={{
+                      width: field.width || "auto", // ★追加: width
+                      minWidth: field.minWidth || "auto", // ★追加: minWidth
+                      maxWidth: field.maxWidth || "auto", // ★追加: maxWidth
+                    }}
+                  >
                     {field.name === fields[0].name ? (
                       <Link
                         to={`${itemBasePath}/${item.id}`}

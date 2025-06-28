@@ -54,6 +54,7 @@ import { useListSettings } from "../hooks/useListSettings.ts";
 import ChartDisplay2 from "../components/ChartDisplay2.tsx";
 import { addSystemFieldsToSchema } from "../utils/appSchemaUtils";
 import { userRepository } from "../../../repositories/userRepository.ts";
+import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 
 // DynamicList に渡すフィールド定義の型を AppSchemaFormPage と合わせるための型
 type FormFieldForDynamicList<T extends object> = FormField<T, CommonFormFieldComponent<any>>;
@@ -65,7 +66,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   const { appId, viewId } = useParams<{ appId: string; viewId?: string }>();
   const navigate = useNavigate();
 
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const { allUsers } = useGlobalDataContext();
 
   const { appSchema, records, customViews, isLoading, error, fetchData } = useAppData(appId);
   // ★追加: useListSettings からリスト関連のステートとハンドラを取得
@@ -162,19 +163,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       setCurrentViewId(viewId || "default");
     }
   }, [viewId]); // viewId が変更されたら実行
-
-  // ★追加: 全ユーザー情報をロードする useEffect
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const users = await userRepository.getAll();
-        setAllUsers(users);
-      } catch (err) {
-        console.error("Error loading users for display:", err);
-      }
-    };
-    loadUsers();
-  }, []); // 初回のみロード (ユーザー管理ページで更新されるため)
 
   // レコード編集ハンドラ (フォームページへ遷移)
   const handleEditRecord = (recordId: string) => {
