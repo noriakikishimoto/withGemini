@@ -28,6 +28,7 @@ export const addSystemFieldsToSchema = (
       ...fieldDef,
       name: fieldDef.name as keyof GenericRecord, // 型キャスト
       component: getFieldComponentByType(fieldDef.type),
+      valueFormatter: fieldDef.type === "user_select" ? getFormattedUserName : undefined,
     })
   ) as FormField<GenericRecord, CommonFormFieldComponent<any>>[];
 

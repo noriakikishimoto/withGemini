@@ -1,5 +1,3 @@
-// src/apps/GenericDatabaseApp/components/FilterSettingsModal.tsx
-
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import {
   Box,
@@ -72,6 +70,7 @@ function FilterSettingsModal<T extends object>({
       case "textarea":
       case "email":
       case "lookup": // ルックアップもテキストベースの検索
+      case "user_select":
         return [
           { value: "eq", label: "と等しい" },
           { value: "ne", label: "と等しくない" },
@@ -164,6 +163,7 @@ function FilterSettingsModal<T extends object>({
       case "email":
       case "number": // TextFieldWrapper で数値も扱うため
       case "lookup": // ルックアップもテキスト入力
+      case "user_select":
         return (
           <MuiTextFieldWrapper
             label="値"

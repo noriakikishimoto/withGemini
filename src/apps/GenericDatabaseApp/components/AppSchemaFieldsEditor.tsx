@@ -34,6 +34,7 @@ import {
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx"; // フィールド定義フォームで使うため
 import MuiCheckboxWrapper from "../../../components/FormFields/MuiCheckboxWrapper.tsx"; // フィールド定義フォームで使うため
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx"; // フィールド定義フォームで使うため
+import { getFormattedUserName } from "../utils/fieldLabelConverter.ts";
 
 const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldComponent<any>>[] = [
   {
@@ -66,6 +67,7 @@ const baseFieldDefinitionFields: FormField<FormField<any, any>, CommonFormFieldC
       { value: "email", label: "メールアドレス" },
       { value: "lookup", label: "ルックアップ" },
       { value: "table", label: "テーブル" },
+      { value: "user_select", label: "ユーザー情報選択" },
     ] as FormFieldSelectOption[],
     component: MuiSelectFieldWrapper,
   },
@@ -182,6 +184,11 @@ const AppSchemaFieldsEditor: FC<AppSchemaFieldsEditorProps> = ({
     if (processedFieldData.type !== "textarea") {
       delete processedFieldData.rows;
     }
+
+    if (processedFieldData.type === "user_select") {
+      processedFieldData.valueFormatter = getFormattedUserName;
+    }
+
     // ★追加: group, xs, sm, md のクリーンアップ
     const hasLayoutProps =
       processedFieldData.group !== undefined ||

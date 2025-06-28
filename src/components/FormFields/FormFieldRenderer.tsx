@@ -13,6 +13,7 @@ import MuiLookupFieldWrapper from "./MuiLookupFieldWrapper.tsx";
 import MuiTableFieldWrapper from "./MuiTableFieldWrapper.tsx";
 
 import { Key } from "@mui/icons-material";
+import MuiUserSelectFieldWrapper from "./MuiUserSelectFieldWrapper.tsx";
 
 interface FormFieldRendererProps<T extends object> {
   field: FormField<T, CommonFormFieldComponent<any>>;
@@ -194,6 +195,19 @@ function FormFieldRenderer<T extends object>({
           tableFilterField={field.tableFilterField || ""}
           tableFilterValue={field.tableFilterValue || ""}
           parentFormData={formData}
+        />
+      );
+    case "user_select":
+      return (
+        <MuiUserSelectFieldWrapper
+          label={field.label}
+          name={fieldNameAsString}
+          value={
+            formData[fieldNameAsString] ? (formData[fieldNameAsString] as string) : field.initialValue
+          }
+          onChange={(val) => handleChange(field.name, val)}
+          required={field.required}
+          //disabled={false}
         />
       );
     default:

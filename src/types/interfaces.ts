@@ -58,7 +58,8 @@ export type FormFieldType =
   | "radio"
   | "email"
   | "lookup"
-  | "table";
+  | "table"
+  | "user_select";
 
 // ★追加: セレクトボックスの選択肢の型
 export interface FormFieldSelectOption {

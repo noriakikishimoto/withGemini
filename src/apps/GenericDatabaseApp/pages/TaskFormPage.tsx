@@ -12,6 +12,7 @@ import { FormField, TaskData, CommonFormFieldComponent } from "../../../types/in
 import { taskRepository } from "../../../repositories/taskRepository.ts"; // タスクリポジトリをインポート
 
 import { Box, Typography, Button, Paper, CircularProgress } from "@mui/material"; // Paperはdivのようなもの、CircularProgressはローディング表示
+import MuiUserSelectFieldWrapper from "../../../components/FormFields/MuiUserSelectFieldWrapper.tsx";
 
 // 担当者の選択肢 (ここでは一旦ページ内で定義)
 const assigneeOptions = [
@@ -46,12 +47,22 @@ export const taskFormFields: FormField<TaskData, CommonFormFieldComponent<any>>[
     required: true,
     component: MuiDatePickerWrapper,
   },
-  {
+
+  /*{
     name: "assignee",
     label: "担当者",
     type: "select",
     options: assigneeOptions,
     component: MuiSelectFieldWrapper,
+  },
+  */
+  {
+    name: "assignee",
+    label: "担当者",
+    type: "user_select",
+    required: true,
+    component: MuiUserSelectFieldWrapper,
+    initialValue: "",
   },
   {
     name: "completed",
