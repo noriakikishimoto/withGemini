@@ -66,12 +66,12 @@ const menuItems: MenuItem[] = [
   },
   // ★追加: アプリスキーマ管理のメニュー項目
   {
-    text: "アプリ管理",
+    text: "台帳管理",
     path: "/generic-db/app-schemas",
     icon: <AppsIcon />,
     children: [
-      { text: "アプリ一覧", path: "/generic-db/app-schemas/list" },
-      { text: "新規アプリ作成", path: "/generic-db/app-schemas/new" },
+      { text: "台帳一覧", path: "/generic-db/app-schemas/list" },
+      { text: "台帳デザイン", path: "/generic-db/app-schemas/new" },
     ],
   },
 ];
@@ -141,7 +141,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
   }
 
   return (
-    <Box>
+    <Box sx={{ mt: 2 }}>
       <List>
         {menuItems.map((item) => (
           <React.Fragment key={item.text}>
@@ -152,8 +152,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                   selected={location.pathname.startsWith(item.path || "")}
                 >
                   {item.icon && (
-                    <ListItemIcon sx={{ minWidth: 34 }}>
-                      {/* ★修正: サブメニュー親アイコンのサイズ調整 */}
+                    <ListItemIcon sx={{ minWidth: 34, color: "#ffffff" }}>
                       {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
                         fontSize: "small",
                       })}
@@ -174,7 +173,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                         //onClick={onDrawerClose} // サブメニュー項目クリックでドロワーを閉じる
                       >
                         {child.icon && (
-                          <ListItemIcon sx={{ minWidth: 34 }}>
+                          <ListItemIcon sx={{ minWidth: 34, color: "#ffffff" }}>
                             {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
                               fontSize: "small",
                             })}
@@ -194,7 +193,7 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
                 //onClick={onDrawerClose} // ルートメニュー項目クリックでドロワーを閉じる
               >
                 {item.icon && (
-                  <ListItemIcon sx={{ minWidth: 34 }}>
+                  <ListItemIcon sx={{ minWidth: 34, color: "#ffffff" }}>
                     {React.cloneElement(item.icon as React.ReactElement<SvgIconProps>, {
                       fontSize: "small",
                     })}
@@ -213,10 +212,10 @@ const SideMenu: FC<SideMenuProps> = ({ onDrawerClose }) => {
               onClick={() => handleSubMenuClick("/generic-db/data")} // 適当なキー
               selected={location.pathname.startsWith("/generic-db/data")}
             >
-              <ListItemIcon sx={{ minWidth: 34 }}>
+              <ListItemIcon sx={{ minWidth: 34, color: "#ffffff" }}>
                 <AppsIcon />
               </ListItemIcon>
-              <ListItemText primary="マイアプリ" />
+              <ListItemText primary="台帳" />
               {openSubMenus["/generic-db/data"] ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
             <Collapse in={openSubMenus["/generic-db/data"]} timeout="auto" unmountOnExit>

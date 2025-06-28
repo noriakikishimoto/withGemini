@@ -20,17 +20,17 @@ const theme = createTheme({
   palette: {
     background: {
       // メインコンテンツの背景色をここで設定
-      default: "#f0f2f5", // 例: 薄いグレー
-      paper: "#ffffff", // Paper コンポーネントなどの背景色
+      default: "#F7F7F7",
+      paper: "#ffffff",
     },
 
     primary: {
-      main: "#7d84af", // デフォルトの青色は#1976d2
+      main: "#1ABB9C",
     },
 
-    //   secondary: {
-    //     main: '#dc004e', // デフォルトのピンク
-    //   },
+    secondary: {
+      main: "#73879C",
+    },
   },
 
   // ★重要: スペーシングの調整
@@ -54,8 +54,8 @@ const theme = createTheme({
     h5: { fontSize: "1.1rem" }, // ListTitle (既存のタスク) など
     h6: { fontSize: "1rem" }, // CardTitle (新しいタスク) など
     subtitle1: { fontSize: "0.9rem" },
-    subtitle2: { fontSize: "0.8rem" },
-    body1: { fontSize: "0.75rem" }, // デフォルトの本文
+    subtitle2: { fontSize: "0.85rem" },
+    body1: { fontSize: "0.82rem" }, // デフォルトの本文
     body2: { fontSize: "0.65rem" }, // 小さいテキスト
     button: { fontSize: "0.6rem" }, // ボタンの文字
     caption: { fontSize: "0.65rem" },
@@ -72,6 +72,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           padding: "4px 4px", // デフォルトのpaddingをさらに小さく
+        },
+        contained: {
+          color: "#ffffff",
         },
       },
     },
@@ -102,10 +105,20 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           padding: "4px 8px", // デフォルトのpaddingを小さく
-          //fontSize: "0.9rem",
+          fontSize: "0.85rem",
+          borderRight: "0.5px solid #e0e0e0", // 右線 (セル間)
+          "&:last-child": {
+            borderRight: "none", // 最後のセルには右線を適用しない
+          },
         },
         head: {
-          //fontSize: "0.9rem",
+          fontSize: "0.85rem",
+          padding: "8px 8px", // デフォルトのpaddingを小さく
+          borderRight: "1px solid #ffffff", // 右線 (セル間)
+          "&:last-child": {
+            borderRight: "none", // 最後のセルには右線を適用しない
+          },
+          backgroundColor: "#EDEDED",
         },
         body: {
           //fontSize: "0.9rem",

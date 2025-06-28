@@ -35,7 +35,7 @@ import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 // AppSchema のリスト表示用のフィールド定義
 // DynamicList に渡すため、AppSchema のプロパティに対応する
 const appSchemaListFields: FormField<AppSchema, any>[] = [
-  { name: "name", label: "アプリ名", type: "text", component: MuiTextFieldWrapper },
+  { name: "name", label: "台帳", type: "text", component: MuiTextFieldWrapper },
   { name: "description", label: "説明", type: "textarea", component: MuiTextFieldWrapper },
   {
     name: "createdBy",
@@ -248,8 +248,14 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
-        作成済みアプリ ({filteredAndSortedAppSchemas.length} 件)
+      <Typography
+        variant="h4"
+        component="h2"
+        color="secondary"
+        gutterBottom
+        sx={{ textAlign: "left", mb: 3 }}
+      >
+        台帳一覧 ({filteredAndSortedAppSchemas.length} 件)
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>

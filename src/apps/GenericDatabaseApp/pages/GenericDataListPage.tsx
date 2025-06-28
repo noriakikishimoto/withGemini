@@ -19,6 +19,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import {
   Box,
   Button,
+  ButtonGroup,
   CircularProgress,
   FormControl,
   IconButton,
@@ -151,7 +152,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
     }
   }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
 */
-  // ★追加: appId が変更されたら currentViewType をデフォルトに戻す
+  // appId が変更されたら currentViewType をデフォルトに戻す
   useEffect(() => {
     setCurrentViewType("table"); // アプリが切り替わったらデフォルトのテーブルビューに
   }, [appId]);
@@ -172,8 +173,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   // レコード削除ハンドラ
   const handleDeleteRecord = async (recordId: string) => {
     if (window.confirm("このレコードを本当に削除しますか？")) {
-      //      setIsLoading(true);
-      //      setError(null);
       try {
         if (!appId) throw new Error("アプリIDが見つかりません。");
         await genericDataRepository.delete(recordId, appId); // appId と recordId を渡す
@@ -283,7 +282,13 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: "left", mb: 3 }}>
+      <Typography
+        color="secondary"
+        variant="h4"
+        component="h2"
+        gutterBottom
+        sx={{ textAlign: "left", mb: 3 }}
+      >
         {appSchema.name} レコード ({filteredAndSortedRecords.length} 件)
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -292,7 +297,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: "300px" }}
+          sx={{ width: "300px", backgroundColor: "#ffffff" }}
         />
         <Button variant="contained" color="primary" onClick={handleCreateNewRecord}>
           新規レコードを作成
@@ -304,6 +309,7 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
           <FormControl sx={{ minWidth: 300 }} size="small">
             <InputLabel>ビュー選択</InputLabel>{" "}
             <Select
+              sx={{ backgroundColor: "#ffffff" }}
               value={currentViewId}
               label="ビュー選択"
               onChange={(e) => {
@@ -355,6 +361,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             variant={sortConditions.length > 0 ? "contained" : "outlined"}
             startIcon={<SortIcon />}
             onClick={handleOpenSortModal}
+            sx={{ mr: 0.5 }}
+            color="secondary"
           >
             ソート設定
           </Button>
@@ -362,6 +370,8 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             variant={filterConditions.length > 0 ? "contained" : "outlined"}
             startIcon={<FilterListIcon />}
             onClick={handleOpenFilterModal}
+            sx={{ mr: 0.5 }}
+            color="secondary"
           >
             絞り込み設定
           </Button>
@@ -373,10 +383,17 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
             }
             startIcon={<ViewColumnIcon />}
             onClick={handleOpenDisplayFieldsModal}
+            sx={{ mr: 0.5 }}
+            color="secondary"
           >
             表示列設定
           </Button>
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSaveViewModal()}>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenSaveViewModal()}
+            color="secondary"
+          >
             ビューを保存
           </Button>
         </Box>

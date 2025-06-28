@@ -16,7 +16,7 @@ import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
 const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
   {
     name: "name",
-    label: "アプリ名",
+    label: "台帳名",
     type: "text",
     required: true,
     component: MuiTextFieldWrapper,
@@ -239,8 +239,8 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
           initialData={appSchema} // appSchema 全体を渡す
           onSubmit={handleAppSchemaSubmit}
           onCancel={handleCancelAppSchemaForm}
-          formTitle={id ? "アプリスキーマを編集" : "新しいアプリを作成"}
-          submitButtonText={id ? "変更を保存" : "アプリを作成"}
+          formTitle={id ? "台帳編集" : "新規台帳作成"}
+          submitButtonText={id ? "変更を保存" : "台帳を作成"}
           onFieldChange={(fieldName, value) => {
             // appSchema ステートをリアルタイムで更新
             setAppSchema((prev) => {

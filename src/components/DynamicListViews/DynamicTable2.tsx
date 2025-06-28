@@ -1,4 +1,4 @@
-import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import EditIcon from "@mui/icons-material/Edit";
 import {
   createTheme,
@@ -19,7 +19,6 @@ import { Link } from "react-router-dom";
 // 共通の型定義をインポート
 import { FilterCondition, FormField, Identifiable, SortCondition } from "../../types/interfaces";
 import { useDrawerContext } from "../../contexts/DrawerContext";
-// ★追加: ソートアイコン
 
 // DynamicTableが受け取るPropsの型定義
 interface DynamicTable2Props<T extends Identifiable & object> {
@@ -136,7 +135,7 @@ function DynamicTable2<T extends Identifiable & object>({
     return isTruncated ? (
       <Tooltip title={displayValue} placement="top">
         <Typography
-          variant="body2"
+          variant="body1"
           sx={{
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -149,7 +148,7 @@ function DynamicTable2<T extends Identifiable & object>({
       </Tooltip>
     ) : (
       <Typography
-        variant="body2"
+        variant="body1"
         sx={{
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -184,7 +183,7 @@ function DynamicTable2<T extends Identifiable & object>({
                 <TableCell
                   key={`ghost-${field.name as string}`}
                   sx={{
-                    fontWeight: "bold",
+                    //    fontWeight: "bold",
                     width: field.width || "auto", // ★追加: width
                     minWidth: field.minWidth || "auto", // ★追加: minWidth
                     maxWidth: field.maxWidth || "auto", // ★追加: maxWidth
@@ -197,9 +196,7 @@ function DynamicTable2<T extends Identifiable & object>({
                   </TableSortLabel>
                 </TableCell>
               ))}
-              <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">
-                アクション
-              </TableCell>
+              <TableCell sx={{ width: "100px" }}></TableCell>
             </TableRow>
           </TableHead>
         </Table>
@@ -240,7 +237,7 @@ function DynamicTable2<T extends Identifiable & object>({
                 <TableCell
                   key={field.name as string}
                   sx={{
-                    fontWeight: "bold",
+                    //fontWeight: "bold",
                     width: field.width || "auto", // ★追加: width
                     minWidth: field.minWidth || "auto", // ★追加: minWidth
                     maxWidth: field.maxWidth || "auto", // ★追加: maxWidth
@@ -261,9 +258,7 @@ function DynamicTable2<T extends Identifiable & object>({
                 </TableCell>
               );
             })}
-            <TableCell sx={{ fontWeight: "bold", width: "150px" }} align="right">
-              アクション
-            </TableCell>
+            <TableCell sx={{ width: "100px" }}></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -275,7 +270,8 @@ function DynamicTable2<T extends Identifiable & object>({
             </TableRow>
           ) : (
             items.map((item) => (
-              <TableRow key={item.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+              //<TableRow key={item.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+              <TableRow key={item.id}>
                 {fields.map((field) => (
                   <TableCell
                     key={field.name as string}
@@ -297,17 +293,17 @@ function DynamicTable2<T extends Identifiable & object>({
                     )}
                   </TableCell>
                 ))}
-                <TableCell align="right">
-                  <IconButton aria-label="編集" color="warning" onClick={() => onEdit(item.id)}>
-                    <EditIcon />
+                <TableCell>
+                  <IconButton aria-label="編集" color="secondary" onClick={() => onEdit(item.id)}>
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     aria-label="削除"
-                    color="error"
+                    color="secondary"
                     onClick={() => onDelete(item.id)}
-                    sx={{ ml: 1 }}
+                    sx={{ ml: 0 }}
                   >
-                    <DeleteIcon />
+                    <DeleteForeverIcon fontSize="small" />
                   </IconButton>
                 </TableCell>
               </TableRow>

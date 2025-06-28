@@ -40,7 +40,7 @@ function HideOnScroll(props: Props) {
 
 const Layout: FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const [open, setOpen] = useState(false); // Drawer (サイドバー) の開閉状態
+  const [open, setOpen] = useState(true); // Drawer (サイドバー) の開閉状態
   //const { currentUser } = useUserContext();
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -54,7 +54,15 @@ const Layout: FC<LayoutProps> = ({ children }) => {
     <Box sx={{ display: "flex" }}>
       {/* AppBar (ヘッダーバー) */}
       <HideOnScroll>
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer - 1 }}>
+        <AppBar
+          position="fixed"
+          elevation={1}
+          sx={{
+            zIndex: (theme) => theme.zIndex.drawer - 1,
+            backgroundColor: "#EDEDED",
+            color: "#73879C",
+          }}
+        >
           <TopHeader
             onMenuOpen={handleDrawerOpen}
             open={open}
@@ -75,7 +83,8 @@ const Layout: FC<LayoutProps> = ({ children }) => {
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             boxSizing: "border-box",
-            backgroundColor: "#ffffff",
+            backgroundColor: "#2A3F54",
+            color: "#ffffff",
             //  pt: (theme) => `${theme.mixins.toolbar.minHeight}px`,
           },
         }}
