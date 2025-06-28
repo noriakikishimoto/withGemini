@@ -7,7 +7,11 @@ import {
   User,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "./fieldComponentMapper"; // fieldComponentMapper をインポート
-import { getFormattedDateString, getFormattedUserName } from "./fieldLabelConverter";
+import {
+  getFormattedDateString,
+  getFormattedUserName,
+  getFormattedUserNameByList,
+} from "./fieldLabelConverter";
 
 /**
  * アプリスキーマのフィールド定義にシステムフィールド (createdBy, createdAt など) を注入する関数。
@@ -28,7 +32,7 @@ export const addSystemFieldsToSchema = (
       ...fieldDef,
       name: fieldDef.name as keyof GenericRecord, // 型キャスト
       component: getFieldComponentByType(fieldDef.type),
-      valueFormatter: fieldDef.type === "user_select" ? getFormattedUserName : undefined,
+      valueFormatter: fieldDef.type === "user_select" ? getFormattedUserNameByList : undefined,
     })
   ) as FormField<GenericRecord, CommonFormFieldComponent<any>>[];
 

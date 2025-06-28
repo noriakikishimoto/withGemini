@@ -18,6 +18,21 @@ export const getFormattedUserName = (userId: string, allUsers?: User[]): string 
   return allUsers?.find((u) => u.id === userId)?.displayName || userId;
 };
 
+export const getFormattedUserNameByList = (userIds: string[], allUsers?: User[]): string => {
+  if (typeof userIds === "string") {
+    return getFormattedUserName(userIds, allUsers);
+  }
+
+  if (!userIds || userIds.length === 0) {
+    return "";
+  }
+  let formattedUserIds: string[] = [];
+  userIds.forEach((userId) => {
+    formattedUserIds.push(getFormattedUserName(userId, allUsers));
+  });
+  return formattedUserIds.join(",");
+};
+
 export const getFormattedDateString = (isoDate: string): string => {
   return isoDate ? new Date(isoDate).toLocaleString() : "";
 };

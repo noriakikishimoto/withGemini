@@ -45,7 +45,7 @@ export interface TaskData extends Identifiable {
   description: string;
   dueDate: string; // 日付型（ISO文字列 YYYY-MM-DD）
   completed: boolean; // 完了フラグ
-  assignee: string; // 担当者（テキストまたは選択肢）
+  assignee: string[]; // 担当者（テキストまたは選択肢）
 }
 // ★追加: フォームフィールドのタイプを表すユニオン型
 export type FormFieldType =

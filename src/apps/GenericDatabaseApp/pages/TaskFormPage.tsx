@@ -62,7 +62,7 @@ export const taskFormFields: FormField<TaskData, CommonFormFieldComponent<any>>[
     type: "user_select",
     required: true,
     component: MuiUserSelectFieldWrapper,
-    initialValue: "",
+    initialValue: [],
   },
   {
     name: "completed",

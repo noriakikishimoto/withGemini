@@ -28,8 +28,8 @@ import { userRepository } from "../../repositories/userRepository.ts";
 interface MuiUserSelectFieldWrapperProps {
   label: string;
   name: string;
-  value: string; // 選択されたユーザーID
-  onChange: (value: string) => void;
+  value: string[]; // 選択されたユーザーID
+  onChange: (value: string[]) => void;
   required?: boolean;
   disabled?: boolean; // 読み取り専用の場合
   // ここで allUsers は直接受け取らず、useUserContext から取得する
@@ -61,13 +61,13 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
   // モーダル内の検索キーワード
   const [searchTerm, setSearchTerm] = useState("");
   // モーダル内で一時的に選択中のユーザーID
-  const [tempSelectedUserId, setTempSelectedUserId] = useState<string | null>(null);
+  const [tempSelectedUserIds, setTempSelectedUserIds] = useState<string[]>([]);
 
   // 現在の value (ユーザーID) に対応するユーザー表示名
-  const selectedUserDisplayName = useMemo(() => {
-    if (!value || !allUsers) return "";
-    const user = allUsers.find((u) => u.id === value);
-    return user ? user.displayName || user.username : value;
+  const selectedUserDisplayNames = useMemo(() => {
+    if (!value || value.length === 0 || !allUsers || allUsers.length === 0) return "";
+    const selectedUsers = allUsers.filter((user) => value.includes(user.id));
+    return selectedUsers.map((user) => user.displayName || user.username).join(", ");
   }, [value, allUsers]);
 
   // モーダル内の表示ユーザーリスト (検索フィルタリング)
@@ -86,7 +86,8 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
   const handleOpenModal = () => {
     setIsModalOpen(true);
     setSearchTerm(""); // モーダルを開くときに検索キーワードをリセット
-    setTempSelectedUserId(value || null); // 現在の値を一時選択状態にセット
+    // ★変更: 現在の value を一時選択状態にセット
+    setTempSelectedUserIds(value ? [...value] : []);
   };
 
   // モーダルを閉じるハンドラ
@@ -95,20 +96,29 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
   };
 
   // ユーザー選択ハンドラ (モーダル内)
+  // ★変更: ユーザー選択ハンドラ (モーダル内) - 複数選択トグル
   const handleUserSelect = (user: User) => {
-    setTempSelectedUserId(user.id);
+    setTempSelectedUserIds((prevSelectedIds) => {
+      if (prevSelectedIds.includes(user.id)) {
+        // 既に選択されていれば削除
+        return prevSelectedIds.filter((id) => id !== user.id);
+      } else {
+        // 選択されていなければ追加
+        return [...prevSelectedIds, user.id];
+      }
+    });
   };
 
   // モーダル内で「選択」ボタンを押したときのハンドラ
   const handleConfirmSelect = () => {
-    onChange(tempSelectedUserId || ""); // 親に選択されたIDを通知
+    onChange(tempSelectedUserIds); // 親に選択されたIDを通知
     handleCloseModal();
   };
 
   // テキストフィールドの値をクリアするハンドラ
   const handleClear = () => {
-    onChange("");
-    setTempSelectedUserId(null); // モーダル内の一時選択状態もクリア
+    onChange([]); // 親のステートを空の配列に更新
+    setTempSelectedUserIds([]); // モーダル内の一時選択状態もクリア
   };
 
   // `getInitialValue` の静的メソッド
@@ -121,7 +131,7 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
         fullWidth
         label={label}
         name={name}
-        value={selectedUserDisplayName} // 表示名を表示
+        value={selectedUserDisplayNames} // 表示名を表示
         required={required}
         disabled={disabled}
         /*
@@ -134,12 +144,11 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
           readOnly: true,
           endAdornment: (
             <InputAdornment position="end">
-              {value &&
-                !disabled && ( // 値があり、無効化されていない場合にクリアボタンを表示
-                  <IconButton onClick={handleClear} edge="end" size="small">
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                )}
+              {value && value.length > 0 && !disabled && (
+                <IconButton onClick={handleClear} edge="end" size="small">
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              )}
               <IconButton onClick={handleOpenModal} edge="end" size="small" disabled={disabled}>
                 <SearchIcon /> {/* 検索アイコン */}
               </IconButton>
@@ -167,13 +176,13 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
                 <ListItemButton
                   key={user.id}
                   onClick={() => handleUserSelect(user)}
-                  selected={tempSelectedUserId === user.id}
+                  selected={tempSelectedUserIds.includes(user.id)}
                 >
                   <ListItemText
                     primary={`${user.displayName} (${user.username})`}
                     secondary={user.email}
                   />
-                  {tempSelectedUserId === user.id && <CheckIcon color="primary" />}
+                  {tempSelectedUserIds.includes(user.id) && <CheckIcon color="primary" />}
                 </ListItemButton>
               ))
             ) : (
@@ -191,7 +200,7 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
             onClick={handleConfirmSelect}
             variant="contained"
             color="primary"
-            disabled={!tempSelectedUserId}
+            disabled={!tempSelectedUserIds}
           >
             選択
           </Button>
@@ -201,5 +210,5 @@ const MuiUserSelectFieldWrapper: CommonFormFieldComponent<MuiUserSelectFieldWrap
   );
 };
 
-MuiUserSelectFieldWrapper.getInitialValue = () => "";
+MuiUserSelectFieldWrapper.getInitialValue = () => [];
 export default MuiUserSelectFieldWrapper;
