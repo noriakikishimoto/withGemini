@@ -4,11 +4,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import DynamicForm from "../../../components/DynamicForm.tsx";
 
 // 共通の型定義をインポート
-import { AppSchema, CommonFormFieldComponent, FormField } from "../../../types/interfaces";
+import { AppSchema, CommonFormFieldComponent, FormField, User } from "../../../types/interfaces";
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 import AppSchemaFieldsEditor from "../components/AppSchemaFieldsEditor.tsx";
 import { useUserContext } from "../../../contexts/UserContext.tsx";
+import { getFormattedDateString, getFormattedUserName } from "../utils/fieldLabelConverter";
+import { userRepository } from "../../../repositories/userRepository.ts";
 
 const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
   {
@@ -18,8 +20,8 @@ const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
     required: true,
     component: MuiTextFieldWrapper,
     xs: 12, // ★追加: 全幅を占める
-    sm: 6, // ★追加: 小画面以上で半分
-    md: 4, // ★追加: 中画面以上で1/3
+    sm: 12, // ★追加: 小画面以上で半分
+    md: 12, // ★追加: 中画面以上で1/3
   },
   {
     name: "description",
@@ -29,6 +31,50 @@ const appSchemaFields: FormField<AppSchema, CommonFormFieldComponent<any>>[] = [
     rows: 3,
     component: MuiTextFieldWrapper,
     xs: 12, // ★追加: 全幅を占める
+  },
+  {
+    name: "createdBy",
+    label: "作成者",
+    type: "text", // 将来的にルックアップ表示も考慮
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+  },
+  {
+    name: "createdAt",
+    label: "作成日時",
+    type: "text",
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+  },
+  {
+    name: "updatedBy",
+    label: "更新者",
+    type: "text", // 将来的にルックアップ表示も考慮
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+  },
+  {
+    name: "updatedAt",
+    label: "更新日時",
+    type: "text",
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
   },
 ];
 
@@ -41,6 +87,19 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(!!id);
   const [error, setError] = useState<string | null>(null);
   const { currentUser } = useUserContext();
+  const [allUsers, setAllUsers] = useState<User[] | []>([]);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await userRepository.getAll();
+        setAllUsers(users);
+      } catch (err) {
+        console.error("Error loading users for display:", err);
+      }
+    };
+    loadUsers();
+  }, []);
 
   // 編集モードの場合、アプリスキーマデータをロード
   useEffect(() => {
@@ -51,7 +110,18 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
         try {
           const data = await appSchemaRepository.getById(id);
           if (data) {
-            setAppSchema(data);
+            let dataWithName = {
+              ...data,
+              createdAt: data.createdAt ? getFormattedDateString(data.createdAt) : data.createdAt,
+              updatedAt: data.updatedAt ? getFormattedDateString(data.updatedAt) : data.updatedAt,
+              createdBy: data.createdBy
+                ? getFormattedUserName(data.createdBy, allUsers)
+                : data.createdBy,
+              updatedBy: data.updatedBy
+                ? getFormattedUserName(data.updatedBy, allUsers)
+                : data.updatedBy,
+            };
+            setAppSchema(dataWithName);
           } else {
             setError("指定されたアプリスキーマが見つかりません。");
           }
@@ -68,7 +138,7 @@ const AppSchemaFormPage: FC<AppSchemaFormPageProps> = () => {
       setAppSchema({ id: "", name: "", description: "", fields: [] }); // 空の AppSchema で初期化
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, allUsers]);
 
   // DynamicForm の onSubmit ハンドラ
   const handleAppSchemaSubmit = async (data: AppSchema) => {

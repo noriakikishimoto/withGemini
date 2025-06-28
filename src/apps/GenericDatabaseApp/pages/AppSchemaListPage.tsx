@@ -22,17 +22,68 @@ import {
   GenericRecord,
   SortCondition,
   SortDirection,
+  User,
 } from "../../../types/interfaces";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 import { appSchemaRepository } from "../../../repositories/appSchemaRepository.ts";
 import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper.tsx";
+import { getFormattedDateString, getFormattedUserName } from "../utils/fieldLabelConverter.ts";
+import { userRepository } from "../../../repositories/userRepository.ts";
 
 // AppSchema のリスト表示用のフィールド定義
 // DynamicList に渡すため、AppSchema のプロパティに対応する
 const appSchemaListFields: FormField<AppSchema, any>[] = [
-  { name: "name", label: "アプリ名", type: "text", component: MuiTextFieldWrapper }, // MuiTextFieldWrapperは仮
+  { name: "name", label: "アプリ名", type: "text", component: MuiTextFieldWrapper },
   { name: "description", label: "説明", type: "textarea", component: MuiTextFieldWrapper },
+  {
+    name: "createdBy",
+    label: "作成者",
+    type: "text", // 将来的にルックアップ表示も考慮
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+    valueFormatter: getFormattedUserName,
+  },
+  {
+    name: "createdAt",
+    label: "作成日時",
+    type: "text",
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+    valueFormatter: getFormattedDateString,
+  },
+  {
+    name: "updatedBy",
+    label: "更新者",
+    type: "text", // 将来的にルックアップ表示も考慮
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+    valueFormatter: getFormattedUserName,
+  },
+  {
+    name: "updatedAt",
+    label: "更新日時",
+    type: "text",
+    readOnly: true,
+    group: "システム情報",
+    component: MuiTextFieldWrapper,
+    xs: 12,
+    sm: 6,
+    md: 3,
+    valueFormatter: getFormattedDateString,
+  },
 ];
 
 interface AppSchemaListPageProps {}
@@ -60,15 +111,50 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
       setIsLoading(false);
     }
   };
+  const [allUsers, setAllUsers] = useState<User[] | []>([]);
 
   // コンポーネントマウント時にアプリスキーマをロード
   useEffect(() => {
     fetchAppSchemas();
+    const loadUsers = async () => {
+      try {
+        const users = await userRepository.getAll();
+        setAllUsers(users);
+      } catch (err) {
+        console.error("Error loading users for display:", err);
+      }
+    };
+    loadUsers();
   }, []);
 
-  const filteredAndSortedAppSchemas = useMemo(() => {
-    let currentAppSchemas = [...appSchemas]; // 元の配列を変更しないようにコピー
+  const converter = (records: GenericRecord[]): GenericRecord[] => {
+    if (appSchemaListFields.length === 0) {
+      return [...records];
+    }
 
+    let formattedRecords = records.map((record) => {
+      const newRecord: GenericRecord = { ...record };
+
+      appSchemaListFields.forEach((fieldDef) => {
+        const fieldWithFormatter = appSchemaListFields.find(
+          (f) => f.name === fieldDef.name && f.valueFormatter
+        );
+        if (fieldWithFormatter && fieldWithFormatter.valueFormatter) {
+          const originalValue = record[fieldDef.name as keyof GenericRecord];
+          newRecord[fieldDef.name as keyof GenericRecord] = fieldWithFormatter.valueFormatter(
+            originalValue,
+            allUsers
+          );
+        }
+      });
+      return newRecord;
+    });
+    return formattedRecords;
+  };
+
+  const filteredAndSortedAppSchemas = useMemo(() => {
+    let currentAppSchemas = converter(appSchemas); // 元の配列を変更しないようにコピー
+    //let currentAppSchemas = [...appSchemas];
     // 1. フィルタリング
     if (searchTerm) {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
@@ -187,7 +273,7 @@ const AppSchemaListPage: FC<AppSchemaListPageProps> = () => {
 
       {/* DynamicList コンポーネントを使用 */}
       <DynamicList<AppSchema>
-        items={filteredAndSortedAppSchemas}
+        items={filteredAndSortedAppSchemas as AppSchema[]}
         fields={appSchemaListFields} // AppSchema のフィールド定義を渡す
         onEdit={handleEditAppSchema}
         onDelete={handleDeleteAppSchema}

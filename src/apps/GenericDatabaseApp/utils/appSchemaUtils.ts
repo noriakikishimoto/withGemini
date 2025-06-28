@@ -1,3 +1,4 @@
+import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrapper";
 import {
   AppSchema,
   CommonFormFieldComponent,
@@ -6,6 +7,7 @@ import {
   User,
 } from "../../../types/interfaces";
 import { getFieldComponentByType } from "./fieldComponentMapper"; // fieldComponentMapper をインポート
+import { getFormattedDateString, getFormattedUserName } from "./fieldLabelConverter";
 
 /**
  * アプリスキーマのフィールド定義にシステムフィールド (createdBy, createdAt など) を注入する関数。
@@ -36,12 +38,11 @@ export const addSystemFieldsToSchema = (
       type: "text", // 将来的にルックアップ表示も考慮
       readOnly: true,
       group: "システム情報",
-      component: getFieldComponentByType("text"),
+      component: MuiTextFieldWrapper,
       xs: 12,
       sm: 6,
       md: 3,
-      valueFormatter: (userId: string, allUsers?: User[]) =>
-        allUsers?.find((u) => u.id === userId)?.displayName || userId,
+      valueFormatter: getFormattedUserName,
     },
     {
       name: "createdAt",
@@ -49,11 +50,11 @@ export const addSystemFieldsToSchema = (
       type: "text",
       readOnly: true,
       group: "システム情報",
-      component: getFieldComponentByType("date"),
+      component: MuiTextFieldWrapper,
       xs: 12,
       sm: 6,
       md: 3,
-      valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
+      valueFormatter: getFormattedDateString,
     },
     {
       name: "updatedBy",
@@ -61,12 +62,11 @@ export const addSystemFieldsToSchema = (
       type: "text", // 将来的にルックアップ表示も考慮
       readOnly: true,
       group: "システム情報",
-      component: getFieldComponentByType("text"),
+      component: MuiTextFieldWrapper,
       xs: 12,
       sm: 6,
       md: 3,
-      valueFormatter: (userId: string, allUsers?: User[]) =>
-        allUsers?.find((u) => u.id === userId)?.displayName || userId,
+      valueFormatter: getFormattedUserName,
     },
     {
       name: "updatedAt",
@@ -74,11 +74,11 @@ export const addSystemFieldsToSchema = (
       type: "text",
       readOnly: true,
       group: "システム情報",
-      component: getFieldComponentByType("date"),
+      component: MuiTextFieldWrapper,
       xs: 12,
       sm: 6,
       md: 3,
-      valueFormatter: (isoDate: string) => (isoDate ? new Date(isoDate).toLocaleString() : ""),
+      valueFormatter: getFormattedDateString,
     },
   ];
 

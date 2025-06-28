@@ -1,4 +1,4 @@
-import { FormField, GenericRecord } from "../../../types/interfaces"; // FormField と GenericRecord をインポート
+import { FormField, User } from "../../../types/interfaces"; // FormField と GenericRecord をインポート
 
 /**
  *
@@ -12,4 +12,12 @@ export const getFieldLabelByName = <T extends object>(
 ): string => {
   const field = appFields.find((f) => f.name === fieldName);
   return field ? field.label : String(fieldName);
+};
+
+export const getFormattedUserName = (userId: string, allUsers?: User[]): string => {
+  return allUsers?.find((u) => u.id === userId)?.displayName || userId;
+};
+
+export const getFormattedDateString = (isoDate: string): string => {
+  return isoDate ? new Date(isoDate).toLocaleString() : "";
 };
