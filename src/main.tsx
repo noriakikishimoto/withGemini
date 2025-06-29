@@ -31,6 +31,13 @@ const theme = createTheme({
     secondary: {
       main: "#73879C",
     },
+    text: {
+      primary: "rgba(0, 0, 0, 0.87)", // デフォルトのプライマリテキスト色
+      secondary: "#73879C", // グレー
+
+      // または、MUIの色パレットから選ぶ場合
+      // secondary: '#757575', // material-ui/colors の grey[600] など
+    },
   },
 
   // ★重要: スペーシングの調整
@@ -88,6 +95,16 @@ const theme = createTheme({
           marginTop: "8px", // マージンを小さく (normal は 16px)
           marginBottom: "8px",
         },
+      },
+    },
+    MuiBadge: {
+      styleOverrides: {
+        root: {
+          //  color: "#ffffff",
+        },
+      },
+      defaultProps: {
+        color: "secondary",
       },
     },
     /*

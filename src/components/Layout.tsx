@@ -1,47 +1,30 @@
-import React, { FC, ReactNode, useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { FC, forwardRef, ReactNode, useEffect, useRef, useState } from "react";
 import SideMenu from "./SideMenu.tsx";
 import TopHeader from "./TopHeader.tsx";
 
-import { AppBar, Box, Drawer, Slide, useScrollTrigger } from "@mui/material";
+import { AppBar, Box, Drawer, Slide, useScrollTrigger, useTheme } from "@mui/material";
 
 import { DrawerContext } from "../contexts/DrawerContext";
-import { useUserContext } from "../contexts/UserContext.tsx";
 
 const drawerWidth = 200;
 
 interface LayoutProps {
   children: ReactNode;
 }
-interface Props {
-  /**
-   * Injected by the documentation to work in an iframe.
-   * You won't need it on your project.
-   */
-  window?: () => Window;
-  children?: React.ReactElement<unknown>;
-}
-
-function HideOnScroll(props: Props) {
-  const { children, window } = props;
-  // Note that you normally won't need to set the window ref as useScrollTrigger
-  // will default to window.
-  // This is only being set here because the demo is in an iframe.
-  const trigger = useScrollTrigger({
-    target: window ? window() : undefined,
-  });
-
-  return (
-    <Slide appear={false} direction="down" in={!trigger}>
-      {children ?? <div />}
-    </Slide>
-  );
-}
 
 const Layout: FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
   const [open, setOpen] = useState(true); // Drawer (サイドバー) の開閉状態
-  //const { currentUser } = useUserContext();
+  const mainContentRef = useRef<HTMLElement>(null);
+
+  const trigger = useScrollTrigger({
+    target: mainContentRef.current || undefined, // main コンテンツのスクロールを監視
+    disableHysteresis: true,
+    threshold: 0,
+  });
+
+  const theme = useTheme(); // テーマから Toolbar の高さを取得
+  const appBarHeight = theme.mixins.toolbar.minHeight; // 通常 64px
+
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -53,7 +36,8 @@ const Layout: FC<LayoutProps> = ({ children }) => {
   return (
     <Box sx={{ display: "flex" }}>
       {/* AppBar (ヘッダーバー) */}
-      <HideOnScroll>
+
+      <Slide appear={false} direction="down" in={!trigger}>
         <AppBar
           position="fixed"
           elevation={1}
@@ -70,7 +54,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
             onMenuClose={handleDrawerClose}
           />
         </AppBar>
-      </HideOnScroll>
+      </Slide>
       {/* Drawer (サイドバー) */}
 
       <Drawer
@@ -97,16 +81,21 @@ const Layout: FC<LayoutProps> = ({ children }) => {
       <DrawerContext.Provider value={{ drawerOpen: open }}>
         <Box
           component="main"
+          ref={mainContentRef}
           sx={{
             flexGrow: 1,
             p: 0,
-            mt: 8,
+            //mt: 8,
+            mt: trigger ? 0 : `${appBarHeight}px`, // trigger が true なら AppBar は非表示なので mt:0
+
             ml: open ? 0 : `-${drawerWidth}px`,
             transition: "margin-left 0.3s ease-out",
             //height: "100vh",
             //  mt: 10,
-            height: "calc(100vh - 80px)", // ★修正: ビューポートの残りの高さを確保
-            //  overflowY: "auto", // ★追加: メインコンテンツ領域をスクロール可能にする
+            //height: "calc(100vh - 80px)", // ★修正: ビューポートの残りの高さを確保
+            height: `calc(100vh - ${trigger ? 0 : appBarHeight}px)`,
+            overflowY: "auto", // ★修正: 縦スクロールはここで管理
+            overflowX: "auto", // ★追加: 横スクロールもここで明示的に管理
           }}
         >
           {children}
