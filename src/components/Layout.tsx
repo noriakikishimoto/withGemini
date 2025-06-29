@@ -11,7 +11,32 @@ const drawerWidth = 200;
 interface LayoutProps {
   children: ReactNode;
 }
+interface HideOnScrollProps {
+  target?: Element | null;
+  children: React.ReactElement;
+}
 
+// HideOnScroll はそのまま
+const HideOnScroll = React.forwardRef<HTMLDivElement, HideOnScrollProps>((props, ref) => {
+  const { children, target } = props;
+
+  const trigger = useScrollTrigger({
+    target: target || undefined,
+    disableHysteresis: true,
+    threshold: 0,
+  });
+
+  return (
+    /*
+    <Slide appear={false} direction="down" in={!trigger}>
+      {React.cloneElement(children, { ref })}
+    </Slide>
+    */
+    <Slide appear={false} direction="down" in={!trigger} ref={ref}>
+      {children}
+    </Slide>
+  );
+});
 const Layout: FC<LayoutProps> = ({ children }) => {
   const [open, setOpen] = useState(true); // Drawer (サイドバー) の開閉状態
   const mainContentRef = useRef<HTMLElement>(null);
@@ -21,6 +46,15 @@ const Layout: FC<LayoutProps> = ({ children }) => {
     disableHysteresis: true,
     threshold: 0,
   });
+
+  const [scrollTargetElement, setScrollTargetElement] = useState<HTMLElement | null>(null);
+
+  // ★追加: mainContentRef が設定されたら targetElement ステートを更新する useEffect
+  useEffect(() => {
+    if (mainContentRef.current) {
+      setScrollTargetElement(mainContentRef.current);
+    }
+  }, [mainContentRef.current]); // ref.current が変更された時のみ実行
 
   const theme = useTheme(); // テーマから Toolbar の高さを取得
   const appBarHeight = theme.mixins.toolbar.minHeight; // 通常 64px
@@ -37,7 +71,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
     <Box sx={{ display: "flex" }}>
       {/* AppBar (ヘッダーバー) */}
 
-      <Slide appear={false} direction="down" in={!trigger}>
+      <HideOnScroll target={scrollTargetElement}>
         <AppBar
           position="fixed"
           elevation={1}
@@ -54,7 +88,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
             onMenuClose={handleDrawerClose}
           />
         </AppBar>
-      </Slide>
+      </HideOnScroll>
       {/* Drawer (サイドバー) */}
 
       <Drawer

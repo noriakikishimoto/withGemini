@@ -2,7 +2,16 @@
 
 import React, { FC } from "react";
 import { Link } from "react-router-dom";
-import { Box, Typography, Button, Card, CardContent, CardActions, IconButton } from "@mui/material"; // IconButton をインポート
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  IconButton,
+  Grid,
+} from "@mui/material"; // IconButton をインポート
 
 // 共通の型定義をインポート
 import {
@@ -67,39 +76,47 @@ function DynamicCards<T extends Identifiable & object>({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {" "}
-      {items.map((item) => (
-        <Card key={item.id} variant="outlined" sx={{ minWidth: 275 }}>
-          {" "}
-          <CardContent sx={{ pb: 1 }}>
-            {" "}
-            <Link
-              to={`${itemBasePath}/${item.id}`}
-              style={{ textDecoration: "none", color: "inherit", display: "block" }}
-            >
+      <Grid container spacing={2}>
+        {items.map((item) => (
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card key={item.id} variant="outlined" sx={{ minWidth: 275 }}>
               {" "}
-              <Typography variant="h6" component="h3" color="primary" sx={{ mb: 0.5 }}>
-                {renderFieldValue(item, fields[0])} {/* ★修正: renderFieldValue を呼び出す */}{" "}
-              </Typography>{" "}
-              {fields.slice(1).map((field) => (
-                <Typography key={field.name as string} variant="body2" color="text.secondary">
-                  <strong>{field.label}:</strong> {renderFieldValue(item, field)}
-                  {/* ★修正: renderFieldValue を呼び出す */}{" "}
-                </Typography>
-              ))}{" "}
-            </Link>{" "}
-          </CardContent>{" "}
-          <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
-            {" "}
-            <IconButton aria-label="編集" color="warning" onClick={() => onEdit(item.id)}>
-              <EditIcon />{" "}
-            </IconButton>{" "}
-            <IconButton aria-label="削除" color="error" onClick={() => onDelete(item.id)} sx={{ ml: 1 }}>
-              <DeleteIcon />{" "}
-            </IconButton>{" "}
-          </CardActions>{" "}
-        </Card>
-      ))}{" "}
+              <CardContent sx={{ pb: 1 }}>
+                {" "}
+                <Link
+                  to={`${itemBasePath}/${item.id}`}
+                  style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                >
+                  {" "}
+                  <Typography variant="h6" component="h3" color="primary" sx={{ mb: 0.5 }}>
+                    {renderFieldValue(item, fields[0])} {/* ★修正: renderFieldValue を呼び出す */}{" "}
+                  </Typography>{" "}
+                  {fields.slice(1).map((field) => (
+                    <Typography key={field.name as string} variant="body2" color="text.secondary">
+                      <strong>{field.label}:</strong> {renderFieldValue(item, field)}
+                      {/* ★修正: renderFieldValue を呼び出す */}{" "}
+                    </Typography>
+                  ))}{" "}
+                </Link>{" "}
+              </CardContent>{" "}
+              <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
+                {" "}
+                <IconButton aria-label="編集" color="secondary" onClick={() => onEdit(item.id)}>
+                  <EditIcon />{" "}
+                </IconButton>{" "}
+                <IconButton
+                  aria-label="削除"
+                  color="secondary"
+                  onClick={() => onDelete(item.id)}
+                  sx={{ ml: 1 }}
+                >
+                  <DeleteIcon />{" "}
+                </IconButton>{" "}
+              </CardActions>{" "}
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 }
