@@ -36,6 +36,7 @@ const localStorageUserRepository: BaseRepositoryNotForApp<
     }
 
     const newUser: User = {
+      ...data,
       id: String(Date.now()), // 簡易的なID生成
       username: data.username, // 明示的に指定
       displayName: data.displayName, // 明示的に指定
@@ -43,7 +44,6 @@ const localStorageUserRepository: BaseRepositoryNotForApp<
       password: data.password, // オプションなのでそのまま
       role: data.role || "user", // デフォルトロール
       // data に含まれるその他のカスタムプロパティもコピー
-      ...data,
     };
 
     const updatedUsers = [...users, newUser];

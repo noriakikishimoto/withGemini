@@ -62,8 +62,8 @@ const theme = createTheme({
     h6: { fontSize: "1rem" }, // CardTitle (新しいタスク) など
     subtitle1: { fontSize: "0.9rem" },
     subtitle2: { fontSize: "0.85rem" },
-    body1: { fontSize: "0.82rem" }, // デフォルトの本文
-    body2: { fontSize: "0.65rem" }, // 小さいテキスト
+    body1: { fontSize: "0.85rem" }, // デフォルトの本文
+    body2: { fontSize: "0.75rem" }, // 小さいテキスト
     button: { fontSize: "0.6rem" }, // ボタンの文字
     caption: { fontSize: "0.65rem" },
     overline: { fontSize: "0.6rem" },

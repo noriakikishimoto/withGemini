@@ -35,6 +35,11 @@ const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => 
     currentViewId,
     setCurrentViewId, // setCurrentViewId も公開
   } = useListSettings({ appId, appSchema, records, customViews, isLoading, allUsers });
+  useEffect(() => {
+    if (widget.customViewId) {
+      setCurrentViewId(widget.customViewId);
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -77,9 +82,9 @@ const DashboardWidgetDisplay: FC<DashboardWidgetDisplayProps> = ({ widget }) => 
           itemBasePath={`/generic-db/data/${widget.appId}`} // 適切なパスを設定
           listTitle={appSchema.name || "レコード"} // アプリ名をタイトルに
           onSortChange={() => {}} // 読み取り専用なのでソート変更は受け付けない
-          currentSortConditions={widget.sortConditions}
+          currentSortConditions={sortConditions}
           onFilterChange={() => {}} // 読み取り専用なのでフィルタ変更は受け付けない
-          currentFilterConditions={widget.filterConditions}
+          currentFilterConditions={filterConditions}
           currentViewType="table" // ダッシュボード内のリストは常にテーブルビュー
         />
       ) : widget.type === "chart" ? (

@@ -278,13 +278,13 @@ export const useListSettings = ({
   // ソート条件変更ハンドラ
   const handleSortConditionsChange = (newSortConditions: SortCondition<GenericRecord>[]) => {
     setSortConditions(newSortConditions);
-    setCurrentViewId("default");
+    //setCurrentViewId("default");
   };
 
   // フィルタリング条件変更ハンドラ
   const handleFilterConditionsChange = (newFilterConditions: FilterCondition<GenericRecord>[]) => {
     setFilterConditions(newFilterConditions);
-    setCurrentViewId("default");
+    //setCurrentViewId("default");
   };
 
   // 表示列変更時のハンドラ (DisplayFieldsModal から呼ばれる)

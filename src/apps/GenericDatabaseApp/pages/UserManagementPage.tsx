@@ -40,6 +40,7 @@ import MuiTextFieldWrapper from "../../../components/FormFields/MuiTextFieldWrap
 import MuiSelectFieldWrapper from "../../../components/FormFields/MuiSelectFieldWrapper.tsx";
 import { useUserContext } from "../../../contexts/UserContext.tsx";
 import { useGlobalDataContext } from "../../../contexts/GlobalDataContext.tsx";
+import AlertDialog from "../../../components/AlertDialog.tsx";
 
 // UserManagementPageProps インターフェース
 interface UserManagementPageProps {}
@@ -57,6 +58,16 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
   const [userMode, setUserMode] = useState<"create" | "edit">("create");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingUserData, setEditingUserData] = useState<User | null>(null);
+
+  // ★追加: AlertDialog のステート
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+  const [alertDialogTitle, setAlertDialogTitle] = useState("");
+  const [alertDialogMessage, setAlertDialogMessage] = useState("");
+  const [alertDialogSeverity, setAlertDialogSeverity] = useState<
+    "error" | "warning" | "info" | "success"
+  >("info");
+  // ユーザー削除確認用 (Promise を利用して非同期に確認)
+  const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
 
   const { login } = useUserContext();
   const { refetchGlobalData } = useGlobalDataContext();
@@ -125,6 +136,7 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
     }
   };
 
+  /*
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("このユーザーを本当に削除しますか？")) {
       try {
@@ -136,6 +148,45 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
         console.error("Error deleting user:", err);
         alert("ユーザーの削除に失敗しました: " + (err as Error).message);
       }
+    }
+  };
+  */
+
+  // ★修正: ユーザー削除ハンドラ
+  const handleDeleteUser = (userId: string) => {
+    setPendingDeleteUserId(userId); // 削除待ちのユーザーIDをセット
+    setAlertDialogTitle("確認");
+    setAlertDialogMessage("このユーザーを本当に削除しますか？");
+    setAlertDialogSeverity("warning");
+    setIsAlertDialogOpen(true); // 確認ダイアログを表示
+  };
+
+  // ★追加: 確認ダイアログのクローズハンドラ (OK/キャンセル両方に対応)
+  const handleCloseAlertDialog = (confirmed: boolean) => {
+    setIsAlertDialogOpen(false);
+    if (confirmed && pendingDeleteUserId) {
+      // ユーザーが「OK」を押した場合、実際の削除処理を実行
+      executeDeleteUser(pendingDeleteUserId);
+    }
+    setPendingDeleteUserId(null); // 削除待ちIDをリセット
+  };
+
+  // ★追加: 実際のユーザー削除処理
+  const executeDeleteUser = async (userId: string) => {
+    try {
+      await userRepository.delete(userId);
+      setAlertDialogTitle("成功");
+      setAlertDialogMessage("ユーザーが削除されました！");
+      setAlertDialogSeverity("success");
+      setIsAlertDialogOpen(true); // 成功アラートを表示
+      fetchUsers();
+      refetchGlobalData();
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      setAlertDialogTitle("エラー");
+      setAlertDialogMessage(`ユーザーの削除に失敗しました: ${(err as Error).message}`);
+      setAlertDialogSeverity("error");
+      setIsAlertDialogOpen(true); // 失敗アラートを表示
     }
   };
 
@@ -321,6 +372,17 @@ const UserManagementPage: FC<UserManagementPageProps> = () => {
           ))}
         </List>
       </Box>
+
+      {/* ★追加: アラートダイアログコンポーネント */}
+      <AlertDialog
+        open={isAlertDialogOpen}
+        onClose={() => handleCloseAlertDialog(false)} // キャンセルの場合
+        title={alertDialogTitle}
+        message={alertDialogMessage}
+        severity={alertDialogSeverity}
+        confirmText={pendingDeleteUserId ? "削除" : "OK"}
+        onConfirm={() => handleCloseAlertDialog(true)} // OKの場合
+      />
     </Box>
   );
 };
