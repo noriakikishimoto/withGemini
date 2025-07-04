@@ -1,0 +1,9 @@
+fastapi==0.111.0
+uvicorn==0.30.1
+black==24.4.2
+sentence-transformers==2.7.0
+protobuf==4.25.3
+fugashi==1.5.1
+unidic-lite==1.0.8 
+
+

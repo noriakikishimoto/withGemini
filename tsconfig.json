@@ -23,7 +23,7 @@
     "noFallthroughCasesInSwitch": true, // switch文のフォールスルーを警告
 
     // ★ Vitestのグローバル型定義を追加
-    "types": ["vitest/globals", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "@testing-library/jest-dom", "vite/client"]
   },
   "include": [
     "src", // srcフォルダ内のすべてのファイルを含める
@@ -31,5 +31,4 @@
     "src/**/*.test.ts", // srcディレクトリとそのサブディレクトリ内のすべての .test.ts ファイルを含める
     "src/**/*.test.tsx" // srcディレクトリとそのサブディレクトリ内のすべての .test.tsx ファイルを含める
   ]
-
 }

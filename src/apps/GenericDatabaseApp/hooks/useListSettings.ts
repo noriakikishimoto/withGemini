@@ -258,20 +258,13 @@ export const useListSettings = ({
   const fieldsForDynamicList = useMemo((): FormField<GenericRecord, CommonFormFieldComponent<any>>[] => {
     if (!appSchema) return [];
 
-    //const appSchemaWithSystemFields = addSystemFieldsToSchema(appSchema);
-
     const fieldsToDisplay =
       selectedDisplayFields.length > 0
         ? appSchemaWithSystemFields?.filter((field) =>
             selectedDisplayFields.includes(field.name as keyof GenericRecord)
           )
         : appSchemaWithSystemFields;
-    /*
-    return fieldsToDisplay.map((field) => ({
-      ...field,
-      component: getFieldComponentByType(field.type),
-    })) as FormFieldForDynamicList<GenericRecord>[];
-  */
+
     return fieldsToDisplay;
   }, [appSchema, selectedDisplayFields, customViews]);
 

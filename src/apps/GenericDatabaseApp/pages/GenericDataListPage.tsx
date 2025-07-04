@@ -122,42 +122,12 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
   // 現在のビュータイプを管理
   const [currentViewType, setCurrentViewType] = useState<"table" | "cards" | "chart">("table");
 
-  /*
-  // 現在のビューIDが変更されたら、フィルタ/ソート条件を適用
-  useEffect(() => {
-    // appSchema がまだロードされていない場合は何もしない
-    if (!appSchema) {
-      // ただし、isLoading が false になった後も appSchema が null ならエラー表示
-      if (!isLoading && !appSchema) {
-        //    setError("アプリスキーマが見つからないか、読み込みに失敗しました。");
-      }
-      return;
-    }
-
-    if (currentViewId === "default") {
-      setFilterConditions([]);
-      setSortConditions([]);
-      setSelectedDisplayFields(appSchema.fields.map((f) => f.name as keyof GenericRecord));
-    } else {
-      const selectedView = customViews.find((view) => view.id === currentViewId);
-      if (selectedView) {
-        setFilterConditions([...selectedView.filterConditions] as FilterCondition<GenericRecord>[]);
-        setSortConditions([...selectedView.sortConditions] as SortCondition<GenericRecord>[]);
-        setSelectedDisplayFields(
-          selectedView.displayFields || appSchema.fields.map((f) => f.name as keyof GenericRecord)
-        );
-      } else {
-        setCurrentViewId("default");
-      }
-    }
-  }, [currentViewId, customViews, appSchema, isLoading]); // isLoading も依存配列に追加 (appSchema のロード完了を待つため)
-*/
   // appId が変更されたら currentViewType をデフォルトに戻す
   useEffect(() => {
     setCurrentViewType("table"); // アプリが切り替わったらデフォルトのテーブルビューに
   }, [appId]);
 
-  // 追加: URL の viewId が変更されたら currentViewId を更新する useEffect
+  // URL の viewId が変更されたら currentViewId を更新する useEffect
   useEffect(() => {
     if (viewId !== currentViewId) {
       // URL の viewId が現在のステートと異なる場合のみ更新
@@ -226,17 +196,6 @@ const GenericDataListPage: FC<GenericDataListPageProps> = () => {
       setCurrentViewType(newViewType);
     }
   };
-
-  // 型合わせのため。。
-  /*
-  const appSchemaFieldsWithComponent = useMemo((): FormFieldForDynamicList<GenericRecord>[] => {
-    if (!appSchema) return [];
-    return appSchema.fields.map((field) => ({
-      ...field,
-      component: getFieldComponentByType(field.type),
-    })) as FormFieldForDynamicList<GenericRecord>[];
-  }, [appSchema]);
-*/
 
   const appSchemaFieldsWithComponent = useMemo(() => {
     if (!appSchema) return [];

@@ -1,0 +1,60 @@
+[
+    {
+        "id": "app001",
+        "name": "顧客情報管理",
+        "description": "更新された顧客情報を管理するアプリ",
+        "fields": [
+            {
+                "name": "customer_name",
+                "label": "顧客名",
+                "type": "text",
+                "required": true,
+                "unique": false,
+                "component": null,
+                "options": null,
+                "lookupAppId": null,
+                "lookupAppFieldId": null,
+                "lookupDisplayFieldId": null,
+                "initialValue": null,
+                "width": null,
+                "minWidth": null,
+                "maxWidth": null,
+                "readOnly": false
+            },
+            {
+                "name": "email",
+                "label": "メールアドレス",
+                "type": "email",
+                "required": false,
+                "unique": false,
+                "component": null,
+                "options": null,
+                "lookupAppId": null,
+                "lookupAppFieldId": null,
+                "lookupDisplayFieldId": null,
+                "initialValue": null,
+                "width": null,
+                "minWidth": null,
+                "maxWidth": null,
+                "readOnly": false
+            },
+            {
+                "name": "phone",
+                "label": "電話番号",
+                "type": "text",
+                "required": false,
+                "unique": false,
+                "component": null,
+                "options": null,
+                "lookupAppId": null,
+                "lookupAppFieldId": null,
+                "lookupDisplayFieldId": null,
+                "initialValue": null,
+                "width": null,
+                "minWidth": null,
+                "maxWidth": null,
+                "readOnly": false
+            }
+        ]
+    }
+]
